@@ -28,9 +28,29 @@ REDIS_UPDATE_OFFSET_KEY = "telegram:update_offset"
 REDIS_PENDING_JOBS_KEY = "telegram:pending_jobs"
 REDIS_JOB_PREFIX = "telegram:job:"
 REDIS_CHAT_JOBS_PREFIX = "telegram:chat_jobs:"
+REDIS_CREDITS_PREFIX = "telegram:credits:"
+REDIS_USER_PREFIX = "telegram:user:"
+REDIS_REFERRAL_PREFIX = "telegram:referral:"
 TELEGRAM_MESSAGE_LIMIT = 3900
 RECENT_JOB_LIMIT = 20
 
+# Credit policy
+CREDITS_PER_RUN = 10
+CREDITS_NEW_USER = 50
+CREDITS_REFERRAL_BONUS = 30  # awarded to referrer on referree's first run
+CREDITS_PER_STAR = 10
+
+# Star packages: (label, stars, credits)
+STAR_PACKAGES = [
+    ("starter", 10, 100),
+    ("basic", 50, 500),
+    ("pro", 100, 1000),
+]
+
+
+# ---------------------------------------------------------------------------
+# Redis helpers
+# ---------------------------------------------------------------------------
 
 def get_redis() -> Redis:
     return Redis.from_url(REDIS_URL)
@@ -46,6 +66,10 @@ def decode(value):
     return value
 
 
+# ---------------------------------------------------------------------------
+# Telegram API
+# ---------------------------------------------------------------------------
+
 def telegram_request(method: str, payload: Optional[dict] = None, timeout: int = 30) -> dict:
     data = json.dumps(payload or {}).encode("utf-8")
     request = urllib.request.Request(
@@ -53,7 +77,6 @@ def telegram_request(method: str, payload: Optional[dict] = None, timeout: int =
         data=data,
         headers={"Content-Type": "application/json"},
     )
-
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             body = response.read().decode("utf-8")
@@ -75,6 +98,89 @@ def send_message(chat_id: str, text: str) -> None:
         message = message[: TELEGRAM_MESSAGE_LIMIT - 20] + "\n\n...[truncated]"
     telegram_request("sendMessage", {"chat_id": chat_id, "text": message}, timeout=30)
 
+
+def answer_pre_checkout_query(query_id: str, ok: bool, error_message: str = "") -> None:
+    payload: dict = {"pre_checkout_query_id": query_id, "ok": ok}
+    if not ok and error_message:
+        payload["error_message"] = error_message
+    telegram_request("answerPreCheckoutQuery", payload)
+
+
+# ---------------------------------------------------------------------------
+# Credit helpers
+# ---------------------------------------------------------------------------
+
+def get_credits(redis: Redis, chat_id: str) -> int:
+    raw = redis.get(f"{REDIS_CREDITS_PREFIX}{chat_id}")
+    return int(decode(raw)) if raw else 0
+
+
+def add_credits(redis: Redis, chat_id: str, amount: int) -> int:
+    new_balance = redis.incrby(f"{REDIS_CREDITS_PREFIX}{chat_id}", amount)
+    return int(new_balance)
+
+
+def deduct_credits(redis: Redis, chat_id: str, amount: int) -> tuple[bool, int]:
+    """Returns (success, new_balance). Atomic check-and-deduct."""
+    key = f"{REDIS_CREDITS_PREFIX}{chat_id}"
+    with redis.pipeline() as pipe:
+        while True:
+            try:
+                pipe.watch(key)
+                current = int(decode(pipe.get(key) or b"0"))
+                if current < amount:
+                    pipe.reset()
+                    return False, current
+                pipe.multi()
+                pipe.decrby(key, amount)
+                result = pipe.execute()
+                return True, int(result[0])
+            except Exception:
+                continue
+
+
+# ---------------------------------------------------------------------------
+# User / referral helpers
+# ---------------------------------------------------------------------------
+
+def is_new_user(redis: Redis, chat_id: str) -> bool:
+    return not redis.exists(f"{REDIS_USER_PREFIX}{chat_id}")
+
+
+def register_user(redis: Redis, chat_id: str, referrer_id: Optional[str] = None) -> None:
+    user_key = f"{REDIS_USER_PREFIX}{chat_id}"
+    mapping: dict = {"created_at": datetime.now(timezone.utc).isoformat()}
+    if referrer_id:
+        mapping["referred_by"] = referrer_id
+    redis.hset(user_key, mapping=mapping)
+    add_credits(redis, chat_id, CREDITS_NEW_USER)
+
+
+def get_referrer(redis: Redis, chat_id: str) -> Optional[str]:
+    raw = redis.hget(f"{REDIS_USER_PREFIX}{chat_id}", "referred_by")
+    return decode(raw) if raw else None
+
+
+def has_run_before(redis: Redis, chat_id: str) -> bool:
+    raw = redis.hget(f"{REDIS_USER_PREFIX}{chat_id}", "first_run_done")
+    return decode(raw) == "1" if raw else False
+
+
+def mark_first_run(redis: Redis, chat_id: str) -> None:
+    redis.hset(f"{REDIS_USER_PREFIX}{chat_id}", "first_run_done", "1")
+
+
+def get_referral_code(chat_id: str) -> str:
+    return chat_id
+
+
+def get_bot_username() -> str:
+    return os.getenv("TELEGRAM_BOT_USERNAME", "graphref_bot")
+
+
+# ---------------------------------------------------------------------------
+# Domain helpers
+# ---------------------------------------------------------------------------
 
 def normalize_domain(value: str) -> str:
     candidate = value.strip()
@@ -114,32 +220,68 @@ def command_name(text: str) -> str:
     return head.split("@", 1)[0].lower()
 
 
+# ---------------------------------------------------------------------------
+# Text helpers
+# ---------------------------------------------------------------------------
+
 def usage_text() -> str:
     return (
-        "명령어 목록\n"
-        "/run <검색어> | <도메인>\n"
+        "Commands\n"
+        "/run <keyword> | <domain>\n"
         "/status [job_id]\n"
-        "/jobs [개수]\n"
+        "/jobs [n]\n"
         "/queue\n"
         "/cancel [job_id]\n"
+        "/credits\n"
+        "/buy\n"
+        "/referral\n"
         "/help\n\n"
-        "예시\n"
-        "/run tiktok save.com | tiktok-save.com\n\n"
-        "설명\n"
-        "- /status 는 job_id 생략 시 마지막 작업을 조회합니다.\n"
-        "- /cancel 은 대기중(queued) 작업만 취소합니다."
-    )
-
-
-def start_text() -> str:
-    return (
-        "Graphref Bot\n\n"
-        "Searches your keyword and clicks your site.\n\n"
-        "Run a task\n"
+        "Example\n"
         "/run <keyword> | <domain>\n\n"
-        "All commands: /help"
+        "Notes\n"
+        "- /status omits job_id to check the latest job.\n"
+        "- /cancel works on queued jobs only.\n"
+        "- Each /run costs 10 credits."
     )
 
+
+def start_text(redis: Redis, chat_id: str) -> str:
+    credits = get_credits(redis, chat_id)
+    job_ids = get_recent_job_ids(redis, chat_id, limit=3)
+
+    lines = [
+        "Graphref Bot",
+        "",
+        "Searches your keyword and clicks your site.",
+        "",
+        f"Credits: {credits}",
+        "",
+        "Run a task",
+        "/run <keyword> | <domain>",
+        "",
+        "All commands: /help",
+    ]
+
+    if job_ids:
+        lines.append("")
+        lines.append("Recent jobs")
+        for job_id in job_ids:
+            try:
+                job = Job.fetch(job_id, connection=redis)
+                meta = get_job_meta(redis, job_id)
+                keyword = meta.get("keyword") or "unknown"
+                domain = meta.get("domain") or "unknown"
+                status = job.get_status(refresh=True)
+                lines.append(f"- {status} | {keyword} | {domain}")
+            except Exception:
+                lines.append(f"- {job_id}: missing")
+
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Job helpers
+# ---------------------------------------------------------------------------
 
 def get_recent_job_ids(redis: Redis, chat_id: str, limit: int = 5) -> list[str]:
     key = f"{REDIS_CHAT_JOBS_PREFIX}{chat_id}"
@@ -208,22 +350,61 @@ def enqueue_job(redis: Redis, queue: Queue, chat_id: str, keyword: str, domain: 
     return job
 
 
+# ---------------------------------------------------------------------------
+# Command handlers
+# ---------------------------------------------------------------------------
+
+def handle_start(redis: Redis, chat_id: str, text: str) -> None:
+    _, _, raw_args = text.partition(" ")
+    referral_code = raw_args.strip() or None
+
+    if is_new_user(redis, chat_id):
+        referrer_id = referral_code if referral_code and referral_code != chat_id else None
+        register_user(redis, chat_id, referrer_id=referrer_id)
+        send_message(chat_id, start_text(redis, chat_id))
+        return
+
+    send_message(chat_id, start_text(redis, chat_id))
+
+
 def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
     keyword, domain = parse_run_command(text)
     if not keyword or not domain:
-        send_message(chat_id, "입력 형식이 잘못되었습니다.\n\n" + usage_text())
+        send_message(chat_id, "Invalid format.\n\n" + usage_text())
         return
+
+    success, balance = deduct_credits(redis, chat_id, CREDITS_PER_RUN)
+    if not success:
+        send_message(
+            chat_id,
+            f"Not enough credits. You have {balance} credits but need {CREDITS_PER_RUN}.\n\nTop up with /buy",
+        )
+        return
+
+    # Referral bonus: award referrer on referree's first run
+    if not has_run_before(redis, chat_id):
+        mark_first_run(redis, chat_id)
+        referrer_id = get_referrer(redis, chat_id)
+        if referrer_id:
+            new_referrer_balance = add_credits(redis, referrer_id, CREDITS_REFERRAL_BONUS)
+            try:
+                send_message(
+                    referrer_id,
+                    f"Referral bonus! Your referral just ran their first job.\n"
+                    f"+{CREDITS_REFERRAL_BONUS} credits added. Balance: {new_referrer_balance}",
+                )
+            except Exception:
+                pass
 
     job = enqueue_job(redis, queue, chat_id, keyword, domain)
     send_message(
         chat_id,
         (
-            "작업을 등록했습니다.\n"
+            f"Job queued. Credits remaining: {balance}\n"
             f"job_id: {job.id}\n"
             f"keyword: {keyword}\n"
             f"domain: {domain}\n\n"
-            "최근 작업: /jobs\n"
-            f"진행 확인: /status {job.id}"
+            f"Check progress: /status {job.id}"
         ),
     )
 
@@ -234,20 +415,20 @@ def handle_status(redis: Redis, chat_id: str, text: str) -> None:
     if not job_id:
         recent_jobs = get_recent_job_ids(redis, chat_id, limit=1)
         if not recent_jobs:
-            send_message(chat_id, "최근 작업이 없습니다. 먼저 /run 으로 작업을 등록하세요.")
+            send_message(chat_id, "No recent jobs. Start one with /run")
             return
         job_id = recent_jobs[0]
 
     try:
         job = Job.fetch(job_id, connection=redis)
     except Exception:
-        send_message(chat_id, f"job을 찾지 못했습니다: {job_id}")
+        send_message(chat_id, f"Job not found: {job_id}")
         return
 
     meta = get_job_meta(redis, job_id)
     owner_chat_id = meta.get("chat_id")
     if owner_chat_id and owner_chat_id != chat_id:
-        send_message(chat_id, "다른 채팅에서 생성한 job 입니다.")
+        send_message(chat_id, "This job belongs to a different chat.")
         return
 
     keyword = meta.get("keyword") or "unknown"
@@ -263,15 +444,15 @@ def handle_jobs(redis: Redis, chat_id: str, text: str) -> None:
         try:
             limit = max(1, min(int(raw_limit), 10))
         except ValueError:
-            send_message(chat_id, "숫자로 개수를 넣어주세요. 예시: /jobs 5")
+            send_message(chat_id, "Please enter a number. Example: /jobs 5")
             return
 
     job_ids = get_recent_job_ids(redis, chat_id, limit=limit)
     if not job_ids:
-        send_message(chat_id, "최근 작업이 없습니다.")
+        send_message(chat_id, "No recent jobs.")
         return
 
-    lines = ["최근 작업"]
+    lines = ["Recent jobs"]
     for job_id in job_ids:
         try:
             job = Job.fetch(job_id, connection=redis)
@@ -282,7 +463,7 @@ def handle_jobs(redis: Redis, chat_id: str, text: str) -> None:
         meta = get_job_meta(redis, job_id)
         keyword = meta.get("keyword") or "unknown"
         domain = meta.get("domain") or "unknown"
-        lines.append(f"- {job.id}: {job.get_status(refresh=True)} | {keyword} | {domain}")
+        lines.append(f"- {job.get_status(refresh=True)} | {keyword} | {domain}")
 
     send_message(chat_id, "\n".join(lines))
 
@@ -301,7 +482,7 @@ def handle_queue(redis: Redis, chat_id: str) -> None:
     send_message(
         chat_id,
         (
-            "큐 상태\n"
+            "Queue status\n"
             f"queue: {QUEUE_NAME}\n"
             f"queued_jobs: {len(queue)}\n"
             f"your_active_jobs: {pending_own_jobs}"
@@ -315,49 +496,145 @@ def handle_cancel(redis: Redis, chat_id: str, text: str) -> None:
     if not job_id:
         recent_jobs = get_recent_job_ids(redis, chat_id, limit=1)
         if not recent_jobs:
-            send_message(chat_id, "취소할 최근 작업이 없습니다.")
+            send_message(chat_id, "No recent job to cancel.")
             return
         job_id = recent_jobs[0]
 
     meta = get_job_meta(redis, job_id)
     owner_chat_id = meta.get("chat_id")
     if owner_chat_id and owner_chat_id != chat_id:
-        send_message(chat_id, "다른 채팅에서 생성한 job 은 취소할 수 없습니다.")
+        send_message(chat_id, "Cannot cancel a job from another chat.")
         return
 
     try:
         job = Job.fetch(job_id, connection=redis)
     except Exception:
-        send_message(chat_id, f"job을 찾지 못했습니다: {job_id}")
+        send_message(chat_id, f"Job not found: {job_id}")
         return
 
     status = job.get_status(refresh=True)
     if status == "queued":
         job.cancel()
         redis.srem(REDIS_PENDING_JOBS_KEY, job_id)
-        send_message(chat_id, f"job을 취소했습니다: {job_id}")
+        # Refund credits
+        new_balance = add_credits(redis, chat_id, CREDITS_PER_RUN)
+        send_message(chat_id, f"Job cancelled: {job_id}\n{CREDITS_PER_RUN} credits refunded. Balance: {new_balance}")
         return
     if status in {"finished", "failed", "canceled", "stopped"}:
-        send_message(chat_id, f"이미 종료된 job 입니다: {job_id} ({status})")
+        send_message(chat_id, f"Job already finished: {job_id} ({status})")
         return
 
-    send_message(chat_id, f"실행 중인 job 은 취소하지 않습니다: {job_id} ({status})")
+    send_message(chat_id, f"Cannot cancel a running job: {job_id} ({status})")
 
+
+def handle_credits(redis: Redis, chat_id: str) -> None:
+    balance = get_credits(redis, chat_id)
+    runs_left = balance // CREDITS_PER_RUN
+    send_message(
+        chat_id,
+        (
+            f"Credits: {balance}\n"
+            f"Runs available: {runs_left}\n\n"
+            "Top up with /buy"
+        ),
+    )
+
+
+def handle_buy(chat_id: str) -> None:
+    lines = ["Choose a package and send the command:\n"]
+    for label, stars, credits in STAR_PACKAGES:
+        lines.append(f"/buy_{label} — {credits} credits ({stars} Stars)")
+    send_message(chat_id, "\n".join(lines))
+
+
+def handle_buy_package(redis: Redis, chat_id: str, package_key: str) -> None:
+    package = next((p for p in STAR_PACKAGES if p[0] == package_key), None)
+    if not package:
+        send_message(chat_id, "Unknown package. Use /buy to see options.")
+        return
+
+    label, stars, credits = package
+    payload = f"credits:{credits}"
+
+    try:
+        telegram_request(
+            "sendInvoice",
+            {
+                "chat_id": chat_id,
+                "title": f"Graphref {label.capitalize()} Pack",
+                "description": f"{credits} credits ({stars} Telegram Stars)",
+                "payload": payload,
+                "currency": "XTR",
+                "prices": [{"label": f"{credits} Credits", "amount": stars}],
+            },
+        )
+    except Exception as exc:
+        send_message(chat_id, f"Failed to create invoice: {exc}")
+
+
+def handle_successful_payment(redis: Redis, chat_id: str, payment: dict) -> None:
+    payload = payment.get("invoice_payload", "")
+    try:
+        _, credits_str = payload.split(":", 1)
+        credits = int(credits_str)
+    except Exception:
+        send_message(chat_id, "Payment received but could not parse credits. Please contact support.")
+        return
+
+    new_balance = add_credits(redis, chat_id, credits)
+    send_message(
+        chat_id,
+        (
+            f"Payment confirmed!\n"
+            f"+{credits} credits added.\n"
+            f"Balance: {new_balance}"
+        ),
+    )
+
+
+def handle_referral(chat_id: str) -> None:
+    bot_username = get_bot_username()
+    code = get_referral_code(chat_id)
+    link = f"https://t.me/{bot_username}?start={code}"
+    send_message(
+        chat_id,
+        (
+            f"Your referral link:\n{link}\n\n"
+            f"When someone joins via your link and runs their first job,\n"
+            f"you earn {CREDITS_REFERRAL_BONUS} credits."
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Message dispatcher
+# ---------------------------------------------------------------------------
 
 def process_message(redis: Redis, queue: Queue, message: dict) -> None:
     chat = message.get("chat") or {}
     chat_id = str(chat.get("id", ""))
     text = (message.get("text") or "").strip()
-    if not chat_id or not text:
+    payment = message.get("successful_payment")
+
+    if not chat_id:
+        return
+
+    # Handle successful Star payment
+    if payment:
+        handle_successful_payment(redis, chat_id, payment)
+        return
+
+    if not text:
         return
 
     if BOT_ALLOWED_CHAT_IDS and chat_id not in BOT_ALLOWED_CHAT_IDS:
-        send_message(chat_id, "허용되지 않은 chat_id 입니다.")
+        send_message(chat_id, "This chat is not authorized.")
         return
 
     name = command_name(text)
+
     if name == "/start":
-        send_message(chat_id, start_text())
+        handle_start(redis, chat_id, text)
         return
     if name == "/help":
         send_message(chat_id, usage_text())
@@ -377,15 +654,36 @@ def process_message(redis: Redis, queue: Queue, message: dict) -> None:
     if name == "/cancel":
         handle_cancel(redis, chat_id, text)
         return
+    if name == "/credits":
+        handle_credits(redis, chat_id)
+        return
+    if name == "/buy":
+        handle_buy(chat_id)
+        return
+    if name in {f"/buy_{p[0]}" for p in STAR_PACKAGES}:
+        package_key = name.removeprefix("/buy_")
+        handle_buy_package(redis, chat_id, package_key)
+        return
+    if name == "/referral":
+        handle_referral(chat_id)
+        return
 
-    send_message(chat_id, "지원하지 않는 명령입니다.\n\n" + usage_text())
+    send_message(chat_id, "Unknown command.\n\n" + usage_text())
 
+
+def process_pre_checkout_query(query: dict) -> None:
+    answer_pre_checkout_query(query["id"], ok=True)
+
+
+# ---------------------------------------------------------------------------
+# Polling
+# ---------------------------------------------------------------------------
 
 def poll_updates(redis: Redis, queue: Queue) -> None:
     current_offset = redis.get(REDIS_UPDATE_OFFSET_KEY)
     payload = {
         "timeout": BOT_POLL_TIMEOUT,
-        "allowed_updates": ["message"],
+        "allowed_updates": ["message", "pre_checkout_query"],
     }
     if current_offset:
         payload["offset"] = int(decode(current_offset))
@@ -393,7 +691,10 @@ def poll_updates(redis: Redis, queue: Queue) -> None:
     response = telegram_request("getUpdates", payload, timeout=BOT_POLL_TIMEOUT + 5)
     for update in response.get("result", []):
         update_id = int(update["update_id"])
-        process_message(redis, queue, update.get("message") or {})
+        if "pre_checkout_query" in update:
+            process_pre_checkout_query(update["pre_checkout_query"])
+        else:
+            process_message(redis, queue, update.get("message") or {})
         redis.set(REDIS_UPDATE_OFFSET_KEY, update_id + 1)
 
 
@@ -412,7 +713,7 @@ def notify_completed_jobs(redis: Redis) -> None:
         try:
             job = Job.fetch(job_id, connection=redis)
         except Exception:
-            send_message(chat_id, f"job 상태를 찾지 못해 추적을 종료합니다: {job_id}")
+            send_message(chat_id, f"Lost track of job: {job_id}")
             redis.srem(REDIS_PENDING_JOBS_KEY, job_id)
             redis.delete(meta_key)
             continue
@@ -424,12 +725,16 @@ def notify_completed_jobs(redis: Redis) -> None:
         keyword = decode(meta.get(b"keyword")) or "unknown"
         domain = decode(meta.get(b"domain")) or "unknown"
         result = job.result if isinstance(job.result, dict) else {}
-        done_label = "작업 완료" if result.get("status") == "ok" and result.get("code") == 0 else "작업 실패"
+        done_label = "Job done" if result.get("status") == "ok" and result.get("code") == 0 else "Job failed"
         body = format_job_message(redis, job, keyword, domain)
         send_message(chat_id, f"{done_label}\n\n{body}")
         redis.srem(REDIS_PENDING_JOBS_KEY, job_id)
         redis.delete(meta_key)
 
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 def main() -> None:
     if not TELEGRAM_BOT_TOKEN:
