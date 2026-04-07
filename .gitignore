@@ -201,7 +201,13 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+.idea/*
+.env.example
 # Marimo
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+web/.next
+web/node_modules

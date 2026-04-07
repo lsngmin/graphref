@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrapHref</title>
+  <style>
+    :root{
+      --color-text-primary:#0b0f1a;
+      --color-text-secondary:#4a5568;
+      --color-text-tertiary:#7a8797;
+      --color-text-success:#0a7b4e;
+      --color-background-primary:#ffffff;
+      --color-background-secondary:#f3f5f7;
+      --color-background-success:#e7f7ef;
+      --color-border-tertiary:#e6e9ee;
+      --border-radius-md:12px;
+      --border-radius-lg:16px;
+    }
+  </style>
+</head>
+<body>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+    .g{font-family:'Manrope',sans-serif;color:var(--color-text-primary);max-width:780px;margin:0 auto;padding:40px 0 60px;}
+.screen{display:none;}
+.screen.active{display:block;}
+
+    .hero-title{font-size:clamp(38px,6.4vw,64px);font-weight:800;line-height:0.85;letter-spacing:-1.2px;margin-bottom:12px;max-width:520px;}
+.hero-sub{font-size:16px;font-weight:400;color:var(--color-text-secondary);line-height:1.6;max-width:360px;margin-bottom:40px;}
+    .tg-btn{display:inline-flex;align-items:center;gap:10px;background:var(--color-text-primary);color:var(--color-background-primary);font-family:'Manrope',sans-serif;font-size:15px;font-weight:700;padding:14px 24px;border-radius:var(--border-radius-md);border:none;cursor:pointer;transition:opacity .15s;}
+.tg-btn:hover{opacity:.82;}
+.tg-icon{width:20px;height:20px;flex-shrink:0;}
+    .note{font-size:12px;color:var(--color-text-tertiary);margin-top:14px;font-family:'JetBrains Mono',monospace;}
+
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:48px 0;}
+
+    .section-title{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:20px;font-family:'JetBrains Mono',monospace;}
+
+.metric-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:32px;}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:16px 18px;}
+.metric-n{font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1;margin-bottom:4px;}
+    .metric-l{font-size:12px;color:var(--color-text-secondary);font-family:'JetBrains Mono',monospace;}
+
+.worker-list{display:grid;gap:1px;background:var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;border:0.5px solid var(--color-border-tertiary);}
+.worker-row{background:var(--color-background-primary);display:grid;grid-template-columns:90px 1fr 56px;align-items:center;gap:16px;padding:14px 18px;}
+.worker-name{font-size:13px;font-weight:700;letter-spacing:-.2px;}
+.bar-wrap{background:var(--color-background-secondary);border-radius:3px;height:6px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;background:var(--color-text-primary);transition:width .4s ease;}
+    .worker-count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-text-secondary);text-align:right;}
+
+.queue-section{margin-top:32px;}
+.queue-list{display:grid;gap:1px;background:var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;border:0.5px solid var(--color-border-tertiary);}
+.queue-item{background:var(--color-background-primary);display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:14px;padding:14px 18px;}
+.q-rank{font-size:22px;font-weight:800;color:var(--color-text-tertiary);letter-spacing:-1px;line-height:1;}
+.q-rank.mine{color:var(--color-text-primary);}
+.q-info{min-width:0;}
+.q-kw{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .q-domain{font-size:12px;color:var(--color-text-secondary);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+    .q-badge{font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 9px;border-radius:20px;white-space:nowrap;}
+.q-badge.running{background:var(--color-background-success);color:var(--color-text-success);}
+.q-badge.mine-tag{background:var(--color-text-primary);color:var(--color-background-primary);}
+.q-badge.waiting{background:var(--color-background-secondary);color:var(--color-text-tertiary);}
+
+.job-form{margin-top:32px;}
+.field{margin-bottom:14px;}
+    .field label{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:6px;font-family:'JetBrains Mono',monospace;}
+    .field input{width:100%;font-family:'Manrope',sans-serif;font-size:15px;}
+    .submit-btn{width:100%;margin-top:8px;font-family:'Manrope',sans-serif;font-size:15px;font-weight:700;padding:13px;cursor:pointer;background:var(--color-text-primary);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);transition:opacity .15s;}
+.submit-btn:hover{opacity:.82;}
+.submit-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+    .back-btn{background:none;border:none;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--color-text-tertiary);cursor:pointer;padding:0;margin-bottom:32px;display:flex;align-items:center;gap:6px;}
+.back-btn:hover{color:var(--color-text-primary);}
+</style>
+
+<div class="g">
+
+<div class="screen active" id="s-home">
+  <div class="hero-title">Web<br>Intelligence<br>Engine.</div>
+  <p class="hero-sub">키워드와 도메인을 입력하면 자동으로 검색 작업을 실행합니다.</p>
+  <button class="tg-btn" id="tgBtn">
+    <svg class="tg-icon" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 6.858l-1.688 7.953c-.127.566-.46.703-.932.437l-2.58-1.902-1.243 1.197c-.137.137-.253.253-.52.253l.186-2.63 4.807-4.342c.209-.186-.046-.29-.323-.104L7.5 14.64l-2.537-.793c-.552-.172-.563-.552.115-.82l9.642-3.717c.46-.168.863.104.71.548z" fill="currentColor"/>
+    </svg>
+    텔레그램으로 시작하기
+  </button>
+  <p class="note">인증 후 작업 제출 및 현황 확인이 가능합니다</p>
+
+  <div class="divider"></div>
+
+  <p class="section-title">현재 현황</p>
+  <div class="metric-row">
+    <div class="metric"><div class="metric-n" id="m-queued">7</div><div class="metric-l">queued</div></div>
+    <div class="metric"><div class="metric-n" id="m-running">3</div><div class="metric-l">running</div></div>
+    <div class="metric"><div class="metric-n" id="m-workers">4</div><div class="metric-l">workers</div></div>
+  </div>
+
+  <p class="section-title">worker 현황</p>
+  <div class="worker-list" id="workerList"></div>
+</div>
+
+<div class="screen" id="s-dash">
+  <button class="back-btn" id="backBtn">← 로그아웃</button>
+
+  <div class="hero-title" style="font-size:clamp(28px,5vw,44px);margin-bottom:8px;">안녕하세요,<br><span id="userName" style="color:var(--color-text-secondary);">@username</span></div>
+
+  <div class="divider" style="margin:32px 0;"></div>
+
+  <div class="metric-row">
+    <div class="metric"><div class="metric-n" id="dm-queued">7</div><div class="metric-l">queued</div></div>
+    <div class="metric"><div class="metric-n" id="dm-running">3</div><div class="metric-l">running</div></div>
+    <div class="metric"><div class="metric-n" style="color:var(--color-text-success);" id="dm-done">12</div><div class="metric-l">completed</div></div>
+  </div>
+
+  <p class="section-title">worker 별 작업량</p>
+  <div class="worker-list" id="workerList2"></div>
+
+  <div class="queue-section">
+    <p class="section-title">대기열</p>
+    <div class="queue-list" id="queueList"></div>
+  </div>
+
+  <div class="job-form">
+    <p class="section-title">새 작업 제출</p>
+    <div class="field"><label>search keyword</label><input type="text" id="kw" placeholder="e.g. Best SaaS Tools"></div>
+    <div class="field"><label>target domain</label><input type="text" id="dm2" placeholder="e.g. example.com"></div>
+    <button class="submit-btn" id="launchBtn">작업 추가</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+const workers = [
+  {name:'worker-01',jobs:5,max:8},
+  {name:'worker-02',jobs:3,max:8},
+  {name:'worker-03',jobs:7,max:8},
+  {name:'worker-04',jobs:2,max:8},
+];
+
+const queue = [
+  {rank:1,kw:'SaaS productivity tools',domain:'notion.so',status:'running',mine:false},
+  {rank:2,kw:'AI writing assistants',domain:'jasper.ai',status:'running',mine:false},
+  {rank:3,kw:'No-code platforms',domain:'webflow.com',status:'running',mine:false},
+  {rank:4,kw:'Best CRM 2025',domain:'hubspot.com',status:'waiting',mine:false},
+  {rank:5,kw:'Email marketing tools',domain:'mailchimp.com',status:'waiting',mine:false},
+];
+
+let myJobs = [];
+let userQueue = [...queue];
+
+function renderWorkers(id) {
+  const el = document.getElementById(id);
+  el.innerHTML = workers.map(w => {
+    const pct = Math.round(w.jobs / w.max * 100);
+    return `<div class="worker-row">
+      <span class="worker-name">${w.name}</span>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <span class="worker-count">${w.jobs}/${w.max}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderQueue() {
+  const el = document.getElementById('queueList');
+  el.innerHTML = userQueue.map(q => {
+    const isMine = myJobs.find(j => j.rank === q.rank);
+    const badgeCls = q.status === 'running' ? 'running' : (isMine ? 'mine-tag' : 'waiting');
+    const badgeTxt = q.status === 'running' ? 'running' : (isMine ? 'my job' : 'waiting');
+    return `<div class="queue-item">
+      <span class="q-rank${isMine ? ' mine' : ''}">${q.rank}</span>
+      <div class="q-info">
+        <div class="q-kw">${q.kw}</div>
+        <div class="q-domain">${q.domain}</div>
+      </div>
+      <span class="q-badge ${badgeCls}">${badgeTxt}</span>
+    </div>`;
+  }).join('');
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+renderWorkers('workerList');
+
+document.getElementById('tgBtn').addEventListener('click', () => {
+  const name = prompt('텔레그램 사용자명을 입력하세요 (데모용)', '@user');
+  if (!name) return;
+  document.getElementById('userName').textContent = name;
+  renderWorkers('workerList2');
+  renderQueue();
+  show('s-dash');
+});
+
+document.getElementById('backBtn').addEventListener('click', () => show('s-home'));
+
+document.getElementById('launchBtn').addEventListener('click', () => {
+  const kw = document.getElementById('kw').value.trim();
+  const dm = document.getElementById('dm2').value.trim();
+  if (!kw || !dm) return;
+  const newRank = userQueue.length + 1;
+  const job = {rank: newRank, kw, domain: dm, status:'waiting', mine: true};
+  userQueue.push(job);
+  myJobs.push(job);
+  document.getElementById('dm-queued').textContent = userQueue.filter(q => q.status === 'waiting').length;
+  renderQueue();
+  document.getElementById('kw').value = '';
+  document.getElementById('dm2').value = '';
+});
+</script>
+
+</body>
+</html>
