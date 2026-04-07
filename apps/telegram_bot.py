@@ -250,16 +250,22 @@ def start_text(redis: Redis, chat_id: str) -> str:
     job_ids = get_recent_job_ids(redis, chat_id, limit=3)
 
     lines = [
-        "Graphref Bot",
+        "<b>🚀 Welcome to Graphref!</b>",
         "",
-        "Searches your keyword and clicks your site.",
+        "✨ <b>How to use:</b>",
+        "Simply provide a <b>keyword</b> and a <b>domain</b> to trigger organic search & clicks.",
         "",
-        f"Credits: {credits}",
+        f"💰 <b>Your Credits:</b> {credits}",
+        f"🎫 <b>Cost:</b> 10 credits per task",
         "",
-        "Run a task",
-        "/run <keyword> | <domain>",
+        "<b>[ Run a Task ]</b>",
+        "<code>/run <keyword> | <domain></code>",
         "",
-        "All commands: /help",
+        "⚠️ <b>Important Notes:</b>",
+        "• The <b>keyword</b> must be indexed in Search Console for at least 24h.",
+        "• The <b>domain</b> must start with <code>https://</code> and be visible in Google search results.",
+        "",
+        "📖 Type /help to see all commands.",
     ]
 
     if job_ids:
