@@ -92,11 +92,14 @@ def telegram_request(method: str, payload: Optional[dict] = None, timeout: int =
     return result
 
 
-def send_message(chat_id: str, text: str) -> None:
+def send_message(chat_id: str, text: str, parse_mode: Optional[str] = None) -> None:
     message = text.strip()
     if len(message) > TELEGRAM_MESSAGE_LIMIT:
         message = message[: TELEGRAM_MESSAGE_LIMIT - 20] + "\n\n...[truncated]"
-    telegram_request("sendMessage", {"chat_id": chat_id, "text": message}, timeout=30)
+    payload = {"chat_id": chat_id, "text": message}
+    if parse_mode:
+        payload["parse_mode"] = parse_mode
+    telegram_request("sendMessage", payload, timeout=30)
 
 
 def answer_pre_checkout_query(query_id: str, ok: bool, error_message: str = "") -> None:
@@ -259,7 +262,7 @@ def start_text(redis: Redis, chat_id: str) -> str:
         f"🎫 <b>Cost:</b> 10 credits per task",
         "",
         "<b>[ Run a Task ]</b>",
-        "<code>/run <keyword> | <domain></code>",
+        "<code>/run &lt;keyword&gt; | &lt;domain&gt;</code>",
         "",
         "⚠️ <b>Important Notes:</b>",
         "• The <b>keyword</b> must be indexed in Search Console for at least 24h.",
@@ -367,10 +370,10 @@ def handle_start(redis: Redis, chat_id: str, text: str) -> None:
     if is_new_user(redis, chat_id):
         referrer_id = referral_code if referral_code and referral_code != chat_id else None
         register_user(redis, chat_id, referrer_id=referrer_id)
-        send_message(chat_id, start_text(redis, chat_id))
+        send_message(chat_id, start_text(redis, chat_id), parse_mode="HTML")
         return
 
-    send_message(chat_id, start_text(redis, chat_id))
+    send_message(chat_id, start_text(redis, chat_id), parse_mode="HTML")
 
 
 def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
