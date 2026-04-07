@@ -4,7 +4,12 @@ import os
 import sys
 
 from playwright.async_api import async_playwright
-from actions import GoogleSearchInput, SearchResultNavigator, UserEngagementSimulator
+from actions import (
+    GoogleSearchInput,
+    SearchResultNavigator,
+    UserEngagementSimulator,
+    wait_for_page_ready,
+)
 from solve_captcha import SolveCaptcha
 from fingerprint import build, build_fingerprint_script
 
@@ -45,7 +50,8 @@ async def run(search_keyword: str, target_domain: str):
         try:
             # ── 1단계: 구글 접속 및 검색 ──────────────────────────
             print("🌐 구글 접속 중...")
-            await page.goto("https://www.google.com", wait_until="networkidle")
+            await page.goto("https://www.google.com", wait_until="domcontentloaded")
+            await wait_for_page_ready(page, 'textarea[name="q"]')
 
             search_input = GoogleSearchInput(page)
             await search_input.activate_search_box()
@@ -68,7 +74,7 @@ async def run(search_keyword: str, target_domain: str):
                     print("✅ 캡차 통과")
                 else:
                     print("❌ 캡차 해결 실패, 종료합니다.")
-                    return
+                    return 1
 
             # ── 3단계: 검색결과 탐색 → 타겟 URL 발견 ──────────────
             navigator = SearchResultNavigator(page)
@@ -77,7 +83,7 @@ async def run(search_keyword: str, target_domain: str):
             for current_page in range(1, 6):
                 print(f"📄 {current_page}페이지 탐색 중...")
 
-                await page.wait_for_load_state("networkidle")
+                await wait_for_page_ready(page, 'div#search, cite, a#pnnext')
                 import random
                 await asyncio.sleep(random.uniform(1.0, 2.0))
 
@@ -91,7 +97,7 @@ async def run(search_keyword: str, target_domain: str):
 
             if not target_url:
                 print("❌ 타겟을 찾지 못했습니다.")
-                return
+                return 1
 
             # ── 4단계: 타겟 사이트 진입 ───────────────────────────
             await navigator.access_target_site(target_url)
@@ -107,10 +113,13 @@ async def run(search_keyword: str, target_domain: str):
 
         except Exception as e:
             print(f"❌ 오류 발생: {e}")
+            return 1
         finally:
             await asyncio.sleep(5)
             await context.close()
             await browser.close()
+
+    return 0
 
 
 if __name__ == "__main__":
@@ -119,4 +128,4 @@ if __name__ == "__main__":
     parser.add_argument("target_domain", type=str, help="찾을 도메인 (ex: tiktok-save.com)")
     args = parser.parse_args()
 
-    asyncio.run(run(search_keyword=args.search_keyword, target_domain=args.target_domain))
+    raise SystemExit(asyncio.run(run(search_keyword=args.search_keyword, target_domain=args.target_domain)))

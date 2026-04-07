@@ -1,5 +1,14 @@
+import asyncio
+import random
+from typing import Optional
+
 from playwright.async_api import Page
-import random,asyncio
+
+
+async def wait_for_page_ready(page: Page, selector: str = "body", timeout: int = 15000):
+    await page.wait_for_load_state("domcontentloaded", timeout=timeout)
+    if selector:
+        await page.wait_for_selector(selector, timeout=timeout)
 
 class GoogleSearchInput:
     def __init__(self, page: Page):
@@ -55,13 +64,7 @@ class GoogleSearchInput:
     async def submit_search(self):
         await asyncio.sleep(random.uniform(0.3, 0.7))  # 입력 끝나고 바로 치는 사람 없음
         await self.page.keyboard.press("Enter")
-        await self.page.wait_for_load_state("networkidle")
-
-
-import asyncio
-import random
-from typing import Optional
-from playwright.async_api import Page
+        await wait_for_page_ready(self.page, 'div#search, cite, a#pnnext')
 
 class SearchResultNavigator:
     def __init__(self, page: Page):
@@ -150,7 +153,7 @@ class SearchResultNavigator:
         print("➡️ 다음 검색 결과 페이지로 이동합니다.")
         await self._scroll_to_element(next_btn)
         await self._click_element(next_btn)
-        await self.page.wait_for_load_state("networkidle")
+        await wait_for_page_ready(self.page, 'div#search, cite, a#pnnext')
         return True
 
     async def access_target_site(self, target_url: str):
@@ -163,7 +166,7 @@ class SearchResultNavigator:
             await asyncio.sleep(random.uniform(0.5, 1.2))
 
             await self._click_element(link)
-            await self.page.wait_for_load_state("networkidle")
+            await wait_for_page_ready(self.page)
         else:
             print("⚠️ 직접 href 매칭 실패 → 제목 링크로 재시도")
             title_link = self.page.locator(f'a[href*="{target_url.split("//")[-1].rstrip("/")}"]').first
@@ -171,11 +174,13 @@ class SearchResultNavigator:
                 await self._scroll_to_element(title_link)
                 await asyncio.sleep(random.uniform(0.5, 1.2))
                 await self._click_element(title_link)
+                await wait_for_page_ready(self.page)
             else:
                 print("⚠️ 링크 요소를 찾지 못해 goto로 이동합니다.")
-                await self.page.goto(target_url, wait_until="networkidle")
+                await self.page.goto(target_url, wait_until="domcontentloaded")
+                await wait_for_page_ready(self.page)
 
-        await self.page.wait_for_load_state("networkidle")
+        await wait_for_page_ready(self.page)
         print(f"✅ 현재 URL: {self.page.url}")
 
 
@@ -248,7 +253,7 @@ class UserEngagementSimulator:
             await chosen_path.scroll_into_view_if_needed()
             await asyncio.sleep(random.uniform(1.0, 2.5))
             await chosen_path.click()
-            await self.page.wait_for_load_state("networkidle")
+            await wait_for_page_ready(self.page)
             return True
         except Exception as e:
             print(f"❌ [Error] 내부 이동 중 오류: {e}")
@@ -263,12 +268,12 @@ class UserEngagementSimulator:
         # 1. 내부페이지 → 타겟사이트 메인
         print("🔙 타겟사이트 메인으로 복귀")
         await self._move_to_back_button()
-        await self.page.wait_for_load_state("networkidle")
+        await wait_for_page_ready(self.page)
         await asyncio.sleep(random.uniform(2.0, 4.0))
 
         # 2. 타겟사이트 메인 → 구글 검색결과
         print("🔙 구글 검색결과로 복귀")
         await self._move_to_back_button()
-        await self.page.wait_for_load_state("networkidle")
+        await wait_for_page_ready(self.page)
 
         print("🏁 세션 종료 완료")
