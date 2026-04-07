@@ -10,7 +10,7 @@ def run_job(payload: dict) -> dict:
     if not search_keyword or not target_domain:
         return {"status": "failed", "error": "missing search_keyword or target_domain"}
 
-    project_root = Path(__file__).resolve().parents[1]
+    project_root = Path(__file__).resolve().parent
     run_py = project_root / "run.py"
     if not run_py.exists():
         return {"status": "failed", "error": f"run.py not found at {run_py}"}
