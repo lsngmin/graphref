@@ -17,6 +17,7 @@ services:
       context: .
       dockerfile: apps/Dockerfile
     command: ["python", "worker.py"]
+    init: true
     shm_size: "1g"
     environment:
       REDIS_URL: redis://redis:6379/0
@@ -25,6 +26,22 @@ services:
       PYTHONUNBUFFERED: "1"
       USE_XVFB: "1"
       CAPSOLVER_API_KEY: ${CAPSOLVER_API_KEY:-}
+    depends_on:
+      - redis
+
+  bot:
+    build:
+      context: .
+      dockerfile: apps/Dockerfile
+    command: ["python", "telegram_bot.py"]
+    init: true
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      RQ_QUEUE: jobs
+      JOB_TIMEOUT: ${JOB_TIMEOUT:-1800}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ALLOWED_CHAT_IDS: ${TELEGRAM_ALLOWED_CHAT_IDS:-}
+      BOT_POLL_TIMEOUT: ${BOT_POLL_TIMEOUT:-20}
     depends_on:
       - redis
 
