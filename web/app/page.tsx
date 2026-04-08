@@ -1,209 +1,286 @@
-import Link from "next/link";
-import Topbar from "../components/Topbar";
-import { Button } from "@/components/ui/button";
-import TelegramConnect from "../components/TelegramConnect";
+"use client";
 
-export default function HomePage() {
-  const featureItems = [
-    {
-      title: "Schedule-driven traffic",
-      description:
-        "스케줄 단위로 트래픽을 분배하고 워커 할당을 고정해 반복 실행에 최적화합니다.",
-    },
-    {
-      title: "Queue visibility",
-      description:
-        "현재 몇 번째 작업인지, 대기열이 얼마나 남았는지 한 화면에서 확인합니다.",
-    },
-    {
-      title: "Telegram-only access",
-      description:
-        "이메일 인증 없이 Telegram 하나로 인증을 통일하고, 무료 플랜도 동일한 흐름으로 시작합니다.",
-    },
-  ];
+import { useState } from "react";
+import { MessageCircle, CheckCircle, ChevronDown } from "lucide-react";
 
-  const flowItems = [
-    {
-      step: "01",
-      title: "Connect Telegram",
-      description: "텔레그램 인증으로 워크스페이스 접근을 활성화합니다.",
-    },
-    {
-      step: "02",
-      title: "Define schedule",
-      description: "스케줄마다 트래픽과 워커 수를 지정합니다.",
-    },
-    {
-      step: "03",
-      title: "Monitor queue",
-      description: "실시간으로 작업 순번과 워커 상태를 추적합니다.",
-    },
-  ];
+const TELEGRAM_URL = "https://t.me/graphrefbot";
 
+const steps = [
+  {
+    number: "01",
+    title: "Open the bot on Telegram",
+    desc: "No account setup. No forms. Just hit Start.",
+  },
+  {
+    number: "02",
+    title: "Type your keyword and domain",
+    desc: "/run your keyword | yoursite.com",
+  },
+  {
+    number: "03",
+    title: "Graphref does the rest",
+    desc: "It searches Google and clicks your listing. You'll see it in Search Console.",
+  },
+];
+
+const plans = [
+  {
+    key: "starter",
+    name: "Starter",
+    price: "$1.99",
+    credits: 100,
+    desc: "Try it out. 100 clicks, no expiry.",
+    highlight: false,
+  },
+  {
+    key: "basic",
+    name: "Basic",
+    price: "$8.99",
+    credits: 500,
+    desc: "For sites you're serious about.",
+    highlight: true,
+  },
+  {
+    key: "pro",
+    name: "Pro",
+    price: "$15.99",
+    credits: 1000,
+    desc: "For when you're ready to push.",
+    highlight: false,
+  },
+];
+
+const faqs = [
+  {
+    q: "Does this show up in Search Console?",
+    a: "Yes. Each click is a real search query routed through Google, so it registers as organic traffic in Search Console.",
+  },
+  {
+    q: "Do credits expire?",
+    a: "No. Buy once, use whenever.",
+  },
+  {
+    q: "How do I get started?",
+    a: "Open Telegram and type /start. New users get 50 free credits — enough for 5 runs.",
+  },
+  {
+    q: "Can I cancel anytime?",
+    a: "There's nothing to cancel. Credits are one-time purchases, not subscriptions.",
+  },
+];
+
+function FAQ({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900">
-      <Topbar />
+    <div
+      className="border-b border-zinc-200 py-5 cursor-pointer select-none"
+      onClick={() => setOpen(!open)}
+    >
+      <div className="flex items-center justify-between gap-4">
+        <span className="text-[15px] font-medium text-zinc-900">{q}</span>
+        <ChevronDown
+          size={16}
+          className={`shrink-0 text-zinc-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </div>
+      {open && (
+        <p className="mt-3 text-[14px] text-zinc-500 leading-relaxed">{a}</p>
+      )}
+    </div>
+  );
+}
 
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-24 px-6 pb-24 pt-24 md:gap-28 md:pt-28">
-        <section className="grid gap-8 md:grid-cols-[minmax(0,1fr)_340px] md:items-end">
-          <div className="max-w-3xl space-y-6">
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
-              Orchestrate search traffic like a product team.
-            </h1>
-            <p className="max-w-2xl text-base leading-relaxed text-zinc-600 md:text-lg">
-              GrapHref는 스케줄 기반 트래픽 분배와 워커 실행을 통합해 줍니다.
-              큐 위치와 실행 현황을 실시간으로 모니터링하세요.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <TelegramConnect label="Telegram으로 시작" className="w-full sm:w-auto" />
-              <Button variant="secondary" asChild>
-                <Link href="/pricing">요금제 보기</Link>
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="rounded-2xl bg-zinc-900 p-6 text-zinc-100">
-              <p className="text-sm text-zinc-400">Live snapshot</p>
-              <pre className="mt-3 overflow-x-auto text-xs leading-6">
-                <code>{`NEXT RUN  21:30
-TRAFFIC   1,200 req
-WORKERS   4 pods
-QUEUE     #3 running`}</code>
-              </pre>
-            </div>
-            <div className="rounded-2xl border border-zinc-200 bg-white p-5 text-sm">
-              <div className="flex items-center justify-between text-xs text-zinc-500">
-                <span>Today at a glance</span>
-                <span className="font-mono text-[11px] text-zinc-600">
-                  Updated 21:12
-                </span>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-xs text-zinc-500">Scheduled runs</p>
-                  <p className="mt-1 text-lg font-semibold text-zinc-900">8</p>
-                </div>
-                <div>
-                  <p className="text-xs text-zinc-500">Success rate</p>
-                  <p className="mt-1 text-lg font-semibold text-zinc-900">99.4%</p>
-                </div>
-                <div>
-                  <p className="text-xs text-zinc-500">Queue depth</p>
-                  <p className="mt-1 text-lg font-semibold text-zinc-900">12</p>
-                </div>
-                <div>
-                  <p className="text-xs text-zinc-500">Active workers</p>
-                  <p className="mt-1 text-lg font-semibold text-zinc-900">4</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+export default function Home() {
+  return (
+    <main className="min-h-screen bg-white text-zinc-900 font-sans">
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur border-b border-zinc-100">
+        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+          <span className="text-sm font-semibold tracking-tight">GRAPHREF</span>
+          <a
+            href="#pricing"
+            className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
+          >
+            Pricing
+          </a>
+        </div>
+      </nav>
 
-        <section className="space-y-8">
-          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-            Why teams choose GrapHref
-          </h2>
-          <div className="grid gap-4 md:grid-cols-3">
-            {featureItems.map((feature) => (
-              <article key={feature.title} className="rounded-2xl bg-zinc-100 p-6">
-                <h3 className="text-lg font-semibold tracking-tight">
-                  {feature.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-                  {feature.description}
-                </p>
-              </article>
-            ))}
+      {/* Hero */}
+      <section className="pt-40 pb-28 px-6">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-[56px] leading-[1.08] font-bold tracking-tight text-zinc-900 mb-6">
+            Stop waiting for traffic.
+            <br />
+            Send it yourself.
+          </h1>
+          <p className="text-[18px] text-zinc-500 leading-relaxed max-w-xl mb-10">
+            Type a keyword. Pick your site. Graphref searches Google and clicks
+            your listing — so you don't have to wait months to move up.
+          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <a
+              href={TELEGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-zinc-900 text-white text-sm font-medium px-5 py-3 rounded-lg hover:bg-zinc-700 transition-colors"
+            >
+              <MessageCircle size={16} />
+              Open on Telegram
+            </a>
+            <a
+              href="#pricing"
+              className="inline-flex items-center gap-2 text-sm text-zinc-500 px-5 py-3 rounded-lg border border-zinc-200 hover:border-zinc-400 transition-colors"
+            >
+              View pricing
+            </a>
           </div>
-        </section>
+          <p className="mt-5 text-[13px] text-zinc-400">
+            New users get 50 free credits — no card required.
+          </p>
+        </div>
+      </section>
 
-        <section className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-zinc-800">Schedule preview</p>
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-600">
-                Next 6h
-              </span>
-            </div>
-            <div className="mt-5 space-y-3 text-xs text-zinc-600">
-              {[
-                ["21:30", "1,200 req", "4 workers"],
-                ["22:00", "900 req", "3 workers"],
-                ["22:30", "1,500 req", "5 workers"],
-              ].map((row) => (
-                <div key={row[0]} className="flex items-center justify-between">
-                  <span className="font-mono text-zinc-900">{row[0]}</span>
-                  <span>{row[1]}</span>
-                  <span>{row[2]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-zinc-800">Queue snapshot</p>
-              <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
-                Realtime
-              </span>
-            </div>
-            <div className="mt-5 space-y-3 text-xs text-zinc-600">
-              {[
-                ["#3", "tiktok save.com", "worker-02"],
-                ["#4", "keyword tracking", "worker-01"],
-                ["#5", "queue audit", "waiting"],
-              ].map((row) => (
-                <div key={row[0]} className="flex items-center justify-between">
-                  <span className="font-mono text-zinc-900">{row[0]}</span>
-                  <span className="truncate">{row[1]}</span>
-                  <span className="text-zinc-500">{row[2]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="space-y-8">
-          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+      {/* How it works */}
+      <section className="py-24 px-6 bg-zinc-50">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-[28px] font-bold tracking-tight mb-14">
             How it works
           </h2>
-          <div className="grid gap-4 md:grid-cols-3">
-            {flowItems.map((flow) => (
-              <article key={flow.step} className="rounded-2xl bg-white p-6">
-                <p className="text-sm font-medium text-zinc-500">{flow.step}</p>
-                <h3 className="mt-2 text-lg font-semibold tracking-tight">
-                  {flow.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-                  {flow.description}
-                </p>
-              </article>
+          <div className="space-y-10">
+            {steps.map((step) => (
+              <div key={step.number} className="flex gap-8 items-start">
+                <span className="text-[13px] font-mono text-zinc-300 pt-1 w-8 shrink-0">
+                  {step.number}
+                </span>
+                <div>
+                  <p className="text-[16px] font-semibold text-zinc-900 mb-1">
+                    {step.title}
+                  </p>
+                  <p className="text-[14px] text-zinc-500">{step.desc}</p>
+                </div>
+              </div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="rounded-3xl bg-zinc-900 px-8 py-10 text-zinc-100 md:px-10 md:py-12">
-          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-2xl space-y-2">
-              <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                Ready to launch your next schedule?
-              </h2>
-              <p className="text-sm leading-relaxed text-zinc-300 md:text-base">
-                Telegram 인증 후 무료 플랜으로 시작하거나, 바로 유료 플랜으로
-                확장하세요.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button variant="secondary" asChild>
-                <Link href="/pricing">Pricing</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/dashboard">Go to dashboard</Link>
-              </Button>
-            </div>
+      {/* Pricing */}
+      <section id="pricing" className="py-24 px-6">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-[28px] font-bold tracking-tight mb-3">
+            Pricing
+          </h2>
+          <p className="text-[15px] text-zinc-500 mb-12">
+            Credits never expire. No subscription.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {plans.map((plan) => (
+              <div
+                key={plan.key}
+                className={`rounded-xl border p-6 flex flex-col gap-4 ${
+                  plan.highlight
+                    ? "border-zinc-900 bg-zinc-900 text-white"
+                    : "border-zinc-200 bg-white text-zinc-900"
+                }`}
+              >
+                <div>
+                  <p
+                    className={`text-[13px] font-medium mb-3 ${plan.highlight ? "text-zinc-400" : "text-zinc-400"}`}
+                  >
+                    {plan.name}
+                  </p>
+                  <p className="text-[32px] font-bold tracking-tight leading-none mb-1">
+                    {plan.price}
+                  </p>
+                  <p
+                    className={`text-[13px] mt-2 ${plan.highlight ? "text-zinc-400" : "text-zinc-500"}`}
+                  >
+                    {plan.credits.toLocaleString()} credits
+                  </p>
+                </div>
+                <p
+                  className={`text-[13px] leading-relaxed ${plan.highlight ? "text-zinc-400" : "text-zinc-500"}`}
+                >
+                  {plan.desc}
+                </p>
+                <a
+                  href={TELEGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`mt-auto inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-lg transition-colors ${
+                    plan.highlight
+                      ? "bg-white text-zinc-900 hover:bg-zinc-100"
+                      : "bg-zinc-900 text-white hover:bg-zinc-700"
+                  }`}
+                >
+                  <MessageCircle size={14} />
+                  Get started
+                </a>
+              </div>
+            ))}
           </div>
-        </section>
-      </main>
-    </div>
+          <div className="mt-8 flex flex-wrap gap-4 text-[13px] text-zinc-400">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle size={13} className="text-zinc-400" />
+              No subscription
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle size={13} className="text-zinc-400" />
+              Credits never expire
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle size={13} className="text-zinc-400" />
+              50 free credits on signup
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-6 bg-zinc-50">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-[28px] font-bold tracking-tight mb-10">FAQ</h2>
+          <div>
+            {faqs.map((faq) => (
+              <FAQ key={faq.q} q={faq.q} a={faq.a} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer CTA */}
+      <section className="py-24 px-6">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-[36px] font-bold tracking-tight mb-4">
+            Ready to try it?
+          </h2>
+          <p className="text-[16px] text-zinc-500 mb-8">
+            Open the bot and run your first job in under a minute.
+          </p>
+          <a
+            href={TELEGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-zinc-900 text-white text-sm font-medium px-5 py-3 rounded-lg hover:bg-zinc-700 transition-colors"
+          >
+            <MessageCircle size={16} />
+            Open on Telegram
+          </a>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-zinc-100 py-8 px-6">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <span className="text-[13px] font-semibold tracking-tight">
+            GRAPHREF
+          </span>
+          <span className="text-[12px] text-zinc-400">
+            © {new Date().getFullYear()} Graphref
+          </span>
+        </div>
+      </footer>
+    </main>
   );
 }

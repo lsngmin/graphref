@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const auth = cookieStore.get("tg_auth")?.value;
   if (auth !== "1") {
     return Response.json({ connected: false }, { status: 401 });

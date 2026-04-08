@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     return new Response("Invalid auth data", { status: 401 });
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const username = body.username || body.first_name || "user";
 
   cookieStore.set("tg_auth", "1", {

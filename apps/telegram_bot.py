@@ -239,31 +239,36 @@ def command_name(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 def usage_text() -> str:
-    return (
-        "Graphref commands\n\n"
-        "/run <keyword> | <domain>\n"
-        "Start a task.\n"
-        "Example: /run tiktok save.com | tiktok-save.com\n\n"
-        "/status [job_id]\n"
-        "Check a job. If omitted, the latest job is used.\n\n"
-        "/jobs [n]\n"
-        "Show recent jobs.\n\n"
-        "/queue\n"
-        "Show queue status.\n\n"
-        "/cancel [job_id]\n"
-        "Cancel a queued job only.\n\n"
-        "/credits\n"
-        "Show your current credits.\n\n"
-        "/buy\n"
-        "Open credit packages.\n\n"
-        "/referral\n"
-        "Show your referral link.\n\n"
-        "/help\n"
-        "Show this message.\n\n"
-        "Credits\n"
-        "- 10 credits per run\n"
-        "- New users start with 50 credits"
-    )
+    lines = [
+        "<b>📖 Graphref Bot Commands</b>",
+        "",
+        "<b>[ Core Actions ]</b>",
+        "<code>/run &lt;keyword&gt; | &lt;domain&gt;</code>",
+        " → Start a new task. (Costs <b>10 credits</b>)",
+        "",
+        "<code>/status [job_id]</code>",
+        " → Check a job. Omit ID for latest.",
+        "",
+        "<code>/jobs [n]</code>",
+        " → Show recent jobs. (Default: 5)",
+        "",
+        "<code>/queue</code>",
+        " → Show server load & queue.",
+        "",
+        "<code>/cancel [job_id]</code>",
+        " → Cancel a <b>queued</b> job. Refunds 10 credits.",
+        "",
+        "<b>[ Account & Growth ]</b>",
+        "<code>/credits</code> → Check your balance.",
+        "<code>/buy</code> → Top up credits.",
+        "<code>/referral</code> → Get your invite link. (+30 credits when referral runs first job)",
+        "<code>/help</code> → Show this guide.",
+        "",
+        "<b>🎁 Bonuses</b>",
+        "• New users start with <b>50 free credits</b>.",
+        "• Each task costs <b>10 credits</b>.",
+    ]
+    return "\n".join(lines)
 
 
 def start_text(redis: Redis, chat_id: str) -> str:
@@ -393,7 +398,7 @@ def handle_start(redis: Redis, chat_id: str, text: str) -> None:
 def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
     keyword, domain = parse_run_command(text)
     if not keyword or not domain:
-        send_message(chat_id, "Invalid format.\n\n" + usage_text())
+        send_message(chat_id, "Invalid format.\n\n" + usage_text(), parse_mode="HTML")
         return
 
     success, balance = deduct_credits(
@@ -669,7 +674,7 @@ def process_message(redis: Redis, queue: Queue, message: dict) -> None:
     ensure_user(redis, chat_id)
 
     if name == "/help":
-        send_message(chat_id, usage_text())
+        send_message(chat_id, usage_text(), parse_mode="HTML")
         return
     if name == "/run":
         handle_run(redis, queue, chat_id, text)
@@ -700,7 +705,7 @@ def process_message(redis: Redis, queue: Queue, message: dict) -> None:
         handle_referral(chat_id)
         return
 
-    send_message(chat_id, "Unknown command.\n\n" + usage_text())
+    send_message(chat_id, "Unknown command.\n\n" + usage_text(), parse_mode="HTML")
 
 
 # ---------------------------------------------------------------------------
