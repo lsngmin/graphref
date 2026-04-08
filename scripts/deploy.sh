@@ -10,7 +10,7 @@ Optional env:
   DEPLOY_PATH       Remote repo path (default: ~/graphref)
   DEPLOY_BRANCH     Branch to deploy (default: current branch)
   DEPLOY_REMOTE     Git remote (default: origin)
-  DEPLOY_SERVICE_CMD Remote restart command (default: docker compose up -d --build)
+  DEPLOY_SERVICE_CMD Remote restart command (default: sudo docker compose up -d --build)
 
 Notes:
   - SSH target is hard-coded for personal use.
@@ -31,7 +31,7 @@ DEPLOY_SSH_PORT="58652"
 DEPLOY_SSH_KEY="${HOME}/.ssh/id_rsa"
 DEPLOY_PATH="${DEPLOY_PATH:-~/graphref}"
 DEPLOY_REMOTE="${DEPLOY_REMOTE:-origin}"
-DEPLOY_SERVICE_CMD="${DEPLOY_SERVICE_CMD:-docker compose up -d --build}"
+DEPLOY_SERVICE_CMD="${DEPLOY_SERVICE_CMD:-sudo docker compose up -d --build}"
 CURRENT_BRANCH="${DEPLOY_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 SSH_TARGET="${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}"
 SSH_ARGS=(-p "${DEPLOY_SSH_PORT}")
