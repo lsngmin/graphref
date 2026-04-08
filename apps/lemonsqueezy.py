@@ -68,7 +68,7 @@ def create_checkout_url(chat_id: str, package_key: str) -> tuple[str, int]:
                     "custom": {
                         "chat_id": chat_id,
                         "package_key": package_key,
-                        "credits": credits,
+                        "credits": str(credits),
                     }
                 },
                 "checkout_options": {
