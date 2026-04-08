@@ -101,40 +101,97 @@ const stats = [
   { icon: Zap, value: "< 60s", label: "Time to first run" },
 ];
 
-// Sparkline chart path for the upward trend visual
-const CHART_POINTS = [
-  [0, 72], [12, 68], [24, 65], [36, 60], [48, 55], [60, 48], [72, 42],
-  [84, 38], [96, 30], [108, 25], [120, 18], [132, 12], [144, 8], [156, 4], [168, 2],
-];
+// GSC-style chart — 6 weeks of data, flat then sharp rise
+const W = 560;
+const H = 160;
+const PAD = { top: 16, right: 20, bottom: 32, left: 44 };
+const RAW = [8, 10, 9, 11, 13, 12, 14, 18, 24, 35, 52, 74, 98, 124];
+const X_LABELS = ["Mar 3", "Mar 10", "Mar 17", "Mar 24", "Mar 31", "Apr 7", "Apr 14"];
+const Y_TICKS = [0, 40, 80, 120];
 
-function TrendChart() {
-  const pts = CHART_POINTS.map(([x, y]) => `${x},${y}`).join(" ");
-  const fillPts = `0,80 ${pts} 168,80`;
+function HeroTrendChart() {
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+  const maxVal = 140;
+
+  const toX = (i: number) => PAD.left + (i / (RAW.length - 1)) * innerW;
+  const toY = (v: number) => PAD.top + innerH - (v / maxVal) * innerH;
+
+  const linePts = RAW.map((v, i) => `${toX(i)},${toY(v)}`).join(" ");
+  const fillPts = `${toX(0)},${PAD.top + innerH} ${linePts} ${toX(RAW.length - 1)},${PAD.top + innerH}`;
+
   return (
-    <div className="relative w-full max-w-[220px]">
-      <svg viewBox="0 0 168 80" className="w-full h-auto overflow-visible">
+    <div className="w-full bg-white border border-zinc-200 rounded-2xl px-5 pt-5 pb-4 shadow-sm">
+      {/* Chart header */}
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Google Search Console</p>
+          <p className="text-[14px] font-semibold text-zinc-900">Impressions · last 6 weeks</p>
+        </div>
+        <span className="text-[12px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
+          ↑ +1,450%
+        </span>
+      </div>
+
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto overflow-visible">
         <defs>
-          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#18181b" stopOpacity="0.12" />
+          <linearGradient id="heroChartGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#18181b" stopOpacity="0.10" />
             <stop offset="100%" stopColor="#18181b" stopOpacity="0" />
           </linearGradient>
         </defs>
-        <polygon points={fillPts} fill="url(#chartGrad)" />
+
+        {/* Horizontal grid lines */}
+        {Y_TICKS.map((tick) => (
+          <g key={tick}>
+            <line
+              x1={PAD.left} y1={toY(tick)}
+              x2={W - PAD.right} y2={toY(tick)}
+              stroke="#e4e4e7" strokeWidth="1"
+            />
+            <text
+              x={PAD.left - 8} y={toY(tick) + 4}
+              textAnchor="end" fontSize="10" fill="#a1a1aa"
+            >
+              {tick}
+            </text>
+          </g>
+        ))}
+
+        {/* X-axis labels */}
+        {X_LABELS.map((label, i) => (
+          <text
+            key={label}
+            x={toX(Math.round(i * (RAW.length - 1) / (X_LABELS.length - 1)))}
+            y={H - 4}
+            textAnchor="middle" fontSize="10" fill="#a1a1aa"
+          >
+            {label}
+          </text>
+        ))}
+
+        {/* Fill area */}
+        <polygon points={fillPts} fill="url(#heroChartGrad)" />
+
+        {/* Line */}
         <polyline
-          points={pts}
+          points={linePts}
           fill="none"
           stroke="#18181b"
-          strokeWidth="2"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* Dot at end */}
-        <circle cx="168" cy="2" r="3.5" fill="#18181b" />
+
+        {/* End dot */}
+        <circle cx={toX(RAW.length - 1)} cy={toY(RAW[RAW.length - 1])} r="4" fill="#18181b" />
+        <circle cx={toX(RAW.length - 1)} cy={toY(RAW[RAW.length - 1])} r="7" fill="#18181b" fillOpacity="0.12" />
       </svg>
-      <div className="absolute top-0 right-0 translate-x-2 -translate-y-1">
-        <span className="text-[10px] font-semibold text-zinc-900 bg-white border border-zinc-200 rounded px-1.5 py-0.5 shadow-sm">
-          ↑ CTR
-        </span>
+
+      {/* Graphref ran label */}
+      <div className="mt-2 flex items-center gap-1.5">
+        <div className="w-2 h-2 rounded-full bg-zinc-900" />
+        <p className="text-[11px] text-zinc-400">Graphref first run: <span className="text-zinc-600 font-medium">Mar 24</span></p>
       </div>
     </div>
   );
@@ -142,42 +199,78 @@ function TrendChart() {
 
 function TelegramMockChat() {
   return (
-    <div className="w-full max-w-[280px] bg-[#efeff4] rounded-2xl overflow-hidden shadow-xl border border-zinc-200/60">
+    <div className="w-full max-w-[400px] bg-[#efeff4] rounded-2xl overflow-hidden shadow-xl border border-zinc-200/60">
       {/* Header */}
       <div className="bg-white px-4 py-3 flex items-center gap-3 border-b border-zinc-100">
-        <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
-          <span className="text-white text-[10px] font-bold">G</span>
+        <div className="relative shrink-0">
+          <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center">
+            <span className="text-white text-[12px] font-bold">G</span>
+          </div>
+          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-white" />
         </div>
-        <div>
-          <p className="text-[13px] font-semibold text-zinc-900 leading-none">Graphref Bot</p>
-          <p className="text-[11px] text-green-500 mt-0.5">online</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-[14px] font-semibold text-zinc-900 leading-none">Graphref Bot</p>
+          <p className="text-[12px] text-green-500 mt-0.5">online</p>
+        </div>
+        <div className="flex items-center gap-3 text-zinc-300">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
         </div>
       </div>
+
       {/* Messages */}
-      <div className="px-3 py-4 space-y-2.5 text-[12px]">
+      <div className="px-4 py-5 space-y-3 text-[13px]">
+        {/* Date divider */}
+        <div className="flex items-center gap-3 my-1">
+          <div className="flex-1 h-px bg-zinc-200/70" />
+          <span className="text-[10px] text-zinc-400 font-medium">Today</span>
+          <div className="flex-1 h-px bg-zinc-200/70" />
+        </div>
+
         {/* User message */}
         <div className="flex justify-end">
-          <div className="bg-[#4f81e0] text-white rounded-2xl rounded-tr-sm px-3 py-2 max-w-[80%] leading-snug">
-            /run best coffee grinder | mycoffeeshop.com
+          <div className="flex flex-col items-end gap-1 max-w-[82%]">
+            <div className="bg-[#4f81e0] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 leading-snug">
+              /run best coffee grinder | mycoffeeshop.com
+            </div>
+            <span className="text-[10px] text-zinc-400 pr-1">9:41 AM ✓✓</span>
           </div>
         </div>
+
         {/* Bot response 1 */}
-        <div className="flex justify-start">
-          <div className="bg-white text-zinc-800 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[80%] leading-snug shadow-sm">
-            ✅ Job started — 10 visits queued
+        <div className="flex justify-start gap-2">
+          <div className="w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center shrink-0 mt-auto mb-4">
+            <span className="text-white text-[9px] font-bold">G</span>
+          </div>
+          <div className="flex flex-col gap-1 max-w-[82%]">
+            <div className="bg-white text-zinc-800 rounded-2xl rounded-tl-sm px-3.5 py-2.5 leading-snug shadow-sm">
+              ✅ Job started — 10 visits queued
+            </div>
+            <div className="bg-white text-zinc-800 rounded-2xl px-3.5 py-2.5 leading-snug shadow-sm">
+              📊 Done. Check Search Console in a few hours.
+            </div>
+            <span className="text-[10px] text-zinc-400 pl-1">9:41 AM</span>
           </div>
         </div>
-        {/* Bot response 2 */}
-        <div className="flex justify-start">
-          <div className="bg-white text-zinc-800 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[80%] leading-snug shadow-sm">
-            📊 Done. Check Search Console in a few hours.
-          </div>
-        </div>
+
         {/* User message 2 */}
         <div className="flex justify-end">
-          <div className="bg-[#4f81e0] text-white rounded-2xl rounded-tr-sm px-3 py-2 max-w-[80%] leading-snug">
-            Wow, already seeing clicks 🚀
+          <div className="flex flex-col items-end gap-1 max-w-[82%]">
+            <div className="bg-[#4f81e0] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 leading-snug">
+              Wow, already seeing clicks 🚀
+            </div>
+            <span className="text-[10px] text-zinc-400 pr-1">9:43 AM ✓✓</span>
           </div>
+        </div>
+      </div>
+
+      {/* Input bar */}
+      <div className="bg-white px-3 py-2.5 flex items-center gap-2 border-t border-zinc-100">
+        <div className="flex-1 bg-zinc-100 rounded-full px-4 py-2 text-[13px] text-zinc-400">
+          Message
+        </div>
+        <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
         </div>
       </div>
     </div>
@@ -222,50 +315,51 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-40 pb-28 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-16">
-          {/* Left: text */}
-          <div className="flex-1">
-            <h1 className="text-[56px] leading-[1.08] font-bold tracking-tight text-zinc-900 mb-6">
-              Stop waiting for traffic.
-              <br />
-              Send it yourself.
-            </h1>
-            <p className="text-[18px] text-zinc-500 leading-relaxed max-w-xl mb-10">
-              Type a keyword. Pick your site. Graphref drives real search visits
-              to your listing — so you don't have to wait months to move up.
-            </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <a
-                href={TELEGRAM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-zinc-900 text-white text-sm font-medium px-5 py-3 rounded-lg hover:bg-zinc-700 transition-colors"
-              >
-                <MessageCircle size={16} />
-                Open on Telegram
-              </a>
-              <a
-                href="#pricing"
-                className="inline-flex items-center gap-2 text-sm text-zinc-500 px-5 py-3 rounded-lg border border-zinc-200 hover:border-zinc-400 transition-colors"
-              >
-                View pricing
-              </a>
+      <section className="pt-40 pb-16 px-6">
+        <div className="max-w-5xl mx-auto">
+          {/* Top row: text + chat */}
+          <div className="flex flex-col lg:flex-row items-center gap-14 mb-14">
+            {/* Left: text */}
+            <div className="flex-1">
+              <h1 className="text-[56px] leading-[1.08] font-bold tracking-tight text-zinc-900 mb-6">
+                Stop waiting for traffic.
+                <br />
+                Send it yourself.
+              </h1>
+              <p className="text-[18px] text-zinc-500 leading-relaxed max-w-xl mb-10">
+                Type a keyword. Pick your site. Graphref drives real search visits
+                to your listing — so you don't have to wait months to move up.
+              </p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <a
+                  href={TELEGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-zinc-900 text-white text-sm font-medium px-5 py-3 rounded-lg hover:bg-zinc-700 transition-colors"
+                >
+                  <MessageCircle size={16} />
+                  Open on Telegram
+                </a>
+                <a
+                  href="#pricing"
+                  className="inline-flex items-center gap-2 text-sm text-zinc-500 px-5 py-3 rounded-lg border border-zinc-200 hover:border-zinc-400 transition-colors"
+                >
+                  View pricing
+                </a>
+              </div>
+              <p className="mt-5 text-[13px] text-zinc-400">
+                New users get 50 free credits — no card required.
+              </p>
             </div>
-            <p className="mt-5 text-[13px] text-zinc-400">
-              New users get 50 free credits — no card required.
-            </p>
+
+            {/* Right: Telegram mock chat */}
+            <div className="flex-shrink-0 w-full lg:w-auto flex justify-center">
+              <TelegramMockChat />
+            </div>
           </div>
 
-          {/* Right: Telegram mock chat */}
-          <div className="flex-shrink-0 flex flex-col items-center gap-6">
-            <TelegramMockChat />
-            {/* Mini chart below chat */}
-            <div className="flex flex-col items-center gap-1">
-              <TrendChart />
-              <p className="text-[11px] text-zinc-400 tracking-wide uppercase">Search Console impressions</p>
-            </div>
-          </div>
+          {/* Bottom: full-width GSC chart */}
+          <HeroTrendChart />
         </div>
       </section>
 
