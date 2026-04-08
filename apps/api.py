@@ -3,18 +3,29 @@ import uuid
 from pathlib import Path
 from typing import Any, List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from redis import Redis
 from rq import Queue
 from rq.job import Job
 
+try:
+    from lemonsqueezy import verify_webhook_signature
+except ModuleNotFoundError:
+    from apps.lemonsqueezy import verify_webhook_signature
+
+try:
+    from supabase_store import SupabaseStore
+except ModuleNotFoundError:
+    from apps.supabase_store import SupabaseStore
+
 from tasks import run_job
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 QUEUE_NAME = os.getenv("RQ_QUEUE", "jobs")
 JOB_TIMEOUT = int(os.getenv("JOB_TIMEOUT", "1800"))
+LEMON_SQUEEZY_WEBHOOK_SECRET = os.getenv("LEMON_SQUEEZY_WEBHOOK_SECRET", "")
 
 app = FastAPI()
 
@@ -59,6 +70,10 @@ def healthz():
     return {"ok": True, "queue": QUEUE_NAME}
 
 
+def get_user_store() -> SupabaseStore:
+    return SupabaseStore.from_env()
+
+
 @app.post("/jobs")
 def create_jobs(payload: JobsRequest):
     jobs = payload.jobs or ([payload.job] if payload.job else [])
@@ -74,6 +89,49 @@ def create_jobs(payload: JobsRequest):
         job_ids.append(rq_job.id)
 
     return {"batch_id": batch_id, "job_ids": job_ids}
+
+
+@app.post("/lemonsqueezy/webhook")
+async def lemonsqueezy_webhook(request: Request):
+    if not LEMON_SQUEEZY_WEBHOOK_SECRET:
+        raise HTTPException(status_code=500, detail="Missing LEMON_SQUEEZY_WEBHOOK_SECRET")
+
+    raw_body = await request.body()
+    signature = request.headers.get("X-Signature", "")
+    if not verify_webhook_signature(raw_body, signature, LEMON_SQUEEZY_WEBHOOK_SECRET):
+        raise HTTPException(status_code=401, detail="Invalid webhook signature")
+
+    payload = await request.json()
+    meta = payload.get("meta") or {}
+    event_name = meta.get("event_name")
+    if event_name != "order_created":
+        return {"ok": True, "ignored": event_name}
+
+    data = payload.get("data") or {}
+    attributes = data.get("attributes") or {}
+    custom = (meta.get("custom_data") or {})
+
+    chat_id = str(custom.get("chat_id") or "").strip()
+    package_key = str(custom.get("package_key") or "").strip()
+    credits = int(custom.get("credits") or 0)
+    if not chat_id or credits <= 0:
+        raise HTTPException(status_code=400, detail="Missing custom_data.chat_id or credits")
+
+    applied, balance = get_user_store().record_lemonsqueezy_order(
+        order_id=str(data.get("id") or ""),
+        chat_id=chat_id,
+        package_key=package_key,
+        credits_added=credits,
+        identifier=str(attributes.get("identifier") or ""),
+        order_number=int(attributes.get("order_number") or 0),
+        user_email=attributes.get("user_email"),
+        currency=str(attributes.get("currency") or ""),
+        total=int(attributes.get("total") or 0),
+        status=str(attributes.get("status") or ""),
+        raw=payload,
+    )
+
+    return {"ok": True, "applied": applied, "balance": balance}
 
 
 @app.get("/jobs/{job_id}")

@@ -12,7 +12,20 @@ from redis import Redis
 from rq import Queue
 from rq.job import Job
 
-from tasks import run_job
+try:
+    from lemonsqueezy import LemonSqueezyError, create_checkout_url, get_packages
+except ModuleNotFoundError:
+    from apps.lemonsqueezy import LemonSqueezyError, create_checkout_url, get_packages
+
+try:
+    from supabase_store import SupabaseStore, SupabaseStoreError
+except ModuleNotFoundError:
+    from apps.supabase_store import SupabaseStore, SupabaseStoreError
+
+try:
+    from tasks import run_job
+except ModuleNotFoundError:
+    from apps.tasks import run_job
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 QUEUE_NAME = os.getenv("RQ_QUEUE", "jobs")
@@ -28,9 +41,6 @@ REDIS_UPDATE_OFFSET_KEY = "telegram:update_offset"
 REDIS_PENDING_JOBS_KEY = "telegram:pending_jobs"
 REDIS_JOB_PREFIX = "telegram:job:"
 REDIS_CHAT_JOBS_PREFIX = "telegram:chat_jobs:"
-REDIS_CREDITS_PREFIX = "telegram:credits:"
-REDIS_USER_PREFIX = "telegram:user:"
-REDIS_REFERRAL_PREFIX = "telegram:referral:"
 TELEGRAM_MESSAGE_LIMIT = 3900
 RECENT_JOB_LIMIT = 20
 
@@ -38,14 +48,7 @@ RECENT_JOB_LIMIT = 20
 CREDITS_PER_RUN = 10
 CREDITS_NEW_USER = 50
 CREDITS_REFERRAL_BONUS = 30  # awarded to referrer on referree's first run
-CREDITS_PER_STAR = 10
-
-# Star packages: (label, stars, credits)
-STAR_PACKAGES = [
-    ("starter", 10, 100),
-    ("basic", 50, 500),
-    ("pro", 100, 1000),
-]
+USER_STORE: Optional[SupabaseStore] = None
 
 
 # ---------------------------------------------------------------------------
@@ -64,6 +67,13 @@ def decode(value):
     if isinstance(value, bytes):
         return value.decode("utf-8", errors="replace")
     return value
+
+
+def get_user_store() -> SupabaseStore:
+    global USER_STORE
+    if USER_STORE is None:
+        USER_STORE = SupabaseStore.from_env()
+    return USER_STORE
 
 
 # ---------------------------------------------------------------------------
@@ -102,44 +112,33 @@ def send_message(chat_id: str, text: str, parse_mode: Optional[str] = None) -> N
     telegram_request("sendMessage", payload, timeout=30)
 
 
-def answer_pre_checkout_query(query_id: str, ok: bool, error_message: str = "") -> None:
-    payload: dict = {"pre_checkout_query_id": query_id, "ok": ok}
-    if not ok and error_message:
-        payload["error_message"] = error_message
-    telegram_request("answerPreCheckoutQuery", payload)
-
-
 # ---------------------------------------------------------------------------
 # Credit helpers
 # ---------------------------------------------------------------------------
 
 def get_credits(redis: Redis, chat_id: str) -> int:
-    raw = redis.get(f"{REDIS_CREDITS_PREFIX}{chat_id}")
-    return int(decode(raw)) if raw else 0
+    user = get_user_store().get_user(chat_id)
+    return int(user["credits"]) if user else 0
 
 
-def add_credits(redis: Redis, chat_id: str, amount: int) -> int:
-    new_balance = redis.incrby(f"{REDIS_CREDITS_PREFIX}{chat_id}", amount)
-    return int(new_balance)
+def add_credits(
+    redis: Redis,
+    chat_id: str,
+    amount: int,
+    reason: str = "credit_add",
+    metadata: Optional[dict] = None,
+) -> int:
+    return get_user_store().add_credits(chat_id, amount, reason=reason, metadata=metadata)
 
 
-def deduct_credits(redis: Redis, chat_id: str, amount: int) -> tuple[bool, int]:
-    """Returns (success, new_balance). Atomic check-and-deduct."""
-    key = f"{REDIS_CREDITS_PREFIX}{chat_id}"
-    with redis.pipeline() as pipe:
-        while True:
-            try:
-                pipe.watch(key)
-                current = int(decode(pipe.get(key) or b"0"))
-                if current < amount:
-                    pipe.reset()
-                    return False, current
-                pipe.multi()
-                pipe.decrby(key, amount)
-                result = pipe.execute()
-                return True, int(result[0])
-            except Exception:
-                continue
+def deduct_credits(
+    redis: Redis,
+    chat_id: str,
+    amount: int,
+    reason: str = "credit_deduct",
+    metadata: Optional[dict] = None,
+) -> tuple[bool, int]:
+    return get_user_store().deduct_credits(chat_id, amount, reason=reason, metadata=metadata)
 
 
 # ---------------------------------------------------------------------------
@@ -147,30 +146,35 @@ def deduct_credits(redis: Redis, chat_id: str, amount: int) -> tuple[bool, int]:
 # ---------------------------------------------------------------------------
 
 def is_new_user(redis: Redis, chat_id: str) -> bool:
-    return not redis.exists(f"{REDIS_USER_PREFIX}{chat_id}")
+    return get_user_store().get_user(chat_id) is None
 
 
 def register_user(redis: Redis, chat_id: str, referrer_id: Optional[str] = None) -> None:
-    user_key = f"{REDIS_USER_PREFIX}{chat_id}"
-    mapping: dict = {"created_at": datetime.now(timezone.utc).isoformat()}
-    if referrer_id:
-        mapping["referred_by"] = referrer_id
-    redis.hset(user_key, mapping=mapping)
-    add_credits(redis, chat_id, CREDITS_NEW_USER)
+    get_user_store().register_user(
+        chat_id,
+        initial_credits=CREDITS_NEW_USER,
+        referred_by=referrer_id,
+        reason="signup_bonus",
+        metadata={"referred_by": referrer_id} if referrer_id else {},
+    )
 
 
 def get_referrer(redis: Redis, chat_id: str) -> Optional[str]:
-    raw = redis.hget(f"{REDIS_USER_PREFIX}{chat_id}", "referred_by")
-    return decode(raw) if raw else None
+    user = get_user_store().get_user(chat_id)
+    return user.get("referred_by") if user else None
 
 
 def has_run_before(redis: Redis, chat_id: str) -> bool:
-    raw = redis.hget(f"{REDIS_USER_PREFIX}{chat_id}", "first_run_done")
-    return decode(raw) == "1" if raw else False
+    user = get_user_store().get_user(chat_id)
+    return bool(user.get("first_run_done")) if user else False
 
 
 def mark_first_run(redis: Redis, chat_id: str) -> None:
-    redis.hset(f"{REDIS_USER_PREFIX}{chat_id}", "first_run_done", "1")
+    get_user_store().begin_first_run(chat_id)
+
+
+def begin_first_run(redis: Redis, chat_id: str) -> tuple[bool, Optional[str]]:
+    return get_user_store().begin_first_run(chat_id)
 
 
 def get_referral_code(chat_id: str) -> str:
@@ -382,7 +386,13 @@ def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
         send_message(chat_id, "Invalid format.\n\n" + usage_text())
         return
 
-    success, balance = deduct_credits(redis, chat_id, CREDITS_PER_RUN)
+    success, balance = deduct_credits(
+        redis,
+        chat_id,
+        CREDITS_PER_RUN,
+        reason="run_charge",
+        metadata={"keyword": keyword, "domain": domain},
+    )
     if not success:
         send_message(
             chat_id,
@@ -390,22 +400,44 @@ def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
         )
         return
 
-    # Referral bonus: award referrer on referree's first run
-    if not has_run_before(redis, chat_id):
-        mark_first_run(redis, chat_id)
-        referrer_id = get_referrer(redis, chat_id)
-        if referrer_id:
-            new_referrer_balance = add_credits(redis, referrer_id, CREDITS_REFERRAL_BONUS)
-            try:
-                send_message(
-                    referrer_id,
-                    f"Referral bonus! Your referral just ran their first job.\n"
-                    f"+{CREDITS_REFERRAL_BONUS} credits added. Balance: {new_referrer_balance}",
-                )
-            except Exception:
-                pass
+    try:
+        job = enqueue_job(redis, queue, chat_id, keyword, domain)
+    except Exception as exc:
+        refunded_balance = add_credits(
+            redis,
+            chat_id,
+            CREDITS_PER_RUN,
+            reason="enqueue_refund",
+            metadata={"keyword": keyword, "domain": domain, "error": str(exc)},
+        )
+        send_message(
+            chat_id,
+            (
+                "Failed to queue the job. Your credits were refunded.\n"
+                f"Balance: {refunded_balance}"
+            ),
+        )
+        return
 
-    job = enqueue_job(redis, queue, chat_id, keyword, domain)
+    # Referral bonus: award referrer on referree's first successfully queued job
+    is_first_run, referrer_id = begin_first_run(redis, chat_id)
+    if is_first_run and referrer_id:
+        new_referrer_balance = add_credits(
+            redis,
+            referrer_id,
+            CREDITS_REFERRAL_BONUS,
+            reason="referral_bonus",
+            metadata={"referred_chat_id": chat_id},
+        )
+        try:
+            send_message(
+                referrer_id,
+                f"Referral bonus! Your referral just ran their first job.\n"
+                f"+{CREDITS_REFERRAL_BONUS} credits added. Balance: {new_referrer_balance}",
+            )
+        except Exception:
+            pass
+
     send_message(
         chat_id,
         (
@@ -526,7 +558,13 @@ def handle_cancel(redis: Redis, chat_id: str, text: str) -> None:
         job.cancel()
         redis.srem(REDIS_PENDING_JOBS_KEY, job_id)
         # Refund credits
-        new_balance = add_credits(redis, chat_id, CREDITS_PER_RUN)
+        new_balance = add_credits(
+            redis,
+            chat_id,
+            CREDITS_PER_RUN,
+            reason="cancel_refund",
+            metadata={"job_id": job_id},
+        )
         send_message(chat_id, f"Job cancelled: {job_id}\n{CREDITS_PER_RUN} credits refunded. Balance: {new_balance}")
         return
     if status in {"finished", "failed", "canceled", "stopped"}:
@@ -551,52 +589,24 @@ def handle_credits(redis: Redis, chat_id: str) -> None:
 
 def handle_buy(chat_id: str) -> None:
     lines = ["Choose a package and send the command:\n"]
-    for label, stars, credits in STAR_PACKAGES:
-        lines.append(f"/buy_{label} — {credits} credits ({stars} Stars)")
+    for label, credits in get_packages():
+        lines.append(f"/buy_{label} — {credits} credits")
     send_message(chat_id, "\n".join(lines))
 
 
 def handle_buy_package(redis: Redis, chat_id: str, package_key: str) -> None:
-    package = next((p for p in STAR_PACKAGES if p[0] == package_key), None)
-    if not package:
-        send_message(chat_id, "Unknown package. Use /buy to see options.")
+    try:
+        checkout_url, credits = create_checkout_url(chat_id, package_key)
+    except LemonSqueezyError as exc:
+        send_message(chat_id, f"Failed to create checkout: {exc}")
         return
 
-    label, stars, credits = package
-    payload = f"credits:{credits}"
-
-    try:
-        telegram_request(
-            "sendInvoice",
-            {
-                "chat_id": chat_id,
-                "title": f"Graphref {label.capitalize()} Pack",
-                "description": f"{credits} credits ({stars} Telegram Stars)",
-                "payload": payload,
-                "currency": "XTR",
-                "prices": [{"label": f"{credits} Credits", "amount": stars}],
-            },
-        )
-    except Exception as exc:
-        send_message(chat_id, f"Failed to create invoice: {exc}")
-
-
-def handle_successful_payment(redis: Redis, chat_id: str, payment: dict) -> None:
-    payload = payment.get("invoice_payload", "")
-    try:
-        _, credits_str = payload.split(":", 1)
-        credits = int(credits_str)
-    except Exception:
-        send_message(chat_id, "Payment received but could not parse credits. Please contact support.")
-        return
-
-    new_balance = add_credits(redis, chat_id, credits)
     send_message(
         chat_id,
         (
-            f"Payment confirmed!\n"
-            f"+{credits} credits added.\n"
-            f"Balance: {new_balance}"
+            f"Checkout ready for {credits} credits.\n"
+            f"{checkout_url}\n\n"
+            "Credits will be added automatically after payment confirmation."
         ),
     )
 
@@ -622,15 +632,15 @@ def handle_referral(chat_id: str) -> None:
 def process_message(redis: Redis, queue: Queue, message: dict) -> None:
     chat = message.get("chat") or {}
     chat_id = str(chat.get("id", ""))
+    chat_type = str(chat.get("type", ""))
     text = (message.get("text") or "").strip()
-    payment = message.get("successful_payment")
 
     if not chat_id:
         return
 
-    # Handle successful Star payment
-    if payment:
-        handle_successful_payment(redis, chat_id, payment)
+    if chat_type != "private":
+        if text:
+            send_message(chat_id, "This bot works in private chat only. Open DM with the bot and try again.")
         return
 
     if not text:
@@ -669,7 +679,7 @@ def process_message(redis: Redis, queue: Queue, message: dict) -> None:
     if name == "/buy":
         handle_buy(chat_id)
         return
-    if name in {f"/buy_{p[0]}" for p in STAR_PACKAGES}:
+    if name in {f"/buy_{label}" for label, _credits in get_packages()}:
         package_key = name.removeprefix("/buy_")
         handle_buy_package(redis, chat_id, package_key)
         return
@@ -680,10 +690,6 @@ def process_message(redis: Redis, queue: Queue, message: dict) -> None:
     send_message(chat_id, "Unknown command.\n\n" + usage_text())
 
 
-def process_pre_checkout_query(query: dict) -> None:
-    answer_pre_checkout_query(query["id"], ok=True)
-
-
 # ---------------------------------------------------------------------------
 # Polling
 # ---------------------------------------------------------------------------
@@ -692,7 +698,7 @@ def poll_updates(redis: Redis, queue: Queue) -> None:
     current_offset = redis.get(REDIS_UPDATE_OFFSET_KEY)
     payload = {
         "timeout": BOT_POLL_TIMEOUT,
-        "allowed_updates": ["message", "pre_checkout_query"],
+        "allowed_updates": ["message"],
     }
     if current_offset:
         payload["offset"] = int(decode(current_offset))
@@ -700,10 +706,7 @@ def poll_updates(redis: Redis, queue: Queue) -> None:
     response = telegram_request("getUpdates", payload, timeout=BOT_POLL_TIMEOUT + 5)
     for update in response.get("result", []):
         update_id = int(update["update_id"])
-        if "pre_checkout_query" in update:
-            process_pre_checkout_query(update["pre_checkout_query"])
-        else:
-            process_message(redis, queue, update.get("message") or {})
+        process_message(redis, queue, update.get("message") or {})
         redis.set(REDIS_UPDATE_OFFSET_KEY, update_id + 1)
 
 
@@ -748,6 +751,11 @@ def notify_completed_jobs(redis: Redis) -> None:
 def main() -> None:
     if not TELEGRAM_BOT_TOKEN:
         raise SystemExit("Missing TELEGRAM_BOT_TOKEN")
+
+    try:
+        get_user_store()
+    except SupabaseStoreError as exc:
+        raise SystemExit(str(exc)) from exc
 
     redis = get_redis()
     queue = get_queue(redis)
