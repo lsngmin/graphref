@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: apps/Dockerfile
     ports:
-      - "8000:8000"
+      - "54123:8000"
     environment:
       REDIS_URL: redis://redis:6379/0
       RQ_QUEUE: jobs
