@@ -240,22 +240,29 @@ def command_name(text: str) -> str:
 
 def usage_text() -> str:
     return (
-        "Commands\n"
+        "Graphref commands\n\n"
         "/run <keyword> | <domain>\n"
+        "Start a task.\n"
+        "Example: /run tiktok save.com | tiktok-save.com\n\n"
         "/status [job_id]\n"
+        "Check a job. If omitted, the latest job is used.\n\n"
         "/jobs [n]\n"
+        "Show recent jobs.\n\n"
         "/queue\n"
+        "Show queue status.\n\n"
         "/cancel [job_id]\n"
+        "Cancel a queued job only.\n\n"
         "/credits\n"
+        "Show your current credits.\n\n"
         "/buy\n"
+        "Open credit packages.\n\n"
         "/referral\n"
-        "/help\n\n"
-        "Example\n"
-        "/run <keyword> | <domain>\n\n"
-        "Notes\n"
-        "- /status omits job_id to check the latest job.\n"
-        "- /cancel works on queued jobs only.\n"
-        "- Each /run costs 10 credits."
+        "Show your referral link.\n\n"
+        "/help\n"
+        "Show this message.\n\n"
+        "Credits\n"
+        "- 10 credits per run\n"
+        "- New users start with 50 credits"
     )
 
 
