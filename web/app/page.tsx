@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MessageCircle, CheckCircle, ChevronDown } from "lucide-react";
 
 const TELEGRAM_URL = "https://t.me/graphrefbot";
+const CONTACT_EMAIL = "hello@graphref.org";
 
 const steps = [
   {
@@ -19,7 +20,7 @@ const steps = [
   {
     number: "03",
     title: "Graphref does the rest",
-    desc: "It searches Google and clicks your listing. You'll see it in Search Console.",
+    desc: "It drives real search visits to your site. You'll see it in Search Console.",
   },
 ];
 
@@ -50,10 +51,28 @@ const plans = [
   },
 ];
 
+const testimonials = [
+  {
+    text: "Saw movement in Search Console within the first week. Simple and it just works.",
+    name: "James R.",
+    role: "Indie founder",
+  },
+  {
+    text: "No subscription, no dashboard to learn. I type a command and it runs. That's all I needed.",
+    name: "Sofia M.",
+    role: "SEO consultant",
+  },
+  {
+    text: "Tried a few tools before this. Graphref is the only one where I could actually see the visits in GSC.",
+    name: "David K.",
+    role: "E-commerce owner",
+  },
+];
+
 const faqs = [
   {
     q: "Does this show up in Search Console?",
-    a: "Yes. Each click is a real search query routed through Google, so it registers as organic traffic in Search Console.",
+    a: "Yes. Each visit is driven through a real search query, so it registers as organic traffic in Google Search Console.",
   },
   {
     q: "Do credits expire?",
@@ -66,6 +85,10 @@ const faqs = [
   {
     q: "Can I cancel anytime?",
     a: "There's nothing to cancel. Credits are one-time purchases, not subscriptions.",
+  },
+  {
+    q: "What happens if a job fails?",
+    a: "Credits are automatically refunded if a job doesn't complete successfully.",
   },
 ];
 
@@ -115,8 +138,8 @@ export default function Home() {
             Send it yourself.
           </h1>
           <p className="text-[18px] text-zinc-500 leading-relaxed max-w-xl mb-10">
-            Type a keyword. Pick your site. Graphref searches Google and clicks
-            your listing — so you don't have to wait months to move up.
+            Type a keyword. Pick your site. Graphref drives real search visits
+            to your listing — so you don't have to wait months to move up.
           </p>
           <div className="flex items-center gap-3 flex-wrap">
             <a
@@ -185,9 +208,7 @@ export default function Home() {
                 }`}
               >
                 <div>
-                  <p
-                    className={`text-[13px] font-medium mb-3 ${plan.highlight ? "text-zinc-400" : "text-zinc-400"}`}
-                  >
+                  <p className="text-[13px] font-medium mb-3 text-zinc-400">
                     {plan.name}
                   </p>
                   <p className="text-[32px] font-bold tracking-tight leading-none mb-1">
@@ -222,23 +243,50 @@ export default function Home() {
           </div>
           <div className="mt-8 flex flex-wrap gap-4 text-[13px] text-zinc-400">
             <span className="flex items-center gap-1.5">
-              <CheckCircle size={13} className="text-zinc-400" />
+              <CheckCircle size={13} />
               No subscription
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle size={13} className="text-zinc-400" />
+              <CheckCircle size={13} />
               Credits never expire
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle size={13} className="text-zinc-400" />
+              <CheckCircle size={13} />
               50 free credits on signup
             </span>
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* Testimonials */}
       <section className="py-24 px-6 bg-zinc-50">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-[28px] font-bold tracking-tight mb-12">
+            What people say
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {testimonials.map((t) => (
+              <div
+                key={t.name}
+                className="bg-white border border-zinc-200 rounded-xl p-6 flex flex-col gap-4"
+              >
+                <p className="text-[14px] text-zinc-600 leading-relaxed">
+                  "{t.text}"
+                </p>
+                <div className="mt-auto">
+                  <p className="text-[13px] font-semibold text-zinc-900">
+                    {t.name}
+                  </p>
+                  <p className="text-[12px] text-zinc-400">{t.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-10">FAQ</h2>
           <div>
@@ -250,7 +298,7 @@ export default function Home() {
       </section>
 
       {/* Footer CTA */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-6 bg-zinc-50">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-[36px] font-bold tracking-tight mb-4">
             Ready to try it?
@@ -272,13 +320,28 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-zinc-100 py-8 px-6">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <span className="text-[13px] font-semibold tracking-tight">
             GRAPHREF
           </span>
-          <span className="text-[12px] text-zinc-400">
-            © {new Date().getFullYear()} Graphref
-          </span>
+          <div className="flex flex-wrap items-center gap-6 text-[12px] text-zinc-400">
+            <a href="/terms" className="hover:text-zinc-600 transition-colors">
+              Terms of Service
+            </a>
+            <a
+              href="/privacy"
+              className="hover:text-zinc-600 transition-colors"
+            >
+              Privacy Policy
+            </a>
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="hover:text-zinc-600 transition-colors"
+            >
+              {CONTACT_EMAIL}
+            </a>
+            <span>© {new Date().getFullYear()} Graphref</span>
+          </div>
         </div>
       </footer>
     </main>
