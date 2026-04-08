@@ -159,6 +159,13 @@ def register_user(redis: Redis, chat_id: str, referrer_id: Optional[str] = None)
     )
 
 
+def ensure_user(redis: Redis, chat_id: str, referrer_id: Optional[str] = None) -> bool:
+    if is_new_user(redis, chat_id):
+        register_user(redis, chat_id, referrer_id=referrer_id)
+        return True
+    return False
+
+
 def get_referrer(redis: Redis, chat_id: str) -> Optional[str]:
     user = get_user_store().get_user(chat_id)
     return user.get("referred_by") if user else None
@@ -371,12 +378,8 @@ def handle_start(redis: Redis, chat_id: str, text: str) -> None:
     _, _, raw_args = text.partition(" ")
     referral_code = raw_args.strip() or None
 
-    if is_new_user(redis, chat_id):
-        referrer_id = referral_code if referral_code and referral_code != chat_id else None
-        register_user(redis, chat_id, referrer_id=referrer_id)
-        send_message(chat_id, start_text(redis, chat_id), parse_mode="HTML")
-        return
-
+    referrer_id = referral_code if referral_code and referral_code != chat_id else None
+    ensure_user(redis, chat_id, referrer_id=referrer_id)
     send_message(chat_id, start_text(redis, chat_id), parse_mode="HTML")
 
 
@@ -655,6 +658,9 @@ def process_message(redis: Redis, queue: Queue, message: dict) -> None:
     if name == "/start":
         handle_start(redis, chat_id, text)
         return
+
+    ensure_user(redis, chat_id)
+
     if name == "/help":
         send_message(chat_id, usage_text())
         return

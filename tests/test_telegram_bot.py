@@ -92,3 +92,20 @@ def test_handle_buy_package_sends_checkout_url(monkeypatch):
             "Credits will be added automatically after payment confirmation.",
         )
     ]
+
+
+def test_process_message_ensures_user_before_buy(monkeypatch):
+    ensure_calls = []
+    buy_calls = []
+
+    monkeypatch.setattr(telegram_bot, "ensure_user", lambda redis, chat_id, referrer_id=None: ensure_calls.append((chat_id, referrer_id)) or True)
+    monkeypatch.setattr(telegram_bot, "handle_buy", lambda chat_id: buy_calls.append(chat_id))
+
+    telegram_bot.process_message(
+        redis=object(),
+        queue=object(),
+        message={"chat": {"id": "user-1", "type": "private"}, "text": "/buy"},
+    )
+
+    assert ensure_calls == [("user-1", None)]
+    assert buy_calls == ["user-1"]

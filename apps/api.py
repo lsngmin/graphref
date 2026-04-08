@@ -74,6 +74,17 @@ def get_user_store() -> SupabaseStore:
     return SupabaseStore.from_env()
 
 
+def ensure_user_exists(chat_id: str) -> None:
+    store = get_user_store()
+    if store.get_user(chat_id) is None:
+        store.register_user(
+            chat_id,
+            initial_credits=50,
+            reason="signup_bonus",
+            metadata={"source": "lemonsqueezy_webhook"},
+        )
+
+
 @app.post("/jobs")
 def create_jobs(payload: JobsRequest):
     jobs = payload.jobs or ([payload.job] if payload.job else [])
@@ -117,6 +128,7 @@ async def lemonsqueezy_webhook(request: Request):
     if not chat_id or credits <= 0:
         raise HTTPException(status_code=400, detail="Missing custom_data.chat_id or credits")
 
+    ensure_user_exists(chat_id)
     applied, balance = get_user_store().record_lemonsqueezy_order(
         order_id=str(data.get("id") or ""),
         chat_id=chat_id,
