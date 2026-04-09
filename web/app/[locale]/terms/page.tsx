@@ -1,4 +1,8 @@
+import { useTranslations } from "next-intl";
+
 export default function Terms() {
+  const t = useTranslations();
+
   return (
     <main className="min-h-screen bg-white px-6 py-24">
       <div className="max-w-3xl mx-auto">
@@ -6,20 +10,17 @@ export default function Terms() {
           href="/"
           className="text-[13px] text-zinc-400 hover:text-zinc-700 transition-colors mb-12 inline-block"
         >
-          ← Back
+          {t("terms.back")}
         </a>
 
         <h1 className="text-[36px] font-bold tracking-tight mb-2">
-          Terms of Service
+          {t("terms.title")}
         </h1>
         <p className="text-[13px] text-zinc-400 mb-6">
-          Last updated: April 9, 2026
+          {t("terms.updated")}
         </p>
         <p className="text-[15px] text-zinc-500 leading-relaxed mb-12">
-          These Terms of Service govern your access to and use of Graphref,
-          including the website, Telegram bot, checkout flows, credits, and
-          related support channels. By accessing or using Graphref, you agree to
-          be bound by these Terms. If you do not agree, do not use the Service.
+          {t("terms.intro")}
         </p>
 
         <div className="prose prose-zinc max-w-none text-[15px] leading-relaxed space-y-10">
@@ -335,7 +336,7 @@ export default function Terms() {
             <p className="text-zinc-500">
               Your use of Graphref is also subject to our{" "}
               <a href="/privacy" className="text-zinc-900 underline">
-                Privacy Policy
+                {t("terms.privacyLink")}
               </a>
               , which explains how we collect, use, and disclose personal
               information.

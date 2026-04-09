@@ -1,33 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { MessageCircle, CheckCircle, ChevronDown, Search, Terminal, TrendingUp, Zap, Users, MousePointerClick } from "lucide-react";
 import MarketingHeader from "@/components/MarketingHeader";
 import PricingCards from "@/components/PricingCards";
 
 const TELEGRAM_URL = "https://t.me/graphrefbot";
 const CONTACT_EMAIL = "support@graphref.org";
-
-const steps = [
-  {
-    number: "01",
-    icon: Search,
-    title: "Open the bot on Telegram",
-    desc: "No account setup. No forms. Just hit Start.",
-  },
-  {
-    number: "02",
-    icon: Terminal,
-    title: "Type your keyword and domain",
-    desc: "/run your keyword | yoursite.com",
-  },
-  {
-    number: "03",
-    icon: TrendingUp,
-    title: "Graphref does the rest",
-    desc: "It drives real search visits to your site. You'll see it in Search Console.",
-  },
-];
 
 const plans = [
   {
@@ -106,47 +86,6 @@ const testimonials = [
     metricSub: "",
     date: "February 7, 2026",
   },
-];
-
-const faqs = [
-  {
-    q: "How does Graphref actually work?",
-    a: "Graphref uses a network of real devices to perform genuine Google searches for your target keyword, then clicks through to your site from the search results. This simulates organic search behavior — the kind of engagement signal that Google uses to evaluate how relevant your page is to a given query. Because every visit originates from an actual search, it shows up as organic traffic in Google Search Console.",
-  },
-  {
-    q: "Will I see results in Google Search Console?",
-    a: "Yes. Since visits are driven through real search queries, they register as organic impressions and clicks in GSC. Most users start seeing movement within 24–72 hours of their first run. We recommend monitoring your target keyword's impression and click data in the Performance tab.",
-  },
-  {
-    q: "Is it safe? Will Google penalize my site?",
-    a: "Graphref is designed to mimic natural user behavior as closely as possible — real devices, real searches, realistic session patterns. We don't use bots or headless browsers. That said, no third-party traffic tool can guarantee zero risk, and we encourage you to use it as one part of a broader SEO strategy rather than a sole growth channel.",
-  },
-  {
-    q: "How many visits does one credit give me?",
-    a: "One run costs 10 credits and delivers 10 targeted search visits to your site. You choose the keyword and domain each time you run a job. There's no minimum spend — you can run a single job with your free credits to see how it works before purchasing more.",
-  },
-  {
-    q: "Can I target multiple keywords or domains?",
-    a: "Yes. Each /run command accepts one keyword and one domain, but you can run as many jobs as your credits allow — across different keywords, different pages, or entirely different sites. There's no restriction on how many domains you use.",
-  },
-  {
-    q: "Do credits expire?",
-    a: "Never. Credits you purchase are yours indefinitely. There's no monthly renewal, no expiry date, and no pressure to use them by a certain time. Buy when you need them, use them at your own pace.",
-  },
-  {
-    q: "What if a job doesn't complete successfully?",
-    a: "If a job fails for any reason — network issues, invalid domain, or a processing error on our end — your credits are automatically refunded in full. You'll receive a notification in the Telegram bot with the reason and your restored balance.",
-  },
-  {
-    q: "Is there a subscription or recurring charge?",
-    a: "No. Graphref is entirely credit-based. You pay once for a credit package and use them whenever you want. There's no subscription to manage, no auto-renewal to worry about, and nothing to cancel.",
-  },
-];
-
-const stats = [
-  { icon: MousePointerClick, value: "2.4M+", label: "Clicks delivered" },
-  { icon: Users, value: "3,800+", label: "Sites powered" },
-  { icon: Zap, value: "< 60s", label: "Time to first run" },
 ];
 
 // Background chart — full-bleed behind hero content
@@ -418,6 +357,70 @@ function FAQ({ q, a }: { q: string; a: string }) {
 }
 
 export default function Home() {
+  const t = useTranslations("home");
+
+  const steps = [
+    {
+      number: "01",
+      icon: Search,
+      title: t("howItWorks.step1Title"),
+      desc: t("howItWorks.step1Desc"),
+    },
+    {
+      number: "02",
+      icon: Terminal,
+      title: t("howItWorks.step2Title"),
+      desc: t("howItWorks.step2Desc"),
+    },
+    {
+      number: "03",
+      icon: TrendingUp,
+      title: t("howItWorks.step3Title"),
+      desc: t("howItWorks.step3Desc"),
+    },
+  ];
+
+  const stats = [
+    { icon: MousePointerClick, value: "2.4M+", label: t("stats.clicks") },
+    { icon: Users, value: "3,800+", label: t("stats.sites") },
+    { icon: Zap, value: "< 60s", label: t("stats.time") },
+  ];
+
+  const faqs = [
+    {
+      q: t("faq.items.0.q"),
+      a: t("faq.items.0.a"),
+    },
+    {
+      q: t("faq.items.1.q"),
+      a: t("faq.items.1.a"),
+    },
+    {
+      q: t("faq.items.2.q"),
+      a: t("faq.items.2.a"),
+    },
+    {
+      q: t("faq.items.3.q"),
+      a: t("faq.items.3.a"),
+    },
+    {
+      q: t("faq.items.4.q"),
+      a: t("faq.items.4.a"),
+    },
+    {
+      q: t("faq.items.5.q"),
+      a: t("faq.items.5.a"),
+    },
+    {
+      q: t("faq.items.6.q"),
+      a: t("faq.items.6.a"),
+    },
+    {
+      q: t("faq.items.7.q"),
+      a: t("faq.items.7.a"),
+    },
+  ];
+
   return (
     <main className="min-h-screen bg-white text-zinc-900 font-sans">
       <MarketingHeader pricingHref="#pricing" theme="light" />
@@ -444,13 +447,12 @@ export default function Home() {
           {/* Left: text */}
           <div className="flex-1 w-full">
             <h1 className="text-[38px] md:text-[56px] leading-[1.08] font-bold tracking-tight text-zinc-900 mb-5">
-              Stop waiting for traffic.
+              {t("hero.headline1")}
               <br />
-              Send it yourself.
+              {t("hero.headline2")}
             </h1>
             <p className="text-base md:text-[18px] text-zinc-500 leading-relaxed max-w-xl mb-8">
-              Type a keyword. Pick your site. Graphref drives real search visits
-              to your listing — so you don't have to wait months to move up.
+              {t("hero.sub")}
             </p>
             <a
               href={TELEGRAM_URL}
@@ -459,10 +461,10 @@ export default function Home() {
               className="flex md:inline-flex items-center justify-center gap-2 bg-zinc-900 text-white text-sm font-medium px-5 py-3.5 rounded-lg hover:bg-zinc-700 transition-colors w-full md:w-auto"
             >
               <MessageCircle size={16} />
-              Open on Telegram
+              {t("hero.cta")}
             </a>
             <p className="mt-4 text-[13px] text-zinc-400 text-center md:text-left">
-              New users get 50 free credits — no card required.
+              {t("hero.freeCredits")}
             </p>
           </div>
 
@@ -498,7 +500,7 @@ export default function Home() {
       <section className="py-24 px-6 bg-zinc-50">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-14">
-            How it works
+            {t("howItWorks.title")}
           </h2>
           <div className="flex flex-col lg:flex-row gap-16 items-start">
           <div className="w-full max-w-xl flex flex-col flex-shrink-0">
@@ -512,8 +514,8 @@ export default function Home() {
                 <div className="w-px flex-1 bg-zinc-200 mt-2" />
               </div>
               <div className="pb-5 pt-1">
-                <p className="text-[15px] font-semibold text-zinc-900 mb-1">Open the bot on Telegram</p>
-                <p className="text-[13px] text-zinc-500 leading-relaxed">No account setup. No forms. Just hit Start.</p>
+                <p className="text-[15px] font-semibold text-zinc-900 mb-1">{steps[0].title}</p>
+                <p className="text-[13px] text-zinc-500 leading-relaxed">{steps[0].desc}</p>
               </div>
             </div>
 
@@ -539,8 +541,8 @@ export default function Home() {
                 <div className="w-px flex-1 bg-zinc-200 mt-2" />
               </div>
               <div className="py-5 pt-6">
-                <p className="text-[15px] font-semibold text-zinc-900 mb-1">Type your keyword and domain</p>
-                <p className="text-[13px] text-zinc-500 leading-relaxed">/run your keyword | yoursite.com</p>
+                <p className="text-[15px] font-semibold text-zinc-900 mb-1">{steps[1].title}</p>
+                <p className="text-[13px] text-zinc-500 leading-relaxed">{steps[1].desc}</p>
               </div>
             </div>
 
@@ -572,8 +574,8 @@ export default function Home() {
                 <div className="w-px flex-1 bg-zinc-200 mt-2" />
               </div>
               <div className="py-5 pt-6">
-                <p className="text-[15px] font-semibold text-zinc-900 mb-1">Graphref does the rest</p>
-                <p className="text-[13px] text-zinc-500 leading-relaxed">It drives real search visits to your site. You'll see it in Search Console.</p>
+                <p className="text-[15px] font-semibold text-zinc-900 mb-1">{steps[2].title}</p>
+                <p className="text-[13px] text-zinc-500 leading-relaxed">{steps[2].desc}</p>
               </div>
             </div>
 
@@ -666,10 +668,10 @@ export default function Home() {
       <section id="pricing" className="scroll-mt-28 py-24 px-6 md:scroll-mt-32">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-3">
-            Pricing
+            {t("pricing.title")}
           </h2>
           <p className="text-[15px] text-zinc-500 mb-12">
-            Credits never expire. No subscription.
+            {t("pricing.sub")}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <PricingCards plans={plans} />
@@ -677,15 +679,15 @@ export default function Home() {
           <div className="mt-8 flex flex-wrap gap-4 text-[13px] text-zinc-400">
             <span className="flex items-center gap-1.5">
               <CheckCircle size={13} />
-              No subscription
+              {t("pricing.badgeNoSub")}
             </span>
             <span className="flex items-center gap-1.5">
               <CheckCircle size={13} />
-              Credits never expire
+              {t("pricing.badgeNoExpire")}
             </span>
             <span className="flex items-center gap-1.5">
               <CheckCircle size={13} />
-              50 free credits on signup
+              {t("pricing.badgeFree")}
             </span>
           </div>
         </div>
@@ -695,7 +697,7 @@ export default function Home() {
       <section className="py-24 px-6 bg-zinc-50">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-12">
-            What people say
+            {t("testimonials.title")}
           </h2>
 
           <div className="flex flex-col gap-4">
@@ -712,7 +714,7 @@ export default function Home() {
                 <span className="text-[11px] text-zinc-400">{testimonials[0].date}</span>
               </div>
               <p className="text-[20px] text-zinc-700 leading-relaxed italic" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-                "{testimonials[0].text}"
+                &ldquo;{testimonials[0].text}&rdquo;
               </p>
               <div className="border-t border-zinc-100 pt-4 flex items-center gap-3">
                 <img src={testimonials[0].avatar} alt={testimonials[0].name} className="w-9 h-9 rounded-full object-cover shrink-0" />
@@ -738,7 +740,7 @@ export default function Home() {
                     <span className="text-[11px] text-zinc-400">{t.date}</span>
                   </div>
                   <p className="text-[17px] text-zinc-600 leading-relaxed flex-1 italic" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-                    "{t.text}"
+                    &ldquo;{t.text}&rdquo;
                   </p>
                   <div className="flex items-center gap-3 mt-auto pt-2 border-t border-zinc-100">
                     <img src={t.avatar} alt={t.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
@@ -757,7 +759,7 @@ export default function Home() {
       {/* FAQ */}
       <section id="faq" className="scroll-mt-28 py-24 px-6 md:scroll-mt-32">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-[28px] font-bold tracking-tight mb-10">FAQ</h2>
+          <h2 className="text-[28px] font-bold tracking-tight mb-10">{t("faq.title")}</h2>
           <div>
             {faqs.map((faq) => (
               <FAQ key={faq.q} q={faq.q} a={faq.a} />
@@ -765,14 +767,14 @@ export default function Home() {
           </div>
           <div className="mt-10 flex items-center gap-4 p-5 bg-zinc-50 rounded-xl border border-zinc-100">
             <div className="flex-1">
-              <p className="text-[14px] font-semibold text-zinc-900">Still have questions?</p>
-              <p className="text-[13px] text-zinc-500 mt-0.5">Can't find what you're looking for? We're happy to help.</p>
+              <p className="text-[14px] font-semibold text-zinc-900">{t("faq.stillHaveQuestions")}</p>
+              <p className="text-[13px] text-zinc-500 mt-0.5">{t("faq.cantFind")}</p>
             </div>
             <a
               href="/contact"
               className="shrink-0 inline-flex items-center gap-2 bg-zinc-900 text-white text-[13px] font-medium px-4 py-2.5 rounded-lg hover:bg-zinc-700 transition-colors"
             >
-              Contact us
+              {t("faq.contactUs")}
             </a>
           </div>
         </div>
@@ -782,10 +784,10 @@ export default function Home() {
       <section className="py-24 px-6 bg-zinc-50">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-[36px] font-bold tracking-tight mb-4">
-            Ready to try it?
+            {t("cta.title")}
           </h2>
           <p className="text-[16px] text-zinc-500 mb-8">
-            Open the bot and run your first job in under a minute.
+            {t("cta.sub")}
           </p>
           <a
             href={TELEGRAM_URL}
@@ -794,7 +796,7 @@ export default function Home() {
             className="inline-flex items-center gap-2 bg-zinc-900 text-white text-sm font-medium px-5 py-3 rounded-lg hover:bg-zinc-700 transition-colors"
           >
             <MessageCircle size={16} />
-            Open on Telegram
+            {t("cta.button")}
           </a>
         </div>
       </section>
@@ -810,16 +812,16 @@ export default function Home() {
               href="/contact"
               className="hover:text-zinc-600 transition-colors"
             >
-              Contact
+              {t("footer.contact")}
             </a>
             <a href="/terms" className="hover:text-zinc-600 transition-colors">
-              Terms
+              {t("footer.terms")}
             </a>
             <a
               href="/privacy"
               className="hover:text-zinc-600 transition-colors"
             >
-              Privacy
+              {t("footer.privacy")}
             </a>
             <span>© {new Date().getFullYear()} Graphref</span>
           </div>

@@ -1,0 +1,227 @@
+{
+  "nav": {
+    "about": "About",
+    "pricing": "Pricing",
+    "openTelegram": "Open on Telegram"
+  },
+  "home": {
+    "hero": {
+      "headline1": "Stop waiting for traffic.",
+      "headline2": "Send it yourself.",
+      "sub": "Type a keyword. Pick your site. Graphref drives real search visits to your listing — so you don't have to wait months to move up.",
+      "cta": "Open on Telegram",
+      "freeCredits": "New users get 50 free credits — no card required."
+    },
+    "stats": {
+      "clicks": "Clicks delivered",
+      "sites": "Sites powered",
+      "time": "Time to first run"
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "step1Title": "Open the bot on Telegram",
+      "step1Desc": "No account setup. No forms. Just hit Start.",
+      "step2Title": "Type your keyword and domain",
+      "step2Desc": "/run your keyword | yoursite.com",
+      "step3Title": "Graphref does the rest",
+      "step3Desc": "It drives real search visits to your site. You'll see it in Search Console."
+    },
+    "pricing": {
+      "title": "Pricing",
+      "sub": "Credits never expire. No subscription.",
+      "badgeNoSub": "No subscription",
+      "badgeNoExpire": "Credits never expire",
+      "badgeFree": "50 free credits on signup"
+    },
+    "testimonials": {
+      "title": "What people say"
+    },
+    "faq": {
+      "title": "FAQ",
+      "stillHaveQuestions": "Still have questions?",
+      "cantFind": "Can't find what you're looking for? We're happy to help.",
+      "contactUs": "Contact us",
+      "items": [
+        {
+          "q": "How does Graphref actually work?",
+          "a": "Graphref uses a network of real devices to perform genuine Google searches for your target keyword, then clicks through to your site from the search results. This simulates organic search behavior — the kind of engagement signal that Google uses to evaluate how relevant your page is to a given query. Because every visit originates from an actual search, it shows up as organic traffic in Google Search Console."
+        },
+        {
+          "q": "Will I see results in Google Search Console?",
+          "a": "Yes. Since visits are driven through real search queries, they register as organic impressions and clicks in GSC. Most users start seeing movement within 24–72 hours of their first run. We recommend monitoring your target keyword's impression and click data in the Performance tab."
+        },
+        {
+          "q": "Is it safe? Will Google penalize my site?",
+          "a": "Graphref is designed to mimic natural user behavior as closely as possible — real devices, real searches, realistic session patterns. We don't use bots or headless browsers. That said, no third-party traffic tool can guarantee zero risk, and we encourage you to use it as one part of a broader SEO strategy rather than a sole growth channel."
+        },
+        {
+          "q": "How many visits does one credit give me?",
+          "a": "One run costs 10 credits and delivers 10 targeted search visits to your site. You choose the keyword and domain each time you run a job. There's no minimum spend — you can run a single job with your free credits to see how it works before purchasing more."
+        },
+        {
+          "q": "Can I target multiple keywords or domains?",
+          "a": "Yes. Each /run command accepts one keyword and one domain, but you can run as many jobs as your credits allow — across different keywords, different pages, or entirely different sites. There's no restriction on how many domains you use."
+        },
+        {
+          "q": "Do credits expire?",
+          "a": "Never. Credits you purchase are yours indefinitely. There's no monthly renewal, no expiry date, and no pressure to use them by a certain time. Buy when you need them, use them at your own pace."
+        },
+        {
+          "q": "What if a job doesn't complete successfully?",
+          "a": "If a job fails for any reason — network issues, invalid domain, or a processing error on our end — your credits are automatically refunded in full. You'll receive a notification in the Telegram bot with the reason and your restored balance."
+        },
+        {
+          "q": "Is there a subscription or recurring charge?",
+          "a": "No. Graphref is entirely credit-based. You pay once for a credit package and use them whenever you want. There's no subscription to manage, no auto-renewal to worry about, and nothing to cancel."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Ready to try it?",
+      "sub": "Open the bot and run your first job in under a minute.",
+      "button": "Open on Telegram"
+    },
+    "footer": {
+      "contact": "Contact",
+      "terms": "Terms",
+      "privacy": "Privacy"
+    }
+  },
+  "plans": {
+    "starter": {
+      "name": "Starter",
+      "features": [
+        "10 keyword runs",
+        "Real organic-looking visits",
+        "Visible in Search Console",
+        "Credits never expire",
+        "Auto-refund on failure"
+      ]
+    },
+    "basic": {
+      "name": "Basic",
+      "features": [
+        "50 keyword runs",
+        "Real organic-looking visits",
+        "Visible in Search Console",
+        "Credits never expire",
+        "Auto-refund on failure"
+      ]
+    },
+    "pro": {
+      "name": "Pro",
+      "features": [
+        "100 keyword runs",
+        "Real organic-looking visits",
+        "Visible in Search Console",
+        "Credits never expire",
+        "Auto-refund on failure",
+        "Priority queue"
+      ]
+    },
+    "credits": "{count} credits",
+    "connectTelegram": "Connect Telegram to buy",
+    "buyNow": "Buy now",
+    "redirecting": "Redirecting…"
+  },
+  "about": {
+    "hero": {
+      "eyebrow": "/ ABOUT GRAPHREF",
+      "headline1": "We got tired of",
+      "headline2": "waiting for traffic.",
+      "sub": "So we built a tool that sends it instead. Graphref is a small team obsessed with one problem: making search visibility accessible to people who ship things."
+    },
+    "story": {
+      "block1Title": "Built out of frustration",
+      "block1p1": "We ran sites. We wrote content. We built backlinks. Google still took months to notice. Meanwhile, big players with established authority kept ranking — not because their content was better, but because they had history.",
+      "block1p2": "We asked: what if we could simulate the signal Google actually cares about — real people searching, finding your site, clicking through?",
+      "block2Title": "A traffic engine, not an SEO tool",
+      "block2p1": "Graphref doesn't touch your site. No plugins, no code, no access needed. You type a keyword and a domain. We drive organic-looking visits to your listing. You see it in Search Console within hours.",
+      "block2p2": "Simple because we wanted it to be usable. Telegram-first because nobody wants another dashboard."
+    },
+    "stats": {
+      "clicks": "Clicks delivered",
+      "sites": "Sites powered",
+      "time": "Time to first run",
+      "founded": "Founded"
+    },
+    "timeline": {
+      "eyebrow": "/ TIMELINE",
+      "2023title": "The problem",
+      "2023body": "Running sites, writing content, building backlinks. Months of work. Google didn't notice.",
+      "2024title": "The insight",
+      "2024body": "Realized search signals matter more than content. Real clicks from real searches move rankings.",
+      "2025title": "First build",
+      "2025body": "Built a tool to simulate organic visits. Tested it. It worked. Search Console moved within hours.",
+      "2026title": "Graphref",
+      "2026body": "Made it Telegram-first. Credits, not subscriptions. Now powering 3,800+ sites worldwide."
+    },
+    "values": {
+      "eyebrow": "/ WHAT WE BELIEVE",
+      "items": [
+        {
+          "title": "Simplicity is the feature.",
+          "body": "You shouldn't need a tutorial to send traffic to your site. One command. One result. That's the whole product."
+        },
+        {
+          "title": "Transparency over hype.",
+          "body": "We don't promise #1 rankings. We deliver real visit signals to Google — the same kind that naturally occur when people search for your keyword."
+        },
+        {
+          "title": "Built for builders.",
+          "body": "Indie hackers, solo founders, small agencies. People who ship fast and need results faster. Not enterprise sales cycles."
+        },
+        {
+          "title": "Credits, not subscriptions.",
+          "body": "Your money shouldn't evaporate every month. Credits don't expire. Use them when you need them."
+        }
+      ]
+    },
+    "sponsor": {
+      "headline1": "We're looking for",
+      "headline2": "sponsors and supporters.",
+      "p1": "Graphref is still early. We're actively looking for sponsors, partners, and supporters who want to help fund the product and shape what we build next.",
+      "p2": "If you want to support the project, explore sponsorship, or talk about a partnership, reach out. We're open to the right fit.",
+      "cta": "Contact us about sponsorship →"
+    },
+    "cta": {
+      "headline1": "50 free credits.",
+      "headline2": "No card required.",
+      "sub": "Open the bot, type a command, see results in Search Console.",
+      "button": "Open on Telegram →"
+    },
+    "footer": {
+      "contact": "Contact",
+      "terms": "Terms",
+      "privacy": "Privacy"
+    }
+  },
+  "contact": {
+    "title": "Contact",
+    "sub": "Have a question or need help? We'll get back to you within 1–2 business days.",
+    "emailLabel": "Email",
+    "responseLabel": "Response time",
+    "responseValue": "1–2 business days",
+    "faqHint": "Most answers are in the FAQ.",
+    "viewFaq": "View FAQ →",
+    "back": "← Back",
+    "footer": {
+      "contact": "Contact",
+      "terms": "Terms",
+      "privacy": "Privacy"
+    }
+  },
+  "terms": {
+    "back": "← Back",
+    "title": "Terms of Service",
+    "updated": "Last updated: April 9, 2026",
+    "intro": "These Terms of Service govern your access to and use of Graphref, including the website, Telegram bot, checkout flows, credits, and related support channels. By accessing or using Graphref, you agree to be bound by these Terms. If you do not agree, do not use the Service.",
+    "privacyLink": "Privacy Policy"
+  },
+  "privacy": {
+    "back": "← Back",
+    "title": "Privacy Policy",
+    "updated": "Last updated: April 9, 2026",
+    "intro": "This Privacy Policy explains how Graphref collects, uses, stores, discloses, and protects personal information when you use our website, Telegram bot, checkout flow, and related support channels. It is meant to describe our actual operating practices in a clear, legal-policy format. If you do not agree with this Policy, do not use the Service."
+  }
+}

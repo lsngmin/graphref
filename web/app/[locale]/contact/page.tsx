@@ -1,6 +1,9 @@
+import { useTranslations } from "next-intl";
 import MarketingHeader from "@/components/MarketingHeader";
 
 export default function ContactPage() {
+  const t = useTranslations();
+
   return (
     <main className="min-h-screen bg-white font-sans text-zinc-900">
       <MarketingHeader pricingHref="/#pricing" theme="light" />
@@ -8,11 +11,10 @@ export default function ContactPage() {
       {/* ── CONTENT ── */}
       <section className="pt-36 pb-24 px-8 max-w-2xl mx-auto">
         <h1 className="text-4xl font-black tracking-tight text-zinc-900 mb-3">
-          Contact
+          {t("contact.title")}
         </h1>
         <p className="text-zinc-500 text-sm leading-relaxed mb-12">
-          Have a question or need help? We&apos;ll get back to you within 1–2
-          business days.
+          {t("contact.sub")}
         </p>
 
         {/* Cards */}
@@ -39,7 +41,7 @@ export default function ContactPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-xs text-zinc-400 mb-0.5">Email</p>
+                <p className="text-xs text-zinc-400 mb-0.5">{t("contact.emailLabel")}</p>
                 <p className="text-zinc-900 text-sm font-medium">
                   support@graphref.org
                 </p>
@@ -69,9 +71,9 @@ export default function ContactPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-xs text-zinc-400 mb-0.5">Response time</p>
+                <p className="text-xs text-zinc-400 mb-0.5">{t("contact.responseLabel")}</p>
                 <p className="text-zinc-900 text-sm font-medium">
-                  1–2 business days
+                  {t("contact.responseValue")}
                 </p>
               </div>
             </div>
@@ -80,12 +82,12 @@ export default function ContactPage() {
 
         {/* FAQ hint */}
         <div className="mt-8 flex items-center justify-between py-5 border-t border-zinc-100">
-          <p className="text-zinc-400 text-sm">Most answers are in the FAQ.</p>
+          <p className="text-zinc-400 text-sm">{t("contact.faqHint")}</p>
           <a
             href="/#faq"
             className="text-xs text-zinc-400 hover:text-zinc-700 transition font-mono"
           >
-            View FAQ →
+            {t("contact.viewFaq")}
           </a>
         </div>
       </section>
@@ -97,13 +99,13 @@ export default function ContactPage() {
         </span>
         <div className="flex gap-6 text-xs text-zinc-400">
           <a href="/contact" className="text-zinc-600">
-            Contact
+            {t("contact.footer.contact")}
           </a>
           <a href="/terms" className="hover:text-zinc-600 transition">
-            Terms
+            {t("contact.footer.terms")}
           </a>
           <a href="/privacy" className="hover:text-zinc-600 transition">
-            Privacy
+            {t("contact.footer.privacy")}
           </a>
           <span>© 2026 Graphref</span>
         </div>

@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, Menu, X, ChevronDown } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
+import { usePathname, useRouter } from "@/i18n/navigation";
 
 type MarketingHeaderProps = {
   activePage?: "about";
@@ -11,10 +12,8 @@ type MarketingHeaderProps = {
 };
 
 const LANGUAGES = [
-  { code: "EN", label: "English" },
-  { code: "KO", label: "한국어" },
-  { code: "JA", label: "日本語" },
-  { code: "ZH", label: "中文" },
+  { code: "en", label: "English", display: "EN" },
+  { code: "ko", label: "한국어", display: "KO" },
 ];
 
 export default function MarketingHeader({
@@ -23,12 +22,21 @@ export default function MarketingHeader({
   theme = "dark",
 }: MarketingHeaderProps) {
   const [open, setOpen] = useState(false);
-  const [lang, setLang] = useState("EN");
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("nav");
   const isDark = theme === "dark";
+
+  // useLocale() returns current locale ("en"|"ko")
+  // usePathname() from next-intl returns path WITHOUT locale prefix (e.g. "/about")
+  const locale = useLocale();
+  const currentLang = LANGUAGES.find((l) => l.code === locale) ?? LANGUAGES[0];
+
+  // prefix for building hrefs in <a> tags
+  const prefix = locale === "ko" ? "/ko" : "";
+
   const resolvedPricingHref = pricingHref ?? (pathname === "/" ? "#pricing" : "/#pricing");
 
   // Close lang dropdown on outside click
@@ -41,6 +49,12 @@ export default function MarketingHeader({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  function switchLocale(targetLocale: string) {
+    setLangOpen(false);
+    // next-intl router understands locale option — handles prefix automatically
+    router.push(pathname, { locale: targetLocale });
+  }
 
   const navClass = isDark
     ? "fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md"
@@ -74,6 +88,13 @@ export default function MarketingHeader({
     ? "flex items-center gap-1 text-xs font-mono text-white/40 hover:text-white/70 transition border border-white/10 hover:border-white/20 rounded px-2 py-1"
     : "flex items-center gap-1 text-xs font-mono text-zinc-400 hover:text-zinc-700 transition border border-zinc-200 hover:border-zinc-300 rounded px-2 py-1";
 
+  const aboutHref = `${prefix}/about`;
+  const pricingHrefResolved = pricingHref
+    ? `${prefix}${pricingHref}`
+    : resolvedPricingHref.startsWith("#")
+      ? resolvedPricingHref
+      : `${prefix}${resolvedPricingHref}`;
+
   const LangDropdown = (
     <div ref={langRef} className="relative">
       <button
@@ -81,7 +102,7 @@ export default function MarketingHeader({
         className={triggerClass}
         aria-label="Select language"
       >
-        {lang}
+        {currentLang.display}
         <ChevronDown size={11} className={`transition-transform ${langOpen ? "rotate-180" : ""}`} />
       </button>
       {langOpen && (
@@ -90,10 +111,10 @@ export default function MarketingHeader({
             <button
               key={l.code}
               className={dropdownItemClass}
-              onClick={() => { setLang(l.code); setLangOpen(false); }}
+              onClick={() => switchLocale(l.code)}
             >
               <span>{l.label}</span>
-              <span className="font-mono text-xs opacity-50">{l.code}</span>
+              <span className="font-mono text-xs opacity-50">{l.display}</span>
             </button>
           ))}
         </div>
@@ -102,7 +123,7 @@ export default function MarketingHeader({
   );
 
   const Logo = (
-    <a href="/" className={brandClass}>
+    <a href={prefix || "/"} className={brandClass}>
       <span className="flex items-center gap-2">
         <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <polygon points="14,2 24,8 24,20 14,26 4,20 4,8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.15"/>
@@ -134,16 +155,16 @@ export default function MarketingHeader({
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
-          <a href="/about" className={activePage === "about" ? activeLinkClass : linkClass}>
-            About
+          <a href={aboutHref} className={activePage === "about" ? activeLinkClass : linkClass}>
+            {t("about")}
           </a>
-          <a href={resolvedPricingHref} className={linkClass} onClick={handlePricingClick}>
-            Pricing
+          <a href={pricingHrefResolved} className={linkClass} onClick={handlePricingClick}>
+            {t("pricing")}
           </a>
           {LangDropdown}
           <a href="https://t.me/graphrefbot" target="_blank" rel="noopener noreferrer" className={ctaClass}>
             <MessageCircle size={15} />
-            Open on Telegram
+            {t("openTelegram")}
           </a>
         </div>
 
@@ -163,11 +184,11 @@ export default function MarketingHeader({
       {/* Mobile drawer */}
       {open && (
         <div className={`md:hidden ${drawerClass}`}>
-          <a href="/about" className={drawerLinkClass} onClick={() => setOpen(false)}>
-            About
+          <a href={aboutHref} className={drawerLinkClass} onClick={() => setOpen(false)}>
+            {t("about")}
           </a>
-          <a href={resolvedPricingHref} className={drawerLinkClass} onClick={handlePricingClick}>
-            Pricing
+          <a href={pricingHrefResolved} className={drawerLinkClass} onClick={handlePricingClick}>
+            {t("pricing")}
           </a>
           <a
             href="https://t.me/graphrefbot"
@@ -177,7 +198,7 @@ export default function MarketingHeader({
             onClick={() => setOpen(false)}
           >
             <MessageCircle size={15} />
-            Open on Telegram
+            {t("openTelegram")}
           </a>
         </div>
       )}
@@ -185,16 +206,19 @@ export default function MarketingHeader({
   );
 
   function handlePricingClick(event: React.MouseEvent<HTMLAnchorElement>) {
-    const hashIndex = resolvedPricingHref.indexOf("#");
+    const href = pricingHrefResolved;
+    const hashIndex = href.indexOf("#");
     if (hashIndex === -1) { setOpen(false); return; }
-    const targetId = resolvedPricingHref.slice(hashIndex + 1);
+    const targetId = href.slice(hashIndex + 1);
     if (!targetId) { setOpen(false); return; }
     event.preventDefault();
     setOpen(false);
+
+    // pathname from next-intl has no locale prefix — "/" means home in any locale
     if (pathname === "/") {
       const section = document.getElementById(targetId);
       if (section) {
-        window.history.replaceState(null, "", `/#${targetId}`);
+        window.history.replaceState(null, "", `${prefix}/#${targetId}`);
         section.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }

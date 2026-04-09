@@ -1,4 +1,8 @@
+import { useTranslations } from "next-intl";
+
 export default function Privacy() {
+  const t = useTranslations();
+
   return (
     <main className="min-h-screen bg-white px-6 py-24">
       <div className="max-w-3xl mx-auto">
@@ -6,21 +10,17 @@ export default function Privacy() {
           href="/"
           className="text-[13px] text-zinc-400 hover:text-zinc-700 transition-colors mb-12 inline-block"
         >
-          ← Back
+          {t("privacy.back")}
         </a>
 
         <h1 className="text-[36px] font-bold tracking-tight mb-2">
-          Privacy Policy
+          {t("privacy.title")}
         </h1>
         <p className="text-[13px] text-zinc-400 mb-6">
-          Last updated: April 9, 2026
+          {t("privacy.updated")}
         </p>
         <p className="text-[15px] text-zinc-500 leading-relaxed mb-12">
-          This Privacy Policy explains how Graphref collects, uses, stores,
-          discloses, and protects personal information when you use our website,
-          Telegram bot, checkout flow, and related support channels. It is meant
-          to describe our actual operating practices in a clear, legal-policy
-          format. If you do not agree with this Policy, do not use the Service.
+          {t("privacy.intro")}
         </p>
 
         <div className="prose prose-zinc max-w-none text-[15px] leading-relaxed space-y-10">

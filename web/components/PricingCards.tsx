@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MessageCircle, CheckCircle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import TelegramLoginModal from "./TelegramLoginModal";
 
 interface Plan {
@@ -25,6 +26,7 @@ interface CheckoutEntry {
 }
 
 export default function PricingCards({ plans }: { plans: Plan[] }) {
+  const t = useTranslations("plans");
   const [tg, setTg] = useState<TelegramState>({ status: "loading" });
   const [showModal, setShowModal] = useState(false);
   const [checkout, setCheckout] = useState<Record<string, CheckoutEntry>>({});
@@ -106,7 +108,7 @@ export default function PricingCards({ plans }: { plans: Plan[] }) {
           >
             <div>
               <p className="text-[13px] font-medium mb-3 text-zinc-400">
-                {plan.name}
+                {t(`${plan.key}.name`)}
               </p>
               <p className="text-[32px] font-bold tracking-tight leading-none mb-1">
                 {plan.price}
@@ -116,20 +118,20 @@ export default function PricingCards({ plans }: { plans: Plan[] }) {
                   plan.highlight ? "text-zinc-400" : "text-zinc-500"
                 }`}
               >
-                {plan.credits.toLocaleString()} credits
+                {t("credits", { count: plan.credits.toLocaleString() })}
               </p>
             </div>
 
             <ul className="flex flex-col gap-2">
-              {plan.features.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-[13px]">
+              {plan.features.map((_, i) => (
+                <li key={i} className="flex items-center gap-2 text-[13px]">
                   <CheckCircle size={13} className="shrink-0 text-zinc-400" />
                   <span
                     className={
                       plan.highlight ? "text-zinc-300" : "text-zinc-600"
                     }
                   >
-                    {f}
+                    {t(`${plan.key}.features.${i}`)}
                   </span>
                 </li>
               ))}
@@ -152,7 +154,7 @@ export default function PricingCards({ plans }: { plans: Plan[] }) {
                   }`}
                 >
                   <MessageCircle size={14} />
-                  Connect Telegram to buy
+                  {t("connectTelegram")}
                 </button>
               ) : (
                 <button
@@ -167,7 +169,7 @@ export default function PricingCards({ plans }: { plans: Plan[] }) {
                   {isLoading ? (
                     <Loader2 size={14} className="animate-spin" />
                   ) : null}
-                  {isLoading ? "Redirecting…" : "Buy now"}
+                  {isLoading ? t("redirecting") : t("buyNow")}
                 </button>
               )}
 
