@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, Menu, X, ChevronDown } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
+import { useRouter } from "next/navigation";
 
 type MarketingHeaderProps = {
   activePage?: "about";
@@ -52,8 +53,16 @@ export default function MarketingHeader({
 
   function switchLocale(targetLocale: string) {
     setLangOpen(false);
-    // next-intl router understands locale option — handles prefix automatically
-    router.push(pathname, { locale: targetLocale });
+    const current = window.location.pathname;
+    let next: string;
+    if (targetLocale === "ko") {
+      next = current.startsWith("/ko") ? current : "/ko" + (current === "/" ? "" : current);
+    } else {
+      next = current.startsWith("/ko") ? current.slice(3) || "/" : current;
+    }
+    // Update cookie BEFORE navigating so middleware serves the correct locale
+    document.cookie = `NEXT_LOCALE=${targetLocale}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    window.location.href = next;
   }
 
   const navClass = isDark
