@@ -139,17 +139,11 @@ def money_to_minor_units(value: str) -> int:
     return int(amount * 100)
 
 
-def _default_cancel_url(return_url: str) -> str:
-    if return_url.endswith("/paypal/return"):
-        return return_url[:-len("/paypal/return")] + "/paypal/cancel"
-    return return_url.rstrip("/") + "/cancel"
-
-
 def create_checkout_url(chat_id: str, package_key: str) -> tuple[str, int]:
     details = get_package_details(package_key)
     credits = int(details["credits"])
     return_url = _require_env("PAYPAL_RETURN_URL")
-    cancel_url = os.getenv("PAYPAL_CANCEL_URL", "").strip() or _default_cancel_url(return_url)
+    cancel_url = _require_env("PAYPAL_CANCEL_URL")
     currency_code = os.getenv("PAYPAL_CURRENCY", "USD").strip() or "USD"
     brand_name = os.getenv("PAYPAL_BRAND_NAME", "Graphref").strip() or "Graphref"
     access_token = get_access_token()
@@ -192,17 +186,6 @@ def create_checkout_url(chat_id: str, package_key: str) -> tuple[str, int]:
         if link.get("rel") in {"payer-action", "approve"} and link.get("href"):
             return str(link["href"]), credits
     raise PayPalError("Missing PayPal approval URL")
-
-
-def capture_order(order_id: str) -> dict:
-    access_token = get_access_token()
-    return _paypal_request(
-        f"/v2/checkout/orders/{urllib.parse.quote(order_id)}/capture",
-        method="POST",
-        payload={},
-        access_token=access_token,
-        headers={"Prefer": "return=representation"},
-    )
 
 
 def fetch_order(order_id: str) -> dict:

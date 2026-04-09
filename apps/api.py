@@ -15,7 +15,6 @@ from decimal import Decimal, ROUND_HALF_UP
 try:
     from paypal import (
         PayPalError,
-        capture_order as capture_paypal_order,
         fetch_order as fetch_paypal_order,
         get_package_credits,
         parse_custom_id,
@@ -24,7 +23,6 @@ try:
 except ModuleNotFoundError:
     from apps.paypal import (
         PayPalError,
-        capture_order as capture_paypal_order,
         fetch_order as fetch_paypal_order,
         get_package_credits,
         parse_custom_id,
@@ -106,34 +104,6 @@ def ensure_user_exists(chat_id: str, source: str = "payment") -> None:
 def _money_to_minor_units(value: str) -> int:
     amount = Decimal(str(value or "0")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     return int(amount * 100)
-
-
-def _paypal_error_page(title: str, detail: str) -> str:
-    safe_title = html.escape(title)
-    safe_detail = html.escape(detail)
-    return f"""
-    <html>
-      <head>
-        <title>{safe_title}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>
-          body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafafa; color: #111; margin: 0; }}
-          .wrap {{ min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }}
-          .card {{ max-width: 640px; background: white; border: 1px solid #e4e4e7; border-radius: 24px; padding: 32px; }}
-          h1 {{ margin: 0 0 12px; font-size: 32px; line-height: 1.1; }}
-          p {{ margin: 0; color: #52525b; line-height: 1.6; white-space: pre-wrap; }}
-        </style>
-      </head>
-      <body>
-        <div class="wrap">
-          <div class="card">
-            <h1>{safe_title}</h1>
-            <p>{safe_detail}</p>
-          </div>
-        </div>
-      </body>
-    </html>
-    """
 
 
 def _record_paypal_order(order: dict, raw: Optional[dict] = None) -> tuple[bool, int]:
@@ -228,58 +198,6 @@ async def paypal_webhook(request: Request):
 
     applied, balance = _record_paypal_order(order, raw=payload)
     return {"ok": True, "applied": applied, "balance": balance}
-
-
-@app.get("/paypal/return", response_class=HTMLResponse)
-def paypal_return(token: str = "", PayerID: str = ""):
-    if not token:
-        raise HTTPException(status_code=400, detail="Missing token")
-
-    try:
-        order = capture_paypal_order(token)
-        applied, balance = _record_paypal_order(
-            order,
-            raw={"source": "paypal_return", "token": token, "payer_id": PayerID, "order": order},
-        )
-        heading = "Payment received" if applied else "Payment already processed"
-        detail = (
-            f"Credits were added successfully. Your balance is now {balance}."
-            if applied
-            else f"This order was already applied. Current balance: {balance}."
-        )
-        return _paypal_error_page(heading, detail)
-    except PayPalError as exc:
-        return HTMLResponse(_paypal_error_page("PayPal capture failed", str(exc)), status_code=502)
-    except Exception as exc:
-        return HTMLResponse(_paypal_error_page("Payment processing failed", str(exc)), status_code=500)
-
-
-@app.get("/paypal/cancel", response_class=HTMLResponse)
-def paypal_cancel():
-    return """
-    <html>
-      <head>
-        <title>Graphref Payment Cancelled</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafafa; color: #111; margin: 0; }
-          .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-          .card { max-width: 520px; background: white; border: 1px solid #e4e4e7; border-radius: 24px; padding: 32px; }
-          h1 { margin: 0 0 12px; font-size: 32px; line-height: 1.1; }
-          p { margin: 0; color: #52525b; line-height: 1.6; }
-        </style>
-      </head>
-      <body>
-        <div class="wrap">
-          <div class="card">
-            <h1>Payment cancelled</h1>
-            <p>No charge was recorded. You can return to Telegram and try again when ready.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-    """
-
 
 @app.get("/jobs/{job_id}")
 def get_job(job_id: str):
