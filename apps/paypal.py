@@ -188,6 +188,17 @@ def create_checkout_url(chat_id: str, package_key: str) -> tuple[str, int]:
     raise PayPalError("Missing PayPal approval URL")
 
 
+def capture_order(order_id: str) -> dict:
+    access_token = get_access_token()
+    return _paypal_request(
+        f"/v2/checkout/orders/{urllib.parse.quote(order_id)}/capture",
+        method="POST",
+        payload={},
+        access_token=access_token,
+        headers={"Prefer": "return=representation"},
+    )
+
+
 def fetch_order(order_id: str) -> dict:
     access_token = get_access_token()
     return _paypal_request(

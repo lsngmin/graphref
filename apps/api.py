@@ -15,6 +15,7 @@ from decimal import Decimal, ROUND_HALF_UP
 try:
     from paypal import (
         PayPalError,
+        capture_order as capture_paypal_order,
         fetch_order as fetch_paypal_order,
         get_package_credits,
         parse_custom_id,
@@ -23,6 +24,7 @@ try:
 except ModuleNotFoundError:
     from apps.paypal import (
         PayPalError,
+        capture_order as capture_paypal_order,
         fetch_order as fetch_paypal_order,
         get_package_credits,
         parse_custom_id,
@@ -182,6 +184,19 @@ async def paypal_webhook(request: Request):
         raise HTTPException(status_code=401, detail="Invalid PayPal webhook signature")
 
     event_type = str(payload.get("event_type") or "")
+    if event_type == "CHECKOUT.ORDER.APPROVED":
+        resource = payload.get("resource") or {}
+        order_id = str(resource.get("id") or "").strip()
+        if not order_id:
+            raise HTTPException(status_code=400, detail="Missing PayPal order_id")
+
+        try:
+            capture_paypal_order(order_id)
+        except PayPalError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+        return {"ok": True, "captured": True, "order_id": order_id}
+
     if event_type != "PAYMENT.CAPTURE.COMPLETED":
         return {"ok": True, "ignored": event_type}
 

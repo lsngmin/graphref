@@ -59,6 +59,27 @@ def test_paypal_webhook_records_completed_capture(monkeypatch):
     assert record_calls[0]["credits_added"] == 100
 
 
+def test_paypal_webhook_captures_approved_order(monkeypatch):
+    client = TestClient(api.app)
+    capture_calls = []
+
+    monkeypatch.setattr(api, "verify_paypal_webhook_event", lambda headers, payload: True)
+    monkeypatch.setattr(api, "capture_paypal_order", lambda order_id: capture_calls.append(order_id) or _sample_order(order_id=order_id))
+
+    payload = {
+        "event_type": "CHECKOUT.ORDER.APPROVED",
+        "resource": {
+            "id": "ORDER-123",
+        },
+    }
+
+    response = client.post("/paypal/webhook", json=payload)
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True, "captured": True, "order_id": "ORDER-123"}
+    assert capture_calls == ["ORDER-123"]
+
+
 def test_paypal_webhook_ignores_unrelated_events(monkeypatch):
     client = TestClient(api.app)
 
