@@ -76,7 +76,11 @@ def test_handle_run_success_awards_referral_after_enqueue(monkeypatch):
 def test_handle_buy_package_sends_checkout_url(monkeypatch):
     sent_messages = []
 
-    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text)))
+    monkeypatch.setattr(
+        telegram_bot,
+        "send_message",
+        lambda chat_id, text, parse_mode=None, reply_markup=None: sent_messages.append((chat_id, text)),
+    )
     monkeypatch.setattr(
         telegram_bot,
         "create_checkout_url",
@@ -90,6 +94,40 @@ def test_handle_buy_package_sends_checkout_url(monkeypatch):
             "user-1",
             "Checkout ready for 100 credits.\nhttps://checkout.example/test\n\n"
             "Credits will be added automatically after payment confirmation.",
+        )
+    ]
+
+
+def test_handle_buy_sends_inline_package_buttons(monkeypatch):
+    sent_messages = []
+
+    monkeypatch.setattr(
+        telegram_bot,
+        "send_message",
+        lambda chat_id, text, parse_mode=None, reply_markup=None: sent_messages.append(
+            (chat_id, text, parse_mode, reply_markup)
+        ),
+    )
+    monkeypatch.setattr(
+        telegram_bot,
+        "get_packages",
+        lambda: [("starter", 100), ("basic", 500), ("pro", 1000)],
+    )
+
+    telegram_bot.handle_buy(chat_id="user-1")
+
+    assert sent_messages == [
+        (
+            "user-1",
+            "<b>Choose a package</b>\n\nTap a button to generate your checkout link.",
+            "HTML",
+            {
+                "inline_keyboard": [
+                    [{"text": "Starter • 100 credits", "callback_data": "buy:starter"}],
+                    [{"text": "Basic • 500 credits", "callback_data": "buy:basic"}],
+                    [{"text": "Pro • 1000 credits", "callback_data": "buy:pro"}],
+                ]
+            },
         )
     ]
 
@@ -291,3 +329,35 @@ def test_process_message_ensures_user_before_buy(monkeypatch):
 
     assert ensure_calls == [("user-1", None)]
     assert buy_calls == ["user-1"]
+
+
+def test_process_callback_query_handles_buy_button(monkeypatch):
+    ensure_calls = []
+    answer_calls = []
+    buy_calls = []
+
+    monkeypatch.setattr(telegram_bot, "ensure_user", lambda redis, chat_id, referrer_id=None: ensure_calls.append((chat_id, referrer_id)) or True)
+    monkeypatch.setattr(
+        telegram_bot,
+        "answer_callback_query",
+        lambda callback_query_id, text=None: answer_calls.append((callback_query_id, text)),
+    )
+    monkeypatch.setattr(
+        telegram_bot,
+        "handle_buy_package",
+        lambda redis, chat_id, package_key: buy_calls.append((chat_id, package_key)),
+    )
+    monkeypatch.setattr(telegram_bot, "get_packages", lambda: [("starter", 100), ("basic", 500), ("pro", 1000)])
+
+    telegram_bot.process_callback_query(
+        redis=object(),
+        callback_query={
+            "id": "cbq-1",
+            "data": "buy:starter",
+            "message": {"chat": {"id": "user-1", "type": "private"}},
+        },
+    )
+
+    assert ensure_calls == [("user-1", None)]
+    assert answer_calls == [("cbq-1", "Generating checkout link...")]
+    assert buy_calls == [("user-1", "starter")]

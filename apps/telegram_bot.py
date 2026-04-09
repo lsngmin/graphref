@@ -103,14 +103,28 @@ def telegram_request(method: str, payload: Optional[dict] = None, timeout: int =
     return result
 
 
-def send_message(chat_id: str, text: str, parse_mode: Optional[str] = None) -> None:
+def send_message(
+    chat_id: str,
+    text: str,
+    parse_mode: Optional[str] = None,
+    reply_markup: Optional[dict] = None,
+) -> None:
     message = text.strip()
     if len(message) > TELEGRAM_MESSAGE_LIMIT:
         message = message[: TELEGRAM_MESSAGE_LIMIT - 20] + "\n\n...[truncated]"
     payload = {"chat_id": chat_id, "text": message}
     if parse_mode:
         payload["parse_mode"] = parse_mode
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
     telegram_request("sendMessage", payload, timeout=30)
+
+
+def answer_callback_query(callback_query_id: str, text: Optional[str] = None) -> None:
+    payload = {"callback_query_id": callback_query_id}
+    if text:
+        payload["text"] = text
+    telegram_request("answerCallbackQuery", payload, timeout=30)
 
 
 # ---------------------------------------------------------------------------
@@ -673,10 +687,23 @@ def handle_credits(redis: Redis, chat_id: str) -> None:
 
 
 def handle_buy(chat_id: str) -> None:
-    lines = ["Choose a package and send the command:\n"]
+    rows = []
     for label, credits in get_packages():
-        lines.append(f"/buy_{label} — {credits} credits")
-    send_message(chat_id, "\n".join(lines))
+        rows.append(
+            [
+                {
+                    "text": f"{label.title()} • {credits} credits",
+                    "callback_data": f"buy:{label}",
+                }
+            ]
+        )
+
+    send_message(
+        chat_id,
+        "<b>Choose a package</b>\n\nTap a button to generate your checkout link.",
+        parse_mode="HTML",
+        reply_markup={"inline_keyboard": rows},
+    )
 
 
 def handle_buy_package(redis: Redis, chat_id: str, package_key: str) -> None:
@@ -718,6 +745,38 @@ def handle_referral(chat_id: str) -> None:
         "🚀 <i>There is no limit to how much you can earn. Start sharing now!</i>",
     ]
     send_message(chat_id, "\n".join(lines), parse_mode="HTML")
+
+
+def process_callback_query(redis: Redis, callback_query: dict) -> None:
+    callback_query_id = str(callback_query.get("id") or "").strip()
+    message = callback_query.get("message") or {}
+    chat = message.get("chat") or {}
+    chat_id = str(chat.get("id") or "").strip()
+    chat_type = str(chat.get("type") or "").strip()
+    data = str(callback_query.get("data") or "").strip()
+
+    if not callback_query_id:
+        return
+
+    if not chat_id or chat_type != "private":
+        answer_callback_query(callback_query_id)
+        return
+
+    if BOT_ALLOWED_CHAT_IDS and chat_id not in BOT_ALLOWED_CHAT_IDS:
+        answer_callback_query(callback_query_id, "This chat is not authorized.")
+        return
+
+    ensure_user(redis, chat_id)
+
+    if data.startswith("buy:"):
+        package_key = data.partition(":")[2].strip().lower()
+        valid_packages = {label for label, _credits in get_packages()}
+        if package_key in valid_packages:
+            answer_callback_query(callback_query_id, "Generating checkout link...")
+            handle_buy_package(redis, chat_id, package_key)
+            return
+
+    answer_callback_query(callback_query_id)
 
 
 # ---------------------------------------------------------------------------
@@ -796,7 +855,7 @@ def poll_updates(redis: Redis, queue: Queue) -> None:
     current_offset = redis.get(REDIS_UPDATE_OFFSET_KEY)
     payload = {
         "timeout": BOT_POLL_TIMEOUT,
-        "allowed_updates": ["message"],
+        "allowed_updates": ["message", "callback_query"],
     }
     if current_offset:
         payload["offset"] = int(decode(current_offset))
@@ -804,7 +863,10 @@ def poll_updates(redis: Redis, queue: Queue) -> None:
     response = telegram_request("getUpdates", payload, timeout=BOT_POLL_TIMEOUT + 5)
     for update in response.get("result", []):
         update_id = int(update["update_id"])
-        process_message(redis, queue, update.get("message") or {})
+        if update.get("callback_query"):
+            process_callback_query(redis, update["callback_query"])
+        else:
+            process_message(redis, queue, update.get("message") or {})
         redis.set(REDIS_UPDATE_OFFSET_KEY, update_id + 1)
 
 
