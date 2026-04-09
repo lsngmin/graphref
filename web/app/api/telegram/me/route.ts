@@ -7,6 +7,7 @@ export async function GET() {
     return Response.json({ connected: false }, { status: 401 });
   }
 
+  const id = cookieStore.get("tg_id")?.value;
   const username = cookieStore.get("tg_user")?.value;
-  return Response.json({ connected: true, user: { username } });
+  return Response.json({ connected: true, user: { id, username } });
 }

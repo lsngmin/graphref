@@ -31,6 +31,11 @@ export async function POST(request: Request) {
 
   const cookieStore = await cookies();
   const username = body.username || body.first_name || "user";
+  const chatId = String(body.id || "").trim();
+
+  if (!chatId) {
+    return new Response("Missing Telegram user id", { status: 400 });
+  }
 
   cookieStore.set("tg_auth", "1", {
     httpOnly: true,
@@ -44,6 +49,12 @@ export async function POST(request: Request) {
     secure: process.env.NODE_ENV === "production",
     path: "/",
   });
+  cookieStore.set("tg_id", chatId, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
 
-  return Response.json({ connected: true, user: { username } });
+  return Response.json({ connected: true, user: { id: chatId, username } });
 }
