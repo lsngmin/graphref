@@ -422,9 +422,13 @@ export default function Home() {
       <MarketingHeader pricingHref="#pricing" theme="light" />
 
       {/* Hero */}
-      <section className="relative pt-52 pb-28 px-6 overflow-hidden">
-        {/* Background chart */}
-        <HeroBgChart />
+      <section className="relative pt-24 md:pt-52 pb-16 md:pb-28 px-6 overflow-hidden">
+        {/* Background chart — desktop only */}
+        <div className="hidden md:block absolute inset-0">
+          <HeroBgChart />
+        </div>
+        {/* Mobile background */}
+        <div className="md:hidden absolute inset-0 bg-zinc-50" />
         {/* Callout badge — desktop only */}
         <div className="hidden md:block absolute top-[28%] right-[8%] z-20 pointer-events-none">
           <span className="inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
@@ -437,54 +441,52 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-14">
           {/* Left: text */}
-          <div className="flex-1">
-            <h1 className="text-[56px] leading-[1.08] font-bold tracking-tight text-zinc-900 mb-6">
+          <div className="flex-1 w-full">
+            <h1 className="text-[38px] md:text-[56px] leading-[1.08] font-bold tracking-tight text-zinc-900 mb-5">
               Stop waiting for traffic.
               <br />
               Send it yourself.
             </h1>
-            <p className="text-[18px] text-zinc-500 leading-relaxed max-w-xl mb-10">
+            <p className="text-base md:text-[18px] text-zinc-500 leading-relaxed max-w-xl mb-8">
               Type a keyword. Pick your site. Graphref drives real search visits
               to your listing — so you don't have to wait months to move up.
             </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <a
-                href={TELEGRAM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-zinc-900 text-white text-sm font-medium px-5 py-3 rounded-lg hover:bg-zinc-700 transition-colors"
-              >
-                <MessageCircle size={16} />
-                Open on Telegram
-              </a>
-            </div>
-            <p className="mt-5 text-[13px] text-zinc-400">
+            <a
+              href={TELEGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex md:inline-flex items-center justify-center gap-2 bg-zinc-900 text-white text-sm font-medium px-5 py-3.5 rounded-lg hover:bg-zinc-700 transition-colors w-full md:w-auto"
+            >
+              <MessageCircle size={16} />
+              Open on Telegram
+            </a>
+            <p className="mt-4 text-[13px] text-zinc-400 text-center md:text-left">
               New users get 50 free credits — no card required.
             </p>
           </div>
 
-          {/* Right: Telegram mock chat */}
-          <div className="flex-shrink-0 w-full lg:w-auto flex justify-center">
+          {/* Right: Telegram mock chat — hidden on mobile */}
+          <div className="hidden lg:flex flex-shrink-0 justify-center">
             <TelegramMockChat />
           </div>
         </div>
       </section>
 
       {/* Stats bar */}
-      <section className="py-10 px-6 bg-zinc-900">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-0">
+      <section className="py-8 px-4 bg-zinc-900">
+        <div className="max-w-5xl mx-auto grid grid-cols-3 gap-0">
           {stats.map((s, i) => {
             const Icon = s.icon;
             return (
               <div
                 key={s.label}
-                className={`flex flex-col items-center gap-2 text-center py-6 px-8 ${
-                  i < stats.length - 1 ? "sm:border-r border-zinc-700" : ""
+                className={`flex flex-col items-center gap-1.5 text-center py-4 px-2 ${
+                  i < stats.length - 1 ? "border-r border-zinc-700" : ""
                 }`}
               >
-                <Icon size={18} className="text-zinc-500" />
-                <span className="text-[32px] font-bold tracking-tight text-white">{s.value}</span>
-                <span className="text-[13px] text-zinc-400">{s.label}</span>
+                <Icon size={15} className="text-zinc-500" />
+                <span className="text-xl md:text-[32px] font-bold tracking-tight text-white">{s.value}</span>
+                <span className="text-[10px] md:text-[13px] text-zinc-400 leading-tight">{s.label}</span>
               </div>
             );
           })}
