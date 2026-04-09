@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 
 interface TelegramUser {
@@ -20,25 +20,39 @@ interface Props {
 
 export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const botUsername =
+    process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME?.trim() || "graphrefbot";
 
   useEffect(() => {
     (window as unknown as Record<string, unknown>).onTelegramAuth = async (
       user: TelegramUser
     ) => {
-      const res = await fetch("/api/telegram/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(user),
-      });
-      if (res.ok) {
+      setError(null);
+
+      try {
+        const res = await fetch("/api/telegram/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(user),
+        });
+
+        if (!res.ok) {
+          const message = await res.text();
+          setError(message || "Telegram verification failed.");
+          return;
+        }
+
         const data = await res.json();
         onSuccess(data.user?.username ?? user.username ?? user.first_name);
+      } catch {
+        setError("Telegram verification failed. Please try again.");
       }
     };
 
     const script = document.createElement("script");
     script.src = "https://telegram.org/js/telegram-widget.js?22";
-    script.setAttribute("data-telegram-login", "graphrefbot");
+    script.setAttribute("data-telegram-login", botUsername);
     script.setAttribute("data-size", "large");
     script.setAttribute("data-onauth", "onTelegramAuth(user)");
     script.setAttribute("data-request-access", "write");
@@ -51,7 +65,7 @@ export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
     return () => {
       delete (window as unknown as Record<string, unknown>).onTelegramAuth;
     };
-  }, [onSuccess]);
+  }, [botUsername, onSuccess]);
 
   return (
     <div
@@ -82,8 +96,12 @@ export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
 
         <div ref={containerRef} className="flex justify-center min-h-[48px]" />
 
+        {error ? (
+          <p className="text-[12px] text-red-500 text-center">{error}</p>
+        ) : null}
+
         <p className="text-[11px] text-zinc-400 text-center">
-          We only read your Telegram username to identify your account.
+          We use your Telegram account to link website checkout with your bot credits.
         </p>
       </div>
     </div>
