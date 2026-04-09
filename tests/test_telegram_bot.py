@@ -113,19 +113,24 @@ def test_handle_buy_sends_inline_package_buttons(monkeypatch):
         "get_packages",
         lambda: [("starter", 100), ("basic", 500), ("pro", 1000)],
     )
+    monkeypatch.setattr(
+        telegram_bot,
+        "create_checkout_url",
+        lambda chat_id, package_key: (f"https://checkout.example/{package_key}", 100),
+    )
 
-    telegram_bot.handle_buy(chat_id="user-1")
+    telegram_bot.handle_buy(redis=object(), chat_id="user-1")
 
     assert sent_messages == [
         (
             "user-1",
-            "<b>Choose a package</b>\n\nTap a button to generate your checkout link.",
+            "<b>Choose a package</b>\n\nTap a button to open PayPal checkout.",
             "HTML",
             {
                 "inline_keyboard": [
-                    [{"text": "Starter • 100 credits", "callback_data": "buy:starter"}],
-                    [{"text": "Basic • 500 credits", "callback_data": "buy:basic"}],
-                    [{"text": "Pro • 1000 credits", "callback_data": "buy:pro"}],
+                    [{"text": "Starter • 100 credits", "url": "https://checkout.example/starter"}],
+                    [{"text": "Basic • 500 credits", "url": "https://checkout.example/basic"}],
+                    [{"text": "Pro • 1000 credits", "url": "https://checkout.example/pro"}],
                 ]
             },
         )
@@ -319,7 +324,7 @@ def test_process_message_ensures_user_before_buy(monkeypatch):
     buy_calls = []
 
     monkeypatch.setattr(telegram_bot, "ensure_user", lambda redis, chat_id, referrer_id=None: ensure_calls.append((chat_id, referrer_id)) or True)
-    monkeypatch.setattr(telegram_bot, "handle_buy", lambda chat_id: buy_calls.append(chat_id))
+    monkeypatch.setattr(telegram_bot, "handle_buy", lambda redis, chat_id: buy_calls.append(chat_id))
 
     telegram_bot.process_message(
         redis=object(),

@@ -686,21 +686,27 @@ def handle_credits(redis: Redis, chat_id: str) -> None:
     send_message(chat_id, "\n".join(lines), parse_mode="HTML")
 
 
-def handle_buy(chat_id: str) -> None:
+def handle_buy(redis: Redis, chat_id: str) -> None:
     rows = []
     for label, credits in get_packages():
+        try:
+            checkout_url, _package_credits = create_checkout_url(chat_id, label)
+        except PayPalError as exc:
+            send_message(chat_id, f"Failed to create checkout: {exc}")
+            return
+
         rows.append(
             [
                 {
                     "text": f"{label.title()} • {credits} credits",
-                    "callback_data": f"buy:{label}",
+                    "url": checkout_url,
                 }
             ]
         )
 
     send_message(
         chat_id,
-        "<b>Choose a package</b>\n\nTap a button to generate your checkout link.",
+        "<b>Choose a package</b>\n\nTap a button to open PayPal checkout.",
         parse_mode="HTML",
         reply_markup={"inline_keyboard": rows},
     )
@@ -834,7 +840,7 @@ def process_message(redis: Redis, queue: Queue, message: dict) -> None:
         handle_credits(redis, chat_id)
         return
     if name == "/buy":
-        handle_buy(chat_id)
+        handle_buy(redis, chat_id)
         return
     if name in {f"/buy_{label}" for label, _credits in get_packages()}:
         package_key = name.removeprefix("/buy_")
