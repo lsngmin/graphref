@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MessageCircle, CheckCircle, ChevronDown, Search, Terminal, TrendingUp, Zap, Users, MousePointerClick } from "lucide-react";
+import MarketingHeader from "@/components/MarketingHeader";
 
 const TELEGRAM_URL = "https://t.me/graphrefbot";
 const CONTACT_EMAIL = "hello@graphref.org";
@@ -233,20 +234,6 @@ function HeroBgChart() {
       <circle cx={endX} cy={endY} r="8" fill="#a1a1aa" fillOpacity="0.15" />
       <circle cx={endX} cy={endY} r="4" fill="#71717a" />
 
-      {/* Callout badge — pinned above the peak (index 7) */}
-      {(() => {
-        const bx = toX(7);
-        const by = toY(BG_RAW[7]);
-        return (
-          <g>
-            <line x1={bx} y1={by - 6} x2={bx} y2={by - 18} stroke="#71717a" strokeWidth="1" strokeDasharray="2 2" />
-            <rect x={bx - 62} y={by - 42} width="124" height="24" rx="12" fill="#18181b" />
-            <text x={bx} y={by - 26} textAnchor="middle" fontSize="11" fill="white" fontWeight="600">
-              ↑ +1,450% impressions
-            </text>
-          </g>
-        );
-      })()}
     </svg>
   );
 }
@@ -432,38 +419,18 @@ function FAQ({ q, a }: { q: string; a: string }) {
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-zinc-900 font-sans">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur border-b border-zinc-100">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <span className="text-sm font-semibold tracking-tight">GRAPHREF</span>
-          <div className="flex items-center gap-6">
-            <a
-              href="/about"
-              className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
-            >
-              About
-            </a>
-            <a
-              href="/roadmap"
-              className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
-            >
-              Roadmap
-            </a>
-            <a
-              href="#pricing"
-              onClick={(e) => { e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }}
-              className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
-            >
-              Pricing
-            </a>
-          </div>
-        </div>
-      </nav>
+      <MarketingHeader pricingHref="#pricing" theme="light" />
 
       {/* Hero */}
       <section className="relative pt-52 pb-28 px-6 overflow-hidden">
         {/* Background chart */}
         <HeroBgChart />
+        {/* Callout badge — desktop only */}
+        <div className="hidden md:block absolute top-[28%] right-[8%] z-20 pointer-events-none">
+          <span className="inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
+            ↑ +1,450% impressions
+          </span>
+        </div>
         {/* Fade out at the bottom so it blends into the next section */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" />
 
@@ -531,7 +498,7 @@ export default function Home() {
             How it works
           </h2>
           <div className="flex flex-col lg:flex-row gap-16 items-start">
-          <div className="max-w-xl flex flex-col flex-shrink-0">
+          <div className="w-full max-w-xl flex flex-col flex-shrink-0">
 
             {/* Step 1 */}
             <div className="flex gap-5">
@@ -612,7 +579,7 @@ export default function Home() {
               <div className="flex flex-col items-center w-9 shrink-0">
                 <div className="w-px flex-1 bg-zinc-200" />
               </div>
-              <div className="py-3">
+              <div className="py-3 flex-1 min-w-0">
                 <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
                   <div className="px-4 py-2.5 border-b border-zinc-100 flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -779,50 +746,25 @@ export default function Home() {
 
           <div className="flex flex-col gap-4">
             {/* Featured card — light, full width */}
-            <div className="bg-white border border-zinc-200 rounded-2xl p-8 flex flex-col lg:flex-row gap-8 lg:items-center">
-              {/* Quote side */}
-              <div className="flex-1 flex flex-col gap-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} width="20" height="20" viewBox="0 0 12 12" fill="#facc15">
-                        <path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5 3.4 8.9l.5-2.9L1.8 4l2.9-.4z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <span className="text-[11px] text-zinc-400">{testimonials[0].date}</span>
-                </div>
-                <p className="text-[17px] text-zinc-700 leading-relaxed italic" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-                  "{testimonials[0].text}"
-                </p>
-                <div className="border-t border-zinc-100 pt-4 flex items-center gap-3 mt-auto">
-                  <img src={testimonials[0].avatar} alt={testimonials[0].name} className="w-9 h-9 rounded-full object-cover shrink-0" />
-                  <div>
-                    <p className="text-[13px] font-semibold text-zinc-900">{testimonials[0].name}</p>
-                    <p className="text-[12px] text-zinc-400">{testimonials[0].role}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Metric side */}
-              <div className="lg:w-56 shrink-0 bg-zinc-50 border border-zinc-100 rounded-xl p-5 flex flex-col gap-3">
-                <p className="text-[11px] text-zinc-400 font-medium uppercase tracking-wider">Search Console</p>
-                <div>
-                  <p className="text-[28px] font-bold text-emerald-500 leading-none">↑ {testimonials[0].metric}</p>
-                  <p className="text-[12px] text-zinc-400 mt-1">{testimonials[0].metricSub}</p>
-                </div>
-                {/* Mini bar chart */}
-                <div className="flex items-end gap-1 h-10 mt-1">
-                  {[2, 3, 2, 4, 5, 7, 10, 14, 18, 22].map((v, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 rounded-sm"
-                      style={{
-                        height: `${(v / 22) * 100}%`,
-                        backgroundColor: i >= 7 ? '#34d399' : '#e4e4e7',
-                      }}
-                    />
+            <div className="bg-white border border-zinc-200 rounded-2xl p-8 flex flex-col gap-5">
+              <div className="flex items-center justify-between">
+                <div className="flex gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} width="20" height="20" viewBox="0 0 12 12" fill="#facc15">
+                      <path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5 3.4 8.9l.5-2.9L1.8 4l2.9-.4z" />
+                    </svg>
                   ))}
+                </div>
+                <span className="text-[11px] text-zinc-400">{testimonials[0].date}</span>
+              </div>
+              <p className="text-[20px] text-zinc-700 leading-relaxed italic" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+                "{testimonials[0].text}"
+              </p>
+              <div className="border-t border-zinc-100 pt-4 flex items-center gap-3">
+                <img src={testimonials[0].avatar} alt={testimonials[0].name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                <div>
+                  <p className="text-[13px] font-semibold text-zinc-900">{testimonials[0].name}</p>
+                  <p className="text-[12px] text-zinc-400">{testimonials[0].role}</p>
                 </div>
               </div>
             </div>
@@ -859,7 +801,7 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section className="py-24 px-6">
+      <section id="faq" className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-10">FAQ</h2>
           <div>

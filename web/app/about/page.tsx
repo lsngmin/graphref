@@ -1,82 +1,170 @@
-export default function About() {
+import MarketingHeader from "@/components/MarketingHeader";
+
+export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-white px-6 py-24">
-      <div className="max-w-2xl mx-auto">
-        <a
-          href="/"
-          className="text-[13px] text-zinc-400 hover:text-zinc-700 transition-colors mb-12 inline-block"
-        >
-          ← Back
-        </a>
-        <h1 className="text-[36px] font-bold tracking-tight mb-3">About</h1>
-        <p className="text-[18px] text-zinc-500 leading-relaxed mb-16">
-          Graphref is a search traffic tool built for people who want results
-          without waiting.
+    <main className="bg-white text-zinc-900 min-h-screen font-sans">
+      <MarketingHeader activePage="about" theme="light" />
+
+      {/* ── HERO ── */}
+      <section className="pt-40 pb-24 px-8 max-w-4xl mx-auto">
+        <h1 className="text-5xl md:text-7xl font-black leading-[1.05] tracking-tight text-zinc-900 mb-8">
+          We got tired of
+          <br />
+          <span className="text-zinc-300">waiting for traffic.</span>
+        </h1>
+        <p className="text-lg text-zinc-500 leading-relaxed max-w-xl">
+          So we built a tool that sends it instead. Graphref is a small team
+          obsessed with one problem: making search visibility accessible to
+          people who ship things.
         </p>
+      </section>
 
-        <div className="space-y-12">
-          <section>
-            <h2 className="text-[16px] font-semibold text-zinc-900 mb-3">
-              Why we built this
-            </h2>
-            <p className="text-[15px] text-zinc-500 leading-relaxed">
-              SEO takes time. Most tools ask you to set up dashboards, manage
-              campaigns, and wait months to see any movement. We wanted
-              something simpler — type a keyword, point it at your site, and
-              watch the visits show up in Search Console. That's Graphref.
-            </p>
-          </section>
+      {/* ── DIVIDER ── */}
+      <div className="border-t border-zinc-100 mx-8" />
 
-          <section>
-            <h2 className="text-[16px] font-semibold text-zinc-900 mb-3">
-              How it works
-            </h2>
-            <p className="text-[15px] text-zinc-500 leading-relaxed">
-              Graphref runs entirely through Telegram. There's no account to
-              create, no dashboard to learn. You send a command with your
-              keyword and domain, and Graphref handles the rest — driving real
-              search visits to your listing that register in Google Search
-              Console.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-[16px] font-semibold text-zinc-900 mb-3">
-              Pricing model
-            </h2>
-            <p className="text-[15px] text-zinc-500 leading-relaxed">
-              We charge per use, not per month. You buy credits once and spend
-              them whenever you want. No subscriptions, no commitments. Credits
-              never expire.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-[16px] font-semibold text-zinc-900 mb-3">
-              Get in touch
-            </h2>
-            <p className="text-[15px] text-zinc-500 leading-relaxed">
-              Questions or feedback? We're reachable at{" "}
-              <a
-                href="mailto:hello@graphref.org"
-                className="text-zinc-900 underline"
-              >
-                hello@graphref.org
-              </a>{" "}
-              or through the{" "}
-              <a
-                href="https://t.me/graphrefbot"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-900 underline"
-              >
-                Telegram bot
-              </a>
-              .
-            </p>
-          </section>
+      {/* ── STORY ── */}
+      <section className="py-24 px-8 max-w-4xl mx-auto grid md:grid-cols-2 gap-16">
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-900 mb-5 leading-snug">
+            Built out of frustration
+          </h2>
+          <p className="text-zinc-500 leading-relaxed text-sm">
+            We ran sites. We wrote content. We built backlinks. Google still
+            took months to notice. Meanwhile, big players with established
+            authority kept ranking — not because their content was better, but
+            because they had history.
+          </p>
+          <p className="text-zinc-500 leading-relaxed text-sm mt-4">
+            We asked: what if we could simulate the signal Google actually
+            cares about — real people searching, finding your site, clicking
+            through?
+          </p>
         </div>
-      </div>
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-900 mb-5 leading-snug">
+            A traffic engine, not an SEO tool
+          </h2>
+          <p className="text-zinc-500 leading-relaxed text-sm">
+            Graphref doesn&apos;t touch your site. No plugins, no code, no access
+            needed. You type a keyword and a domain. We drive organic-looking
+            visits to your listing. You see it in Search Console within hours.
+          </p>
+          <p className="text-zinc-500 leading-relaxed text-sm mt-4">
+            Simple because we wanted it to be usable. Telegram-first because
+            nobody wants another dashboard.
+          </p>
+        </div>
+      </section>
+
+      {/* ── DIVIDER ── */}
+      <div className="border-t border-zinc-100 mx-8" />
+
+      {/* ── STATS ── */}
+      <section className="py-24 px-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-zinc-100 border border-zinc-100 rounded-2xl overflow-hidden">
+          {[
+            { value: "2.4M+", label: "Clicks delivered" },
+            { value: "3,800+", label: "Sites powered" },
+            { value: "< 60s", label: "Time to first run" },
+            { value: "2026", label: "Founded" },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white px-8 py-10">
+              <p className="text-3xl font-black text-zinc-900 mb-2 tracking-tight">
+                {stat.value}
+              </p>
+              <p className="text-xs text-zinc-400 font-mono tracking-wide">
+                {stat.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── DIVIDER ── */}
+      <div className="border-t border-zinc-100 mx-8" />
+
+      {/* ── VALUES ── */}
+      <section className="py-24 px-8 max-w-4xl mx-auto">
+        <div className="space-y-px">
+          {[
+            {
+              n: "01",
+              title: "Simplicity is the feature.",
+              body: "You shouldn't need a tutorial to send traffic to your site. One command. One result. That's the whole product.",
+            },
+            {
+              n: "02",
+              title: "Transparency over hype.",
+              body: "We don't promise #1 rankings. We deliver real visit signals to Google — the same kind that naturally occur when people search for your keyword.",
+            },
+            {
+              n: "03",
+              title: "Built for builders.",
+              body: "Indie hackers, solo founders, small agencies. People who ship fast and need results faster. Not enterprise sales cycles.",
+            },
+            {
+              n: "04",
+              title: "Credits, not subscriptions.",
+              body: "Your money shouldn't evaporate every month. Credits don't expire. Use them when you need them.",
+            },
+          ].map((item) => (
+            <div
+              key={item.n}
+              className="group flex gap-8 py-8 border-b border-zinc-100 hover:bg-zinc-50 transition px-4 -mx-4 rounded-lg cursor-default"
+            >
+              <span className="font-mono text-xs text-zinc-300 pt-1 shrink-0 w-6">
+                {item.n}
+              </span>
+              <div>
+                <h3 className="text-zinc-900 font-semibold mb-2">{item.title}</h3>
+                <p className="text-zinc-500 text-sm leading-relaxed">
+                  {item.body}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── DIVIDER ── */}
+      <div className="border-t border-zinc-100 mx-8" />
+
+      {/* ── CTA ── */}
+      <section className="py-24 px-8 max-w-4xl mx-auto text-center">
+        <h2 className="text-4xl md:text-5xl font-black text-zinc-900 mb-4 tracking-tight">
+          50 free credits.
+          <br />
+          <span className="text-zinc-300">No card required.</span>
+        </h2>
+        <p className="text-zinc-500 text-sm mb-10">
+          Open the bot, type a command, see results in Search Console.
+        </p>
+        <a
+          href="https://t.me/graphrefbot"
+          className="inline-flex items-center gap-2 px-8 py-4 bg-zinc-900 text-white text-sm font-bold rounded-full hover:bg-zinc-800 transition"
+        >
+          Open on Telegram →
+        </a>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="border-t border-zinc-100 px-8 py-8 flex items-center justify-between">
+        <span className="font-mono text-xs tracking-[0.2em] text-zinc-400">
+          GRAPHREF
+        </span>
+        <div className="flex gap-6 text-xs text-zinc-400">
+          <a href="/contact" className="hover:text-zinc-600 transition">
+            Contact
+          </a>
+          <a href="/terms" className="hover:text-zinc-600 transition">
+            Terms
+          </a>
+          <a href="/privacy" className="hover:text-zinc-600 transition">
+            Privacy
+          </a>
+          <span>© 2026 Graphref</span>
+        </div>
+      </footer>
     </main>
   );
 }

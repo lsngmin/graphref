@@ -1,5 +1,17 @@
 import type { Metadata } from "next";
+import { DM_Sans, Space_Mono } from "next/font/google";
 import "./globals.css";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-geist-sans",
+});
+
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-geist-mono",
+});
 
 export const metadata: Metadata = {
   title: "GrapHref",
@@ -15,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className={`${dmSans.variable} ${spaceMono.variable} antialiased`}>
         {children}
         {modal}
       </body>
