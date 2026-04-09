@@ -1,3 +1,4 @@
+import html
 import os
 import uuid
 from pathlib import Path
@@ -107,6 +108,34 @@ def _money_to_minor_units(value: str) -> int:
     return int(amount * 100)
 
 
+def _paypal_error_page(title: str, detail: str) -> str:
+    safe_title = html.escape(title)
+    safe_detail = html.escape(detail)
+    return f"""
+    <html>
+      <head>
+        <title>{safe_title}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style>
+          body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafafa; color: #111; margin: 0; }}
+          .wrap {{ min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }}
+          .card {{ max-width: 640px; background: white; border: 1px solid #e4e4e7; border-radius: 24px; padding: 32px; }}
+          h1 {{ margin: 0 0 12px; font-size: 32px; line-height: 1.1; }}
+          p {{ margin: 0; color: #52525b; line-height: 1.6; white-space: pre-wrap; }}
+        </style>
+      </head>
+      <body>
+        <div class="wrap">
+          <div class="card">
+            <h1>{safe_title}</h1>
+            <p>{safe_detail}</p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+
+
 def _record_paypal_order(order: dict, raw: Optional[dict] = None) -> tuple[bool, int]:
     order_id = str(order.get("id") or "").strip()
     purchase_units = order.get("purchase_units") or []
@@ -208,42 +237,21 @@ def paypal_return(token: str = "", PayerID: str = ""):
 
     try:
         order = capture_paypal_order(token)
+        applied, balance = _record_paypal_order(
+            order,
+            raw={"source": "paypal_return", "token": token, "payer_id": PayerID, "order": order},
+        )
+        heading = "Payment received" if applied else "Payment already processed"
+        detail = (
+            f"Credits were added successfully. Your balance is now {balance}."
+            if applied
+            else f"This order was already applied. Current balance: {balance}."
+        )
+        return _paypal_error_page(heading, detail)
     except PayPalError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
-
-    applied, balance = _record_paypal_order(
-        order,
-        raw={"source": "paypal_return", "token": token, "payer_id": PayerID, "order": order},
-    )
-    heading = "Payment received" if applied else "Payment already processed"
-    detail = (
-        f"Credits were added successfully. Your balance is now {balance}."
-        if applied
-        else f"This order was already applied. Current balance: {balance}."
-    )
-    return f"""
-    <html>
-      <head>
-        <title>Graphref Payment</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>
-          body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafafa; color: #111; margin: 0; }}
-          .wrap {{ min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }}
-          .card {{ max-width: 520px; background: white; border: 1px solid #e4e4e7; border-radius: 24px; padding: 32px; }}
-          h1 {{ margin: 0 0 12px; font-size: 32px; line-height: 1.1; }}
-          p {{ margin: 0; color: #52525b; line-height: 1.6; }}
-        </style>
-      </head>
-      <body>
-        <div class="wrap">
-          <div class="card">
-            <h1>{heading}</h1>
-            <p>{detail}</p>
-          </div>
-        </div>
-      </body>
-    </html>
-    """
+        return HTMLResponse(_paypal_error_page("PayPal capture failed", str(exc)), status_code=502)
+    except Exception as exc:
+        return HTMLResponse(_paypal_error_page("Payment processing failed", str(exc)), status_code=500)
 
 
 @app.get("/paypal/cancel", response_class=HTMLResponse)
