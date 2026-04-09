@@ -23,6 +23,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY apps/api.py /app/api.py
 COPY apps/lemonsqueezy.py /app/lemonsqueezy.py
+COPY apps/paypal.py /app/paypal.py
 COPY apps/supabase_store.py /app/supabase_store.py
 COPY apps/telegram_bot.py /app/telegram_bot.py
 COPY apps/worker.py /app/worker.py

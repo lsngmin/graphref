@@ -362,10 +362,10 @@ export default function Terms() {
             <p className="text-zinc-500">
               Questions about these Terms can be sent to{" "}
               <a
-                href="mailto:hello@graphref.org"
+                href="mailto:support@graphref.org"
                 className="text-zinc-900 underline"
               >
-                hello@graphref.org
+                support@graphref.org
               </a>{" "}
               or through{" "}
               <a

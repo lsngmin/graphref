@@ -129,6 +129,37 @@ export default function AboutPage() {
       {/* ── DIVIDER ── */}
       <div className="border-t border-zinc-100 mx-8" />
 
+      {/* ── SUPPORT ── */}
+      <section className="py-24 px-8 max-w-4xl mx-auto grid md:grid-cols-2 gap-16">
+        <div>
+          <h2 className="text-4xl md:text-5xl font-black leading-[1.05] tracking-tight text-zinc-900">
+            We&apos;re looking for
+            <br />
+            <span className="text-zinc-300">sponsors and supporters.</span>
+          </h2>
+        </div>
+        <div>
+          <p className="text-zinc-500 leading-relaxed text-sm">
+            Graphref is still early. We&apos;re actively looking for sponsors,
+            partners, and supporters who want to help fund the product and shape
+            what we build next.
+          </p>
+          <p className="text-zinc-500 leading-relaxed text-sm mt-4">
+            If you want to support the project, explore sponsorship, or talk
+            about a partnership, reach out. We&apos;re open to the right fit.
+          </p>
+          <a
+            href="/contact"
+            className="inline-flex items-center gap-2 mt-8 text-sm font-semibold text-zinc-900 hover:text-zinc-500 transition"
+          >
+            Contact us about sponsorship →
+          </a>
+        </div>
+      </section>
+
+      {/* ── DIVIDER ── */}
+      <div className="border-t border-zinc-100 mx-8" />
+
       {/* ── CTA ── */}
       <section className="py-24 px-8 max-w-4xl mx-auto text-center">
         <h2 className="text-4xl md:text-5xl font-black text-zinc-900 mb-4 tracking-tight">

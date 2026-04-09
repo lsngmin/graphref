@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { MessageCircle, Menu, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { MessageCircle, Menu, X, ChevronDown } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 type MarketingHeaderProps = {
@@ -10,16 +10,37 @@ type MarketingHeaderProps = {
   theme?: "dark" | "light";
 };
 
+const LANGUAGES = [
+  { code: "EN", label: "English" },
+  { code: "KO", label: "한국어" },
+  { code: "JA", label: "日本語" },
+  { code: "ZH", label: "中文" },
+];
+
 export default function MarketingHeader({
   activePage,
   pricingHref,
   theme = "dark",
 }: MarketingHeaderProps) {
   const [open, setOpen] = useState(false);
+  const [lang, setLang] = useState("EN");
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const isDark = theme === "dark";
   const resolvedPricingHref = pricingHref ?? (pathname === "/" ? "#pricing" : "/#pricing");
+
+  // Close lang dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const navClass = isDark
     ? "fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md"
@@ -43,37 +64,42 @@ export default function MarketingHeader({
   const drawerLinkClass = isDark
     ? "text-sm text-white/50 hover:text-white transition py-1"
     : "text-sm text-zinc-500 hover:text-zinc-900 transition py-1";
+  const dropdownClass = isDark
+    ? "absolute right-0 mt-1.5 w-36 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50"
+    : "absolute right-0 mt-1.5 w-36 bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden z-50";
+  const dropdownItemClass = isDark
+    ? "w-full text-left px-3 py-2 text-sm text-white/50 hover:bg-white/5 hover:text-white transition flex items-center justify-between"
+    : "w-full text-left px-3 py-2 text-sm text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 transition flex items-center justify-between";
+  const triggerClass = isDark
+    ? "flex items-center gap-1 text-xs font-mono text-white/40 hover:text-white/70 transition border border-white/10 hover:border-white/20 rounded px-2 py-1"
+    : "flex items-center gap-1 text-xs font-mono text-zinc-400 hover:text-zinc-700 transition border border-zinc-200 hover:border-zinc-300 rounded px-2 py-1";
 
-  const handlePricingClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    const hashIndex = resolvedPricingHref.indexOf("#");
-
-    if (hashIndex === -1) {
-      setOpen(false);
-      return;
-    }
-
-    const targetId = resolvedPricingHref.slice(hashIndex + 1);
-
-    if (!targetId) {
-      setOpen(false);
-      return;
-    }
-
-    event.preventDefault();
-    setOpen(false);
-
-    if (pathname === "/") {
-      const section = document.getElementById(targetId);
-
-      if (section) {
-        window.history.replaceState(null, "", `/#${targetId}`);
-        section.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
-    }
-
-    router.push(`/#${targetId}`, { scroll: false });
-  };
+  const LangDropdown = (
+    <div ref={langRef} className="relative">
+      <button
+        onClick={() => setLangOpen(v => !v)}
+        className={triggerClass}
+        aria-label="Select language"
+      >
+        {lang}
+        <ChevronDown size={11} className={`transition-transform ${langOpen ? "rotate-180" : ""}`} />
+      </button>
+      {langOpen && (
+        <div className={dropdownClass}>
+          {LANGUAGES.map(l => (
+            <button
+              key={l.code}
+              className={dropdownItemClass}
+              onClick={() => { setLang(l.code); setLangOpen(false); }}
+            >
+              <span>{l.label}</span>
+              <span className="font-mono text-xs opacity-50">{l.code}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   const Logo = (
     <a href="/" className={brandClass}>
@@ -88,7 +114,14 @@ export default function MarketingHeader({
           <circle cx="4" cy="20" r="2" fill="currentColor" fillOpacity="0.35"/>
           <circle cx="14" cy="14" r="3" fill="currentColor"/>
         </svg>
-        GRAPHREF
+        <span className="flex items-center">
+          <span style={{ opacity: 0.38 }}>GRAP</span>
+          <span
+            className="inline-block w-[4px] h-[4px] rounded-full mx-[6px] shrink-0 -translate-y-px"
+            style={{ background: "currentColor", opacity: 0.5 }}
+          />
+          <span className="font-bold">HREF</span>
+        </span>
       </span>
     </a>
   );
@@ -96,7 +129,7 @@ export default function MarketingHeader({
   return (
     <nav className={navClass}>
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-4">
+      <div className="flex items-center justify-between px-4 md:px-8 py-4">
         {Logo}
 
         {/* Desktop nav */}
@@ -107,20 +140,24 @@ export default function MarketingHeader({
           <a href={resolvedPricingHref} className={linkClass} onClick={handlePricingClick}>
             Pricing
           </a>
+          {LangDropdown}
           <a href="https://t.me/graphrefbot" target="_blank" rel="noopener noreferrer" className={ctaClass}>
             <MessageCircle size={15} />
             Open on Telegram
           </a>
         </div>
 
-        {/* Mobile: hamburger */}
-        <button
-          className={`md:hidden ${hamburgerClass}`}
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        {/* Mobile right: lang + hamburger */}
+        <div className="md:hidden flex items-center gap-3">
+          {LangDropdown}
+          <button
+            className={hamburgerClass}
+            onClick={() => setOpen(!open)}
+            aria-label="Toggle menu"
+          >
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
@@ -146,4 +183,22 @@ export default function MarketingHeader({
       )}
     </nav>
   );
+
+  function handlePricingClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    const hashIndex = resolvedPricingHref.indexOf("#");
+    if (hashIndex === -1) { setOpen(false); return; }
+    const targetId = resolvedPricingHref.slice(hashIndex + 1);
+    if (!targetId) { setOpen(false); return; }
+    event.preventDefault();
+    setOpen(false);
+    if (pathname === "/") {
+      const section = document.getElementById(targetId);
+      if (section) {
+        window.history.replaceState(null, "", `/#${targetId}`);
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+    }
+    router.push(`/#${targetId}`, { scroll: false });
+  }
 }

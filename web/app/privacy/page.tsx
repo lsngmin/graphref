@@ -39,10 +39,10 @@ export default function Privacy() {
             <p className="text-zinc-500">
               Questions, requests, or complaints can be sent to{" "}
               <a
-                href="mailto:hello@graphref.org"
+                href="mailto:support@graphref.org"
                 className="text-zinc-900 underline"
               >
-                hello@graphref.org
+                support@graphref.org
               </a>
               .
             </p>
@@ -318,10 +318,10 @@ export default function Privacy() {
             <p className="text-zinc-500">
               To exercise these rights, contact{" "}
               <a
-                href="mailto:hello@graphref.org"
+                href="mailto:support@graphref.org"
                 className="text-zinc-900 underline"
               >
-                hello@graphref.org
+                support@graphref.org
               </a>
               . We may need to verify your identity before acting on a request.
               We may also retain limited information where required to complete
@@ -375,10 +375,10 @@ export default function Privacy() {
             <p className="text-zinc-500">
               For privacy-related questions or requests, contact{" "}
               <a
-                href="mailto:hello@graphref.org"
+                href="mailto:support@graphref.org"
                 className="text-zinc-900 underline"
               >
-                hello@graphref.org
+                support@graphref.org
               </a>{" "}
               or reach us through{" "}
               <a

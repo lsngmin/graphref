@@ -1,0 +1,27 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="32" height="32" rx="7" fill="#18181b"/>
+
+  <!-- Hexagon outline -->
+  <polygon
+    points="16,4 24,8.5 24,17.5 16,22 8,17.5 8,8.5"
+    fill="none"
+    stroke="white"
+    stroke-width="1"
+    stroke-opacity="0.2"
+    stroke-linejoin="round"
+  />
+
+  <!-- Spokes from center to 3 nodes -->
+  <line x1="16" y1="13" x2="16" y2="4"  stroke="white" stroke-width="0.8" stroke-opacity="0.3" stroke-linecap="round"/>
+  <line x1="16" y1="13" x2="24" y2="17.5" stroke="white" stroke-width="0.8" stroke-opacity="0.3" stroke-linecap="round"/>
+  <line x1="16" y1="13" x2="8"  y2="17.5" stroke="white" stroke-width="0.8" stroke-opacity="0.3" stroke-linecap="round"/>
+
+  <!-- Outer nodes -->
+  <circle cx="16" cy="4"    r="2"   fill="white" fill-opacity="0.55"/>
+  <circle cx="24" cy="17.5" r="1.5" fill="white" fill-opacity="0.35"/>
+  <circle cx="8"  cy="17.5" r="1.5" fill="white" fill-opacity="0.35"/>
+
+  <!-- Center node -->
+  <circle cx="16" cy="13" r="2.8" fill="white"/>
+</svg>

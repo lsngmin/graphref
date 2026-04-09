@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from redis import Redis
 from rq import Queue
 from rq.job import Job
+from decimal import Decimal, ROUND_HALF_UP
 
 try:
     from lemonsqueezy import verify_webhook_signature
@@ -16,11 +17,33 @@ except ModuleNotFoundError:
     from apps.lemonsqueezy import verify_webhook_signature
 
 try:
+    from paypal import (
+        PayPalError,
+        capture_order as capture_paypal_order,
+        fetch_order as fetch_paypal_order,
+        get_package_credits,
+        parse_custom_id,
+        verify_webhook_event as verify_paypal_webhook_event,
+    )
+except ModuleNotFoundError:
+    from apps.paypal import (
+        PayPalError,
+        capture_order as capture_paypal_order,
+        fetch_order as fetch_paypal_order,
+        get_package_credits,
+        parse_custom_id,
+        verify_webhook_event as verify_paypal_webhook_event,
+    )
+
+try:
     from supabase_store import SupabaseStore
 except ModuleNotFoundError:
     from apps.supabase_store import SupabaseStore
 
-from tasks import run_job
+try:
+    from tasks import run_job
+except ModuleNotFoundError:
+    from apps.tasks import run_job
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 QUEUE_NAME = os.getenv("RQ_QUEUE", "jobs")
@@ -74,15 +97,66 @@ def get_user_store() -> SupabaseStore:
     return SupabaseStore.from_env()
 
 
-def ensure_user_exists(chat_id: str) -> None:
+def ensure_user_exists(chat_id: str, source: str = "lemonsqueezy_webhook") -> None:
     store = get_user_store()
     if store.get_user(chat_id) is None:
         store.register_user(
             chat_id,
             initial_credits=50,
             reason="signup_bonus",
-            metadata={"source": "lemonsqueezy_webhook"},
+            metadata={"source": source},
         )
+
+
+def _money_to_minor_units(value: str) -> int:
+    amount = Decimal(str(value or "0")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return int(amount * 100)
+
+
+def _record_paypal_order(order: dict, raw: Optional[dict] = None) -> tuple[bool, int]:
+    order_id = str(order.get("id") or "").strip()
+    purchase_units = order.get("purchase_units") or []
+    if not order_id or not purchase_units:
+        raise HTTPException(status_code=400, detail="Invalid PayPal order payload")
+
+    purchase_unit = purchase_units[0] or {}
+    custom_id = str(purchase_unit.get("custom_id") or "").strip()
+    if not custom_id:
+        raise HTTPException(status_code=400, detail="Missing PayPal custom_id")
+
+    try:
+        chat_id, package_key = parse_custom_id(custom_id)
+        credits = get_package_credits(package_key)
+    except PayPalError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    payments = purchase_unit.get("payments") or {}
+    captures = payments.get("captures") or []
+    if not captures:
+        raise HTTPException(status_code=400, detail="Missing PayPal capture")
+
+    capture = captures[-1] or {}
+    amount = capture.get("amount") or purchase_unit.get("amount") or {}
+    currency = str(amount.get("currency_code") or "")
+    total = _money_to_minor_units(str(amount.get("value") or "0"))
+    capture_id = str(capture.get("id") or "").strip()
+    payer = order.get("payer") or {}
+    user_email = payer.get("email_address")
+    status = str(capture.get("status") or order.get("status") or "").strip()
+
+    ensure_user_exists(chat_id, source="paypal_payment")
+    return get_user_store().record_paypal_order(
+        order_id=order_id,
+        chat_id=chat_id,
+        package_key=package_key,
+        credits_added=credits,
+        capture_id=capture_id,
+        user_email=user_email,
+        currency=currency,
+        total=total,
+        status=status,
+        raw=raw or order,
+    )
 
 
 @app.post("/jobs")
@@ -144,6 +218,109 @@ async def lemonsqueezy_webhook(request: Request):
     )
 
     return {"ok": True, "applied": applied, "balance": balance}
+
+
+@app.post("/paypal/webhook")
+async def paypal_webhook(request: Request):
+    payload = await request.json()
+
+    try:
+        verified = verify_paypal_webhook_event(request.headers, payload)
+    except PayPalError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    if not verified:
+        raise HTTPException(status_code=401, detail="Invalid PayPal webhook signature")
+
+    event_type = str(payload.get("event_type") or "")
+    if event_type != "PAYMENT.CAPTURE.COMPLETED":
+        return {"ok": True, "ignored": event_type}
+
+    resource = payload.get("resource") or {}
+    related_ids = (resource.get("supplementary_data") or {}).get("related_ids") or {}
+    order_id = str(related_ids.get("order_id") or "").strip()
+    if not order_id:
+        raise HTTPException(status_code=400, detail="Missing PayPal order_id")
+
+    try:
+        order = fetch_paypal_order(order_id)
+    except PayPalError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    applied, balance = _record_paypal_order(order, raw=payload)
+    return {"ok": True, "applied": applied, "balance": balance}
+
+
+@app.get("/paypal/return", response_class=HTMLResponse)
+def paypal_return(token: str = "", PayerID: str = ""):
+    if not token:
+        raise HTTPException(status_code=400, detail="Missing token")
+
+    try:
+        order = capture_paypal_order(token)
+    except PayPalError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    applied, balance = _record_paypal_order(
+        order,
+        raw={"source": "paypal_return", "token": token, "payer_id": PayerID, "order": order},
+    )
+    heading = "Payment received" if applied else "Payment already processed"
+    detail = (
+        f"Credits were added successfully. Your balance is now {balance}."
+        if applied
+        else f"This order was already applied. Current balance: {balance}."
+    )
+    return f"""
+    <html>
+      <head>
+        <title>Graphref Payment</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style>
+          body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafafa; color: #111; margin: 0; }}
+          .wrap {{ min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }}
+          .card {{ max-width: 520px; background: white; border: 1px solid #e4e4e7; border-radius: 24px; padding: 32px; }}
+          h1 {{ margin: 0 0 12px; font-size: 32px; line-height: 1.1; }}
+          p {{ margin: 0; color: #52525b; line-height: 1.6; }}
+        </style>
+      </head>
+      <body>
+        <div class="wrap">
+          <div class="card">
+            <h1>{heading}</h1>
+            <p>{detail}</p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+
+
+@app.get("/paypal/cancel", response_class=HTMLResponse)
+def paypal_cancel():
+    return """
+    <html>
+      <head>
+        <title>Graphref Payment Cancelled</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafafa; color: #111; margin: 0; }
+          .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+          .card { max-width: 520px; background: white; border: 1px solid #e4e4e7; border-radius: 24px; padding: 32px; }
+          h1 { margin: 0 0 12px; font-size: 32px; line-height: 1.1; }
+          p { margin: 0; color: #52525b; line-height: 1.6; }
+        </style>
+      </head>
+      <body>
+        <div class="wrap">
+          <div class="card">
+            <h1>Payment cancelled</h1>
+            <p>No charge was recorded. You can return to Telegram and try again when ready.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
 
 
 @app.get("/jobs/{job_id}")

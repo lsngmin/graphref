@@ -44,6 +44,20 @@ create table if not exists public.lemonsqueezy_orders (
   created_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.paypal_orders (
+  order_id text primary key,
+  chat_id text not null references public.telegram_users(chat_id) on delete cascade,
+  package_key text null,
+  credits_added integer not null,
+  capture_id text null,
+  user_email text null,
+  currency text null,
+  total integer null,
+  status text null,
+  raw jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
 create or replace function public.tg_register_user(
   p_chat_id text,
   p_initial_credits integer default 50,
@@ -411,6 +425,106 @@ begin
         'order_id', p_order_id,
         'package_key', p_package_key,
         'identifier', p_identifier,
+        'currency', p_currency,
+        'total', p_total
+      )
+    );
+
+    return jsonb_build_object('applied', true, 'balance', v_balance);
+  end if;
+
+  select credits
+    into v_balance
+    from public.telegram_users
+   where chat_id = p_chat_id;
+
+  return jsonb_build_object('applied', false, 'balance', coalesce(v_balance, 0));
+end;
+$$;
+
+create or replace function public.tg_record_paypal_order(
+  p_order_id text,
+  p_chat_id text,
+  p_package_key text default null,
+  p_credits_added integer default 0,
+  p_capture_id text default null,
+  p_user_email text default null,
+  p_currency text default null,
+  p_total integer default null,
+  p_status text default null,
+  p_raw jsonb default '{}'::jsonb
+)
+returns jsonb
+language plpgsql
+as $$
+declare
+  v_balance integer;
+begin
+  insert into public.telegram_users (
+    chat_id,
+    credits,
+    first_run_done,
+    created_at,
+    updated_at
+  )
+  values (
+    p_chat_id,
+    0,
+    false,
+    timezone('utc', now()),
+    timezone('utc', now())
+  )
+  on conflict (chat_id) do nothing;
+
+  insert into public.paypal_orders (
+    order_id,
+    chat_id,
+    package_key,
+    credits_added,
+    capture_id,
+    user_email,
+    currency,
+    total,
+    status,
+    raw
+  )
+  values (
+    p_order_id,
+    p_chat_id,
+    nullif(p_package_key, ''),
+    greatest(coalesce(p_credits_added, 0), 0),
+    nullif(p_capture_id, ''),
+    nullif(p_user_email, ''),
+    nullif(p_currency, ''),
+    p_total,
+    nullif(p_status, ''),
+    coalesce(p_raw, '{}'::jsonb)
+  )
+  on conflict (order_id) do nothing;
+
+  if found then
+    update public.telegram_users
+       set credits = credits + greatest(coalesce(p_credits_added, 0), 0),
+           updated_at = timezone('utc', now())
+     where chat_id = p_chat_id
+    returning credits into v_balance;
+
+    insert into public.telegram_credit_ledger (
+      chat_id,
+      delta,
+      reason,
+      balance_after,
+      metadata
+    )
+    values (
+      p_chat_id,
+      greatest(coalesce(p_credits_added, 0), 0),
+      'paypal_payment',
+      v_balance,
+      jsonb_build_object(
+        'order_id', p_order_id,
+        'package_key', p_package_key,
+        'capture_id', p_capture_id,
         'currency', p_currency,
         'total', p_total
       )

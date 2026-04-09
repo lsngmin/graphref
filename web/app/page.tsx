@@ -5,7 +5,7 @@ import { MessageCircle, CheckCircle, ChevronDown, Search, Terminal, TrendingUp, 
 import MarketingHeader from "@/components/MarketingHeader";
 
 const TELEGRAM_URL = "https://t.me/graphrefbot";
-const CONTACT_EMAIL = "hello@graphref.org";
+const CONTACT_EMAIL = "support@graphref.org";
 
 const steps = [
   {

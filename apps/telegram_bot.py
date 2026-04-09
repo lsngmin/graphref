@@ -14,9 +14,9 @@ from rq import Queue
 from rq.job import Job
 
 try:
-    from lemonsqueezy import LemonSqueezyError, create_checkout_url, get_packages
+    from paypal import PayPalError, create_checkout_url, get_packages
 except ModuleNotFoundError:
-    from apps.lemonsqueezy import LemonSqueezyError, create_checkout_url, get_packages
+    from apps.paypal import PayPalError, create_checkout_url, get_packages
 
 try:
     from supabase_store import SupabaseStore, SupabaseStoreError
@@ -682,7 +682,7 @@ def handle_buy(chat_id: str) -> None:
 def handle_buy_package(redis: Redis, chat_id: str, package_key: str) -> None:
     try:
         checkout_url, credits = create_checkout_url(chat_id, package_key)
-    except LemonSqueezyError as exc:
+    except PayPalError as exc:
         send_message(chat_id, f"Failed to create checkout: {exc}")
         return
 

@@ -1,0 +1,46 @@
+<svg width="340" height="88" viewBox="0 0 340 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="340" height="88" rx="14" fill="#18181b"/>
+
+  <!-- Icon mark: 48×48, centered at y=20 -->
+  <svg x="22" y="20" width="48" height="48" viewBox="0 0 28 28" fill="none">
+    <polygon points="14,2 24,8 24,20 14,26 4,20 4,8"
+      fill="none" stroke="white" stroke-width="1.5" stroke-opacity="0.18" stroke-linejoin="round"/>
+    <line x1="14" y1="14" x2="14" y2="2"  stroke="white" stroke-width="1" stroke-opacity="0.28" stroke-linecap="round"/>
+    <line x1="14" y1="14" x2="24" y2="20" stroke="white" stroke-width="1" stroke-opacity="0.28" stroke-linecap="round"/>
+    <line x1="14" y1="14" x2="4"  y2="20" stroke="white" stroke-width="1" stroke-opacity="0.28" stroke-linecap="round"/>
+    <circle cx="14" cy="2"  r="2" fill="white" fill-opacity="0.55"/>
+    <circle cx="24" cy="20" r="2" fill="white" fill-opacity="0.35"/>
+    <circle cx="4"  cy="20" r="2" fill="white" fill-opacity="0.35"/>
+    <circle cx="14" cy="14" r="3" fill="white"/>
+  </svg>
+
+  <!-- Thin vertical divider -->
+  <line x1="86" y1="26" x2="86" y2="62" stroke="white" stroke-width="0.75" stroke-opacity="0.12"/>
+
+  <!-- GRAP — dimmed -->
+  <text x="100" y="55"
+    font-family="'Space Mono', 'Courier New', Courier, monospace"
+    font-size="22"
+    font-weight="400"
+    letter-spacing="5"
+    fill="white"
+    fill-opacity="0.38"
+  >GRAP</text>
+
+  <!-- Node separator (matches icon center dot) -->
+  <circle cx="200" cy="46" r="3" fill="white" fill-opacity="0.45"/>
+
+  <!-- HREF — bold, prominent -->
+  <text x="210" y="55"
+    font-family="'Space Mono', 'Courier New', Courier, monospace"
+    font-size="22"
+    font-weight="700"
+    letter-spacing="5"
+    fill="white"
+    fill-opacity="0.92"
+  >HREF</text>
+
+  <!-- Subtle baseline rule under wordmark -->
+  <line x1="100" y1="62" x2="300" y2="62" stroke="white" stroke-width="0.75" stroke-opacity="0.07"/>
+</svg>
