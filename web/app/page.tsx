@@ -33,24 +33,46 @@ const plans = [
     name: "Starter",
     price: "$1.99",
     credits: 100,
-    desc: "Try it out. 100 clicks, no expiry.",
+    runs: 10,
     highlight: false,
+    features: [
+      "10 keyword runs",
+      "Real organic-looking visits",
+      "Visible in Search Console",
+      "Credits never expire",
+      "Auto-refund on failure",
+    ],
   },
   {
     key: "basic",
     name: "Basic",
     price: "$8.99",
     credits: 500,
-    desc: "For sites you're serious about.",
+    runs: 50,
     highlight: true,
+    features: [
+      "50 keyword runs",
+      "Real organic-looking visits",
+      "Visible in Search Console",
+      "Credits never expire",
+      "Auto-refund on failure",
+    ],
   },
   {
     key: "pro",
     name: "Pro",
     price: "$15.99",
     credits: 1000,
-    desc: "For when you're ready to push.",
+    runs: 100,
     highlight: false,
+    features: [
+      "100 keyword runs",
+      "Real organic-looking visits",
+      "Visible in Search Console",
+      "Credits never expire",
+      "Auto-refund on failure",
+      "Priority queue",
+    ],
   },
 ];
 
@@ -101,84 +123,267 @@ const stats = [
   { icon: Zap, value: "< 60s", label: "Time to first run" },
 ];
 
-// Sparkline chart path for the upward trend visual
-const CHART_POINTS = [
-  [0, 72], [12, 68], [24, 65], [36, 60], [48, 55], [60, 48], [72, 42],
-  [84, 38], [96, 30], [108, 25], [120, 18], [132, 12], [144, 8], [156, 4], [168, 2],
-];
+// Background chart — full-bleed behind hero content
+const BG_RAW = [10, 14, 22, 40, 68, 98, 124, 138, 142, 140, 138, 136, 135, 134, 133];
 
-function TrendChart() {
-  const pts = CHART_POINTS.map(([x, y]) => `${x},${y}`).join(" ");
-  const fillPts = `0,80 ${pts} 168,80`;
+function HeroBgChart() {
+  const W = 1000;
+  const H = 500;
+  const padL = 70;
+  const padR = 40;
+  const padTop = 110;
+  const padBot = 40;
+  const maxVal = 150;
+
+  const innerW = W - padL - padR;
+  const innerH = H - padTop - padBot;
+
+  const toX = (i: number) => padL + (i / (BG_RAW.length - 1)) * innerW;
+  const toY = (v: number) => padTop + innerH - (v / maxVal) * innerH;
+
+  const linePts = BG_RAW.map((v, i) => `${toX(i)},${toY(v)}`).join(" ");
+  const fillPts = `${toX(0)},${padTop + innerH} ${linePts} ${toX(BG_RAW.length - 1)},${padTop + innerH}`;
+
+  // Y grid ticks
+  const yTicks = [0, 50, 100, 150];
+  // X date labels
+  const xLabels = ["Mar 3", "Mar 17", "Mar 31", "Apr 14"];
+
+  const endX = toX(BG_RAW.length - 1);
+  const endY = toY(BG_RAW[BG_RAW.length - 1]);
+
   return (
-    <div className="relative w-full max-w-[220px]">
-      <svg viewBox="0 0 168 80" className="w-full h-auto overflow-visible">
-        <defs>
-          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#18181b" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#18181b" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <polygon points={fillPts} fill="url(#chartGrad)" />
-        <polyline
-          points={pts}
-          fill="none"
-          stroke="#18181b"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* Dot at end */}
-        <circle cx="168" cy="2" r="3.5" fill="#18181b" />
-      </svg>
-      <div className="absolute top-0 right-0 translate-x-2 -translate-y-1">
-        <span className="text-[10px] font-semibold text-zinc-900 bg-white border border-zinc-200 rounded px-1.5 py-0.5 shadow-sm">
-          ↑ CTR
-        </span>
-      </div>
-    </div>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="xMidYMid slice"
+      className="absolute inset-0 w-full h-full"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="bgChartFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#d4d4d8" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#d4d4d8" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      {/* Y grid lines + labels */}
+      {yTicks.map((tick) => (
+        <g key={tick}>
+          <line
+            x1={padL} y1={toY(tick)}
+            x2={W - padR} y2={toY(tick)}
+            stroke="#e4e4e7" strokeWidth="1"
+          />
+          <text x={padL - 8} y={toY(tick) + 4} textAnchor="end" fontSize="11" fill="#a1a1aa">
+            {tick}
+          </text>
+        </g>
+      ))}
+
+      {/* X labels */}
+      {xLabels.map((label, i) => (
+        <text
+          key={label}
+          x={toX(Math.round(i * (BG_RAW.length - 1) / (xLabels.length - 1)))}
+          y={padTop + innerH + 20}
+          textAnchor="middle" fontSize="11" fill="#a1a1aa"
+        >
+          {label}
+        </text>
+      ))}
+
+      {/* Metric label top-left */}
+      <text x={padL} y={padTop - 28} fontSize="11" fill="#a1a1aa" fontWeight="500" letterSpacing="1">
+        ORGANIC IMPRESSIONS
+      </text>
+
+      {/* Fill */}
+      <polygon points={fillPts} fill="url(#bgChartFill)" />
+
+      {/* Line */}
+      <polyline
+        points={linePts}
+        fill="none"
+        stroke="#c4c4c8"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* End dot + pulse */}
+      <circle cx={endX} cy={endY} r="8" fill="#a1a1aa" fillOpacity="0.15" />
+      <circle cx={endX} cy={endY} r="4" fill="#71717a" />
+
+      {/* Callout badge — pinned above the peak (index 7) */}
+      {(() => {
+        const bx = toX(7);
+        const by = toY(BG_RAW[7]);
+        return (
+          <g>
+            <line x1={bx} y1={by - 6} x2={bx} y2={by - 18} stroke="#71717a" strokeWidth="1" strokeDasharray="2 2" />
+            <rect x={bx - 62} y={by - 42} width="124" height="24" rx="12" fill="#18181b" />
+            <text x={bx} y={by - 26} textAnchor="middle" fontSize="11" fill="white" fontWeight="600">
+              ↑ +1,450% impressions
+            </text>
+          </g>
+        );
+      })()}
+    </svg>
   );
 }
 
 function TelegramMockChat() {
   return (
-    <div className="w-full max-w-[280px] bg-[#efeff4] rounded-2xl overflow-hidden shadow-xl border border-zinc-200/60">
+    <div className="w-full max-w-[400px] bg-[#efeff4] rounded-2xl overflow-hidden shadow-xl border border-zinc-200/60">
       {/* Header */}
       <div className="bg-white px-4 py-3 flex items-center gap-3 border-b border-zinc-100">
-        <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
-          <span className="text-white text-[10px] font-bold">G</span>
+        <div className="relative shrink-0">
+          <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center">
+            <span className="text-white text-[12px] font-bold">G</span>
+          </div>
+          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-white" />
         </div>
-        <div>
-          <p className="text-[13px] font-semibold text-zinc-900 leading-none">Graphref Bot</p>
-          <p className="text-[11px] text-green-500 mt-0.5">online</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-[14px] font-semibold text-zinc-900 leading-none">Graphref Bot</p>
+          <p className="text-[12px] text-green-500 mt-0.5">online</p>
+        </div>
+        <div className="flex items-center gap-3 text-zinc-300">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
         </div>
       </div>
+
       {/* Messages */}
-      <div className="px-3 py-4 space-y-2.5 text-[12px]">
+      <div className="px-4 py-5 space-y-3 text-[13px]">
+        {/* Date divider */}
+        <div className="flex items-center gap-3 my-1">
+          <div className="flex-1 h-px bg-zinc-200/70" />
+          <span className="text-[10px] text-zinc-400 font-medium">Today</span>
+          <div className="flex-1 h-px bg-zinc-200/70" />
+        </div>
+
         {/* User message */}
         <div className="flex justify-end">
-          <div className="bg-[#4f81e0] text-white rounded-2xl rounded-tr-sm px-3 py-2 max-w-[80%] leading-snug">
+          <div className="flex flex-col items-end gap-1 max-w-[82%]">
+            <div className="bg-[#4f81e0] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 leading-snug">
+              /run best coffee grinder | mycoffeeshop.com
+            </div>
+            <span className="text-[10px] text-zinc-400 pr-1">9:41 AM ✓✓</span>
+          </div>
+        </div>
+
+        {/* Bot response 1 */}
+        <div className="flex justify-start gap-2">
+          <div className="w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center shrink-0 mt-auto mb-4">
+            <span className="text-white text-[9px] font-bold">G</span>
+          </div>
+          <div className="flex flex-col gap-1 max-w-[82%]">
+            <div className="bg-white text-zinc-800 rounded-2xl rounded-tl-sm px-3.5 py-2.5 leading-snug shadow-sm">
+              ✅ Job started — 10 visits queued
+            </div>
+            <div className="bg-white text-zinc-800 rounded-2xl px-3.5 py-2.5 leading-snug shadow-sm">
+              📊 Done. Check Search Console in a few hours.
+            </div>
+            <span className="text-[10px] text-zinc-400 pl-1">9:41 AM</span>
+          </div>
+        </div>
+
+        {/* User message 2 */}
+        <div className="flex justify-end">
+          <div className="flex flex-col items-end gap-1 max-w-[82%]">
+            <div className="bg-[#4f81e0] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 leading-snug">
+              Wow, already seeing clicks 🚀
+            </div>
+            <span className="text-[10px] text-zinc-400 pr-1">9:43 AM ✓✓</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Input bar */}
+      <div className="bg-white px-3 py-2.5 flex items-center gap-2 border-t border-zinc-100">
+        <div className="flex-1 bg-zinc-100 rounded-full px-4 py-2 text-[13px] text-zinc-400">
+          Message
+        </div>
+        <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const rankingRows = [
+  { keyword: "best coffee grinder", before: 14, after: 3 },
+  { keyword: "pour over coffee maker", before: 21, after: 7 },
+  { keyword: "espresso machine home", before: 18, after: 5 },
+];
+
+function ChatTypeCard() {
+  return (
+    <div className="bg-[#efeff4] rounded-2xl overflow-hidden border border-zinc-200/60 shadow-sm">
+      <div className="bg-white px-3 py-2.5 flex items-center gap-2 border-b border-zinc-100">
+        <div className="relative shrink-0">
+          <div className="w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center">
+            <span className="text-white text-[9px] font-bold">G</span>
+          </div>
+          <span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-green-400 rounded-full border border-white" />
+        </div>
+        <p className="text-[12px] font-semibold text-zinc-900">Graphref Bot</p>
+      </div>
+      {/* Sent message bubble */}
+      <div className="px-3 pt-3 pb-2">
+        <div className="flex justify-end">
+          <div className="bg-[#4f81e0] text-white rounded-2xl rounded-tr-sm px-3 py-2 text-[12px] leading-snug max-w-[88%]">
             /run best coffee grinder | mycoffeeshop.com
           </div>
         </div>
-        {/* Bot response 1 */}
-        <div className="flex justify-start">
-          <div className="bg-white text-zinc-800 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[80%] leading-snug shadow-sm">
-            ✅ Job started — 10 visits queued
+      </div>
+      {/* Input bar — typing effect */}
+      <div className="bg-white px-3 py-2 flex items-center gap-2 border-t border-zinc-100">
+        <div className="flex-1 bg-zinc-100 rounded-full px-3 py-1.5 flex items-center text-[12px] text-zinc-700">
+          /run keyword | yoursite.com
+          <span className="inline-block w-0.5 h-3.5 bg-zinc-500 rounded-full animate-pulse ml-0.5" />
+        </div>
+        <div className="w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RankingCard() {
+  return (
+    <div className="w-full max-w-[340px] bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-400" />
+          <span className="text-[12px] font-semibold text-zinc-700">Search Console · Performance</span>
+        </div>
+        <span className="text-[11px] text-zinc-400">Last 28 days</span>
+      </div>
+      {/* Column headers */}
+      <div className="grid grid-cols-[1fr_56px_56px] px-4 py-2 bg-zinc-50 border-b border-zinc-100">
+        <span className="text-[11px] text-zinc-400 font-medium">Keyword</span>
+        <span className="text-[11px] text-zinc-400 font-medium text-center">Before</span>
+        <span className="text-[11px] text-zinc-400 font-medium text-center">After</span>
+      </div>
+      {/* Rows */}
+      {rankingRows.map((row) => (
+        <div key={row.keyword} className="grid grid-cols-[1fr_56px_56px] px-4 py-3 border-b border-zinc-50 last:border-0 items-center">
+          <span className="text-[12px] text-zinc-700 truncate pr-2">{row.keyword}</span>
+          <span className="text-[13px] text-zinc-400 font-medium text-center">#{row.before}</span>
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-[13px] font-bold text-emerald-600">#{row.after}</span>
+            <span className="text-[10px] text-emerald-500">↑</span>
           </div>
         </div>
-        {/* Bot response 2 */}
-        <div className="flex justify-start">
-          <div className="bg-white text-zinc-800 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[80%] leading-snug shadow-sm">
-            📊 Done. Check Search Console in a few hours.
-          </div>
-        </div>
-        {/* User message 2 */}
-        <div className="flex justify-end">
-          <div className="bg-[#4f81e0] text-white rounded-2xl rounded-tr-sm px-3 py-2 max-w-[80%] leading-snug">
-            Wow, already seeing clicks 🚀
-          </div>
-        </div>
+      ))}
+      {/* Footer */}
+      <div className="px-4 py-2.5 bg-zinc-50 flex items-center gap-1.5">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        <span className="text-[11px] text-zinc-400">Powered by Graphref</span>
       </div>
     </div>
   );
@@ -222,8 +427,14 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-40 pb-28 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+      <section className="relative pt-52 pb-28 px-6 overflow-hidden">
+        {/* Background chart */}
+        <HeroBgChart />
+        {/* Fade out at the bottom so it blends into the next section */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+
+        {/* Content */}
+        <div className="relative z-10 max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-14">
           {/* Left: text */}
           <div className="flex-1">
             <h1 className="text-[56px] leading-[1.08] font-bold tracking-tight text-zinc-900 mb-6">
@@ -258,27 +469,27 @@ export default function Home() {
           </div>
 
           {/* Right: Telegram mock chat */}
-          <div className="flex-shrink-0 flex flex-col items-center gap-6">
+          <div className="flex-shrink-0 w-full lg:w-auto flex justify-center">
             <TelegramMockChat />
-            {/* Mini chart below chat */}
-            <div className="flex flex-col items-center gap-1">
-              <TrendChart />
-              <p className="text-[11px] text-zinc-400 tracking-wide uppercase">Search Console impressions</p>
-            </div>
           </div>
         </div>
       </section>
 
       {/* Stats bar */}
-      <section className="border-y border-zinc-100 py-10 px-6">
-        <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8">
-          {stats.map((s) => {
+      <section className="py-10 px-6 bg-zinc-900">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-0">
+          {stats.map((s, i) => {
             const Icon = s.icon;
             return (
-              <div key={s.label} className="flex flex-col items-center gap-2 text-center">
-                <Icon size={20} className="text-zinc-400" />
-                <span className="text-[28px] font-bold tracking-tight text-zinc-900">{s.value}</span>
-                <span className="text-[13px] text-zinc-500">{s.label}</span>
+              <div
+                key={s.label}
+                className={`flex flex-col items-center gap-2 text-center py-6 px-8 ${
+                  i < stats.length - 1 ? "sm:border-r border-zinc-700" : ""
+                }`}
+              >
+                <Icon size={18} className="text-zinc-500" />
+                <span className="text-[32px] font-bold tracking-tight text-white">{s.value}</span>
+                <span className="text-[13px] text-zinc-400">{s.label}</span>
               </div>
             );
           })}
@@ -287,41 +498,182 @@ export default function Home() {
 
       {/* How it works */}
       <section className="py-24 px-6 bg-zinc-50">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-14">
             How it works
           </h2>
-          <div className="space-y-10">
-            {steps.map((step) => {
-              const Icon = step.icon;
-              return (
-                <div key={step.number} className="flex gap-6 items-start">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center shrink-0">
-                    <Icon size={18} className="text-white" />
-                  </div>
-                  <div className="pt-1">
-                    <p className="text-[16px] font-semibold text-zinc-900 mb-1">
-                      {step.title}
-                    </p>
-                    <p className="text-[14px] text-zinc-500">{step.desc}</p>
+          <div className="flex flex-col lg:flex-row gap-16 items-start">
+          <div className="max-w-xl flex flex-col flex-shrink-0">
+
+            {/* Step 1 */}
+            <div className="flex gap-5">
+              <div className="flex flex-col items-center w-9 shrink-0">
+                <div className="w-9 h-9 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
+                  <Search size={15} className="text-white" />
+                </div>
+                <div className="w-px flex-1 bg-zinc-200 mt-2" />
+              </div>
+              <div className="pb-5 pt-1">
+                <p className="text-[15px] font-semibold text-zinc-900 mb-1">Open the bot on Telegram</p>
+                <p className="text-[13px] text-zinc-500 leading-relaxed">No account setup. No forms. Just hit Start.</p>
+              </div>
+            </div>
+
+            {/* Visual 1: START button */}
+            <div className="flex gap-5">
+              <div className="flex flex-col items-center w-9 shrink-0">
+                <div className="w-px flex-1 bg-zinc-200" />
+              </div>
+              <div className="py-3 pl-0">
+                <div className="bg-[#4f81e0] text-white text-[13px] font-semibold px-10 py-2 rounded-xl inline-block shadow-sm">
+                  START
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex gap-5">
+              <div className="flex flex-col items-center">
+                <div className="w-px flex-1 bg-zinc-200 mb-2" />
+                <div className="w-9 h-9 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
+                  <Terminal size={15} className="text-white" />
+                </div>
+                <div className="w-px flex-1 bg-zinc-200 mt-2" />
+              </div>
+              <div className="py-5 pt-6">
+                <p className="text-[15px] font-semibold text-zinc-900 mb-1">Type your keyword and domain</p>
+                <p className="text-[13px] text-zinc-500 leading-relaxed">/run your keyword | yoursite.com</p>
+              </div>
+            </div>
+
+            {/* Visual 2: chat input bar */}
+            <div className="flex gap-5">
+              <div className="flex flex-col items-center w-9 shrink-0">
+                <div className="w-px flex-1 bg-zinc-200" />
+              </div>
+              <div className="py-3">
+                <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-full px-3 py-2 shadow-sm w-72">
+                  <span className="flex-1 text-[13px] text-zinc-500 font-mono">
+                    /run keyword | yoursite.com
+                    <span className="inline-block w-0.5 h-3.5 bg-zinc-400 rounded-full animate-pulse ml-0.5 align-middle" />
+                  </span>
+                  <div className="w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex gap-5">
+              <div className="flex flex-col items-center">
+                <div className="w-px flex-1 bg-zinc-200 mb-2" />
+                <div className="w-9 h-9 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
+                  <TrendingUp size={15} className="text-white" />
+                </div>
+                <div className="w-px flex-1 bg-zinc-200 mt-2" />
+              </div>
+              <div className="py-5 pt-6">
+                <p className="text-[15px] font-semibold text-zinc-900 mb-1">Graphref does the rest</p>
+                <p className="text-[13px] text-zinc-500 leading-relaxed">It drives real search visits to your site. You'll see it in Search Console.</p>
+              </div>
+            </div>
+
+            {/* Visual 3: horizontal ranking card */}
+            <div className="flex gap-5">
+              <div className="flex flex-col items-center w-9 shrink-0">
+                <div className="w-px flex-1 bg-zinc-200" />
+              </div>
+              <div className="py-3">
+                <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="px-4 py-2.5 border-b border-zinc-100 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span className="text-[11px] font-semibold text-zinc-600">Search Console · Performance</span>
+                    <span className="ml-auto text-[11px] text-zinc-400">Last 28 days</span>
+                  </div>
+                  <div className="flex divide-x divide-zinc-100">
+                    {rankingRows.map((row) => (
+                      <div key={row.keyword} className="flex-1 px-3 py-3 text-center">
+                        <p className="text-[11px] text-zinc-400 truncate mb-1.5">{row.keyword}</p>
+                        <div className="flex items-center justify-center gap-2 text-[12px]">
+                          <span className="text-zinc-400">#{row.before}</span>
+                          <span className="text-zinc-300">→</span>
+                          <span className="font-bold text-emerald-600">#{row.after}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+            {/* Right: SERP mockup */}
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
+                {/* Browser chrome */}
+                <div className="bg-zinc-100 px-4 py-2.5 flex items-center gap-2 border-b border-zinc-200">
+                  <div className="flex gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/60" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-400/60" />
+                  </div>
+                  <div className="flex-1 bg-white rounded-md px-3 py-1 flex items-center gap-2 border border-zinc-200 mx-3">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <span className="text-[11px] text-zinc-400">best coffee grinder</span>
+                  </div>
+                </div>
+                {/* SERP results */}
+                <div className="px-5 py-4 space-y-4">
+                  {/* Sponsored label */}
+                  <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">About 4,200,000 results</p>
+
+                  {/* Result 1 — competitor */}
+                  <div className="space-y-0.5 opacity-50">
+                    <p className="text-[11px] text-zinc-400">bestreviews.com › coffee › grinders</p>
+                    <p className="text-[13px] text-blue-600 font-medium">Best Coffee Grinders of 2024 — Expert Picks</p>
+                    <p className="text-[11px] text-zinc-500">We tested 30+ grinders so you don't have to. Here are our top picks...</p>
+                  </div>
+
+                  {/* Result 2 — competitor */}
+                  <div className="space-y-0.5 opacity-50">
+                    <p className="text-[11px] text-zinc-400">wirecutter.com › reviews › best-coffee-grinder</p>
+                    <p className="text-[13px] text-blue-600 font-medium">The Best Coffee Grinder — Wirecutter</p>
+                    <p className="text-[11px] text-zinc-500">After testing dozens of models, we recommend the Baratza Encore...</p>
+                  </div>
+
+                  {/* Result 3 — USER's site, highlighted */}
+                  <div className="space-y-0.5 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2.5 relative">
+                    <div className="absolute -top-2 right-3 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">↑ #3</div>
+                    <p className="text-[11px] text-emerald-600">mycoffeeshop.com › best-coffee-grinder</p>
+                    <p className="text-[13px] text-blue-600 font-medium">Best Coffee Grinders — My Coffee Shop</p>
+                    <p className="text-[11px] text-zinc-500">Hand-picked grinders for every budget. Free shipping over $50...</p>
+                  </div>
+
+                  {/* Result 4 — competitor */}
+                  <div className="space-y-0.5 opacity-40">
+                    <p className="text-[11px] text-zinc-400">amazon.com › best-sellers › coffee-grinders</p>
+                    <p className="text-[13px] text-blue-600 font-medium">Amazon Best Sellers: Coffee Grinders</p>
+                    <p className="text-[11px] text-zinc-500">Discover the best Coffee Grinders in Best Sellers...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Pricing */}
       <section id="pricing" className="py-24 px-6">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-3">
             Pricing
           </h2>
           <p className="text-[15px] text-zinc-500 mb-12">
             Credits never expire. No subscription.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {plans.map((plan) => (
               <div
                 key={plan.key}
@@ -344,11 +696,19 @@ export default function Home() {
                     {plan.credits.toLocaleString()} credits
                   </p>
                 </div>
-                <p
-                  className={`text-[13px] leading-relaxed ${plan.highlight ? "text-zinc-400" : "text-zinc-500"}`}
-                >
-                  {plan.desc}
-                </p>
+                <ul className="flex flex-col gap-2">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-[13px]">
+                      <CheckCircle
+                        size={13}
+                        className={`shrink-0 ${plan.highlight ? "text-zinc-400" : "text-zinc-400"}`}
+                      />
+                      <span className={plan.highlight ? "text-zinc-300" : "text-zinc-600"}>
+                        {f}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
                 <a
                   href={TELEGRAM_URL}
                   target="_blank"
@@ -384,7 +744,7 @@ export default function Home() {
 
       {/* Testimonials */}
       <section className="py-24 px-6 bg-zinc-50">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-12">
             What people say
           </h2>
@@ -419,7 +779,7 @@ export default function Home() {
 
       {/* FAQ */}
       <section className="py-24 px-6">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-10">FAQ</h2>
           <div>
             {faqs.map((faq) => (
@@ -431,7 +791,7 @@ export default function Home() {
 
       {/* Footer CTA */}
       <section className="py-24 px-6 bg-zinc-50">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <h2 className="text-[36px] font-bold tracking-tight mb-4">
             Ready to try it?
           </h2>
