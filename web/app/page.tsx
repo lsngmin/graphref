@@ -662,7 +662,7 @@ export default function Home() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-24 px-6">
+      <section id="pricing" className="scroll-mt-28 py-24 px-6 md:scroll-mt-32">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-3">
             Pricing
@@ -803,7 +803,7 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-24 px-6">
+      <section id="faq" className="scroll-mt-28 py-24 px-6 md:scroll-mt-32">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-[28px] font-bold tracking-tight mb-10">FAQ</h2>
           <div>

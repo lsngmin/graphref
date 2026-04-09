@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MessageCircle, Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 type MarketingHeaderProps = {
   activePage?: "about";
@@ -11,11 +12,14 @@ type MarketingHeaderProps = {
 
 export default function MarketingHeader({
   activePage,
-  pricingHref = "#pricing",
+  pricingHref,
   theme = "dark",
 }: MarketingHeaderProps) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
   const isDark = theme === "dark";
+  const resolvedPricingHref = pricingHref ?? (pathname === "/" ? "#pricing" : "/#pricing");
 
   const navClass = isDark
     ? "fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md"
@@ -39,6 +43,37 @@ export default function MarketingHeader({
   const drawerLinkClass = isDark
     ? "text-sm text-white/50 hover:text-white transition py-1"
     : "text-sm text-zinc-500 hover:text-zinc-900 transition py-1";
+
+  const handlePricingClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    const hashIndex = resolvedPricingHref.indexOf("#");
+
+    if (hashIndex === -1) {
+      setOpen(false);
+      return;
+    }
+
+    const targetId = resolvedPricingHref.slice(hashIndex + 1);
+
+    if (!targetId) {
+      setOpen(false);
+      return;
+    }
+
+    event.preventDefault();
+    setOpen(false);
+
+    if (pathname === "/") {
+      const section = document.getElementById(targetId);
+
+      if (section) {
+        window.history.replaceState(null, "", `/#${targetId}`);
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+    }
+
+    router.push(`/#${targetId}`, { scroll: false });
+  };
 
   const Logo = (
     <a href="/" className={brandClass}>
@@ -69,7 +104,7 @@ export default function MarketingHeader({
           <a href="/about" className={activePage === "about" ? activeLinkClass : linkClass}>
             About
           </a>
-          <a href={pricingHref} className={linkClass}>
+          <a href={resolvedPricingHref} className={linkClass} onClick={handlePricingClick}>
             Pricing
           </a>
           <a href="https://t.me/graphrefbot" target="_blank" rel="noopener noreferrer" className={ctaClass}>
@@ -94,7 +129,7 @@ export default function MarketingHeader({
           <a href="/about" className={drawerLinkClass} onClick={() => setOpen(false)}>
             About
           </a>
-          <a href={pricingHref} className={drawerLinkClass} onClick={() => setOpen(false)}>
+          <a href={resolvedPricingHref} className={drawerLinkClass} onClick={handlePricingClick}>
             Pricing
           </a>
           <a

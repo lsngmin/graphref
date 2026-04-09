@@ -123,7 +123,7 @@ def test_handle_status_without_job_id_uses_active_job(monkeypatch):
         "job-active": FakeJob("started"),
     }
 
-    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text)))
+    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text, parse_mode)))
     monkeypatch.setattr(telegram_bot, "get_recent_job_ids", lambda redis, chat_id, limit=5: ["job-done", "job-active"])
     monkeypatch.setattr(telegram_bot.Job, "fetch", lambda job_id, connection=None: jobs[job_id])
     monkeypatch.setattr(
@@ -135,7 +135,7 @@ def test_handle_status_without_job_id_uses_active_job(monkeypatch):
 
     telegram_bot.handle_status(redis=object(), chat_id="user-1", text="/status")
 
-    assert sent_messages == [("user-1", "started hello world example.com")]
+    assert sent_messages == [("user-1", "started hello world example.com", "HTML")]
 
 
 def test_handle_status_without_job_id_reports_when_no_active_job(monkeypatch):
@@ -153,7 +153,7 @@ def test_handle_status_without_job_id_reports_when_no_active_job(monkeypatch):
         "job-2": FakeJob("failed"),
     }
 
-    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text)))
+    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text, parse_mode)))
     monkeypatch.setattr(telegram_bot, "get_recent_job_ids", lambda redis, chat_id, limit=5: ["job-1", "job-2"])
     monkeypatch.setattr(telegram_bot.Job, "fetch", lambda job_id, connection=None: jobs[job_id])
     monkeypatch.setattr(
@@ -164,7 +164,53 @@ def test_handle_status_without_job_id_reports_when_no_active_job(monkeypatch):
 
     telegram_bot.handle_status(redis=object(), chat_id="user-1", text="/status")
 
-    assert sent_messages == [("user-1", "No active jobs.")]
+    assert sent_messages == [("user-1", "No active jobs.", None)]
+
+
+def test_format_job_message_for_started_job():
+    class FakeJob:
+        id = "job-123"
+        result = None
+        exc_info = None
+
+        def get_status(self, refresh: bool = False) -> str:
+            return "started"
+
+    body = telegram_bot.format_job_message(
+        redis=object(),
+        job=FakeJob(),
+        keyword="hello <world>",
+        domain="example.com",
+    )
+
+    assert "<b>🚀 Job Status</b>" in body
+    assert "<b>Status:</b> Running" in body
+    assert "<code>hello &lt;world&gt;</code>" in body
+    assert "<code>example.com</code>" in body
+    assert "<i>Your job is currently being processed.</i>" in body
+    assert "<code>job-123</code>" in body
+
+
+def test_format_job_message_for_failed_job_includes_preview():
+    class FakeJob:
+        id = "job-456"
+        result = {"status": "failed", "code": 1, "stderr": "boom <bad>\ntrace"}
+        exc_info = None
+
+        def get_status(self, refresh: bool = False) -> str:
+            return "failed"
+
+    body = telegram_bot.format_job_message(
+        redis=object(),
+        job=FakeJob(),
+        keyword="kw",
+        domain="example.com",
+    )
+
+    assert "<b>❌ Job Failed</b>" in body
+    assert "<b>Result:</b> <code>failed</code>" in body
+    assert "<b>Exit code:</b> <code>1</code>" in body
+    assert "<pre>boom &lt;bad&gt;\ntrace</pre>" in body
 
 
 def test_handle_jobs_requires_limit(monkeypatch):

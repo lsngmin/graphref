@@ -1,3 +1,4 @@
+import html
 import json
 import os
 import time
@@ -237,6 +238,47 @@ def command_name(text: str) -> str:
 # Text helpers
 # ---------------------------------------------------------------------------
 
+def escape_html(value: object) -> str:
+    return html.escape(str(value))
+
+
+def get_job_status_display(status: str, result: Optional[dict] = None) -> tuple[str, str, str]:
+    if status == "queued":
+        return ("⏳ Job Status", "Queued", "Your job is waiting in the queue.")
+    if status == "started":
+        return ("🚀 Job Status", "Running", "Your job is currently being processed.")
+    if status == "finished":
+        if result and result.get("status") == "ok" and result.get("code") == 0:
+            return ("✅ Job Complete", "Completed", "The run finished successfully.")
+        return ("⚠️ Job Complete", "Finished with issues", "The run finished, but it reported an issue.")
+    if status == "failed":
+        return ("❌ Job Failed", "Failed", "The run stopped because of an error.")
+    if status == "canceled":
+        return ("🛑 Job Cancelled", "Cancelled", "This job was cancelled before completion.")
+    if status == "stopped":
+        return ("🛑 Job Stopped", "Stopped", "This job was stopped before completion.")
+    return ("ℹ️ Job Status", status.title(), "Job status updated.")
+
+
+def get_job_detail_preview(job: Job) -> Optional[str]:
+    result = job.result if isinstance(job.result, dict) else None
+    preview = ""
+
+    if result:
+        preview = str(result.get("stderr") or result.get("stdout") or "").strip()
+
+    if not preview and job.exc_info:
+        preview = str(job.exc_info).strip()
+
+    if not preview:
+        return None
+
+    compact = "\n".join(line.rstrip() for line in preview.splitlines() if line.strip()).strip()
+    if not compact:
+        return None
+
+    return compact[-500:]
+
 def usage_text() -> str:
     lines = [
         "<b>📖 Graphref Bot Commands</b>",
@@ -331,32 +373,41 @@ def get_job_meta(redis: Redis, job_id: str) -> dict[str, str]:
 
 def format_job_message(redis: Redis, job: Job, keyword: str, domain: str) -> str:
     status = job.get_status(refresh=True)
+    result = job.result if isinstance(job.result, dict) else None
+    title, status_label, summary = get_job_status_display(status, result=result)
     lines = [
-        f"job_id: {job.id}",
-        f"queue_status: {status}",
-        f"keyword: {keyword}",
-        f"domain: {domain}",
+        f"<b>{title}</b>",
+        "",
+        f"<b>Status:</b> {escape_html(status_label)}",
+        f"<b>Keyword:</b> <code>{escape_html(keyword)}</code>",
+        f"<b>Domain:</b> <code>{escape_html(domain)}</code>",
     ]
 
     if status == "queued":
         position = get_queue(redis).get_job_position(job.id)
         if position is not None:
-            lines.append(f"queue_position: {position + 1}")
+            lines.append(f"<b>Queue position:</b> {position + 1}")
 
-    result = job.result if isinstance(job.result, dict) else None
-    if result:
-        lines.append(f"result_status: {result.get('status')}")
-        if result.get("code") is not None:
-            lines.append(f"exit_code: {result.get('code')}")
+    if result and result.get("status"):
+        lines.append(f"<b>Result:</b> <code>{escape_html(result.get('status'))}</code>")
+    if result and result.get("code") is not None:
+        lines.append(f"<b>Exit code:</b> <code>{escape_html(result.get('code'))}</code>")
 
-        preview = (result.get("stderr") or result.get("stdout") or "").strip()
-        if preview:
-            lines.append("")
-            lines.append(preview[-1200:])
+    lines.extend(["", f"<i>{escape_html(summary)}</i>"])
 
-    if job.exc_info:
-        lines.append("")
-        lines.append(job.exc_info[-1200:])
+    preview = get_job_detail_preview(job)
+    if preview:
+        lines.extend([
+            "",
+            "<b>Details:</b>",
+            f"<pre>{escape_html(preview)}</pre>",
+        ])
+
+    lines.extend([
+        "",
+        "<b>Job ID:</b>",
+        f"<code>{escape_html(job.id)}</code>",
+    ])
 
     return "\n".join(lines)
 
@@ -499,7 +550,7 @@ def handle_status(redis: Redis, chat_id: str, text: str) -> None:
 
     keyword = meta.get("keyword") or "unknown"
     domain = meta.get("domain") or "unknown"
-    send_message(chat_id, format_job_message(redis, job, keyword, domain))
+    send_message(chat_id, format_job_message(redis, job, keyword, domain), parse_mode="HTML")
 
 
 def handle_jobs(redis: Redis, chat_id: str, text: str) -> None:
@@ -783,10 +834,8 @@ def notify_completed_jobs(redis: Redis) -> None:
 
         keyword = decode(meta.get(b"keyword")) or "unknown"
         domain = decode(meta.get(b"domain")) or "unknown"
-        result = job.result if isinstance(job.result, dict) else {}
-        done_label = "Job done" if result.get("status") == "ok" and result.get("code") == 0 else "Job failed"
         body = format_job_message(redis, job, keyword, domain)
-        send_message(chat_id, f"{done_label}\n\n{body}")
+        send_message(chat_id, body, parse_mode="HTML")
         redis.srem(REDIS_PENDING_JOBS_KEY, job_id)
         redis.delete(meta_key)
 
