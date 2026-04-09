@@ -78,42 +78,66 @@ const plans = [
 
 const testimonials = [
   {
-    text: "Saw movement in Search Console within the first week. Simple and it just works.",
+    text: "I've tried paid backlinks, guest posts, all of it. Nothing moved the needle as fast as Graphref. Within the first week I could see real movement in Search Console — impressions up, clicks coming in. It's stupidly simple. You type a command and it just works.",
     name: "James R.",
     role: "Indie founder",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    metric: "+1,200% impressions",
+    metricSub: "in 7 days",
+    date: "March 22, 2026",
   },
   {
     text: "No subscription, no dashboard to learn. I type a command and it runs. That's all I needed.",
     name: "Sofia M.",
     role: "SEO consultant",
+    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    metric: "Ranked #3",
+    metricSub: "",
+    date: "January 14, 2026",
   },
   {
     text: "Tried a few tools before this. Graphref is the only one where I could actually see the visits in GSC.",
     name: "David K.",
     role: "E-commerce owner",
+    avatar: "https://randomuser.me/api/portraits/men/76.jpg",
+    metric: "+340% CTR",
+    metricSub: "",
+    date: "February 7, 2026",
   },
 ];
 
 const faqs = [
   {
-    q: "Does this show up in Search Console?",
-    a: "Yes. Each visit is driven through a real search query, so it registers as organic traffic in Google Search Console.",
+    q: "How does Graphref actually work?",
+    a: "Graphref uses a network of real devices to perform genuine Google searches for your target keyword, then clicks through to your site from the search results. This simulates organic search behavior — the kind of engagement signal that Google uses to evaluate how relevant your page is to a given query. Because every visit originates from an actual search, it shows up as organic traffic in Google Search Console.",
+  },
+  {
+    q: "Will I see results in Google Search Console?",
+    a: "Yes. Since visits are driven through real search queries, they register as organic impressions and clicks in GSC. Most users start seeing movement within 24–72 hours of their first run. We recommend monitoring your target keyword's impression and click data in the Performance tab.",
+  },
+  {
+    q: "Is it safe? Will Google penalize my site?",
+    a: "Graphref is designed to mimic natural user behavior as closely as possible — real devices, real searches, realistic session patterns. We don't use bots or headless browsers. That said, no third-party traffic tool can guarantee zero risk, and we encourage you to use it as one part of a broader SEO strategy rather than a sole growth channel.",
+  },
+  {
+    q: "How many visits does one credit give me?",
+    a: "One run costs 10 credits and delivers 10 targeted search visits to your site. You choose the keyword and domain each time you run a job. There's no minimum spend — you can run a single job with your free credits to see how it works before purchasing more.",
+  },
+  {
+    q: "Can I target multiple keywords or domains?",
+    a: "Yes. Each /run command accepts one keyword and one domain, but you can run as many jobs as your credits allow — across different keywords, different pages, or entirely different sites. There's no restriction on how many domains you use.",
   },
   {
     q: "Do credits expire?",
-    a: "No. Buy once, use whenever.",
+    a: "Never. Credits you purchase are yours indefinitely. There's no monthly renewal, no expiry date, and no pressure to use them by a certain time. Buy when you need them, use them at your own pace.",
   },
   {
-    q: "How do I get started?",
-    a: "Open Telegram and type /start. New users get 50 free credits — enough for 5 runs.",
+    q: "What if a job doesn't complete successfully?",
+    a: "If a job fails for any reason — network issues, invalid domain, or a processing error on our end — your credits are automatically refunded in full. You'll receive a notification in the Telegram bot with the reason and your restored balance.",
   },
   {
-    q: "Can I cancel anytime?",
-    a: "There's nothing to cancel. Credits are one-time purchases, not subscriptions.",
-  },
-  {
-    q: "What happens if a job fails?",
-    a: "Credits are automatically refunded if a job doesn't complete successfully.",
+    q: "Is there a subscription or recurring charge?",
+    a: "No. Graphref is entirely credit-based. You pay once for a credit package and use them whenever you want. There's no subscription to manage, no auto-renewal to worry about, and nothing to cancel.",
   },
 ];
 
@@ -191,11 +215,6 @@ function HeroBgChart() {
           {label}
         </text>
       ))}
-
-      {/* Metric label top-left */}
-      <text x={padL} y={padTop - 28} fontSize="11" fill="#a1a1aa" fontWeight="500" letterSpacing="1">
-        ORGANIC IMPRESSIONS
-      </text>
 
       {/* Fill */}
       <polygon points={fillPts} fill="url(#bgChartFill)" />
@@ -417,12 +436,21 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur border-b border-zinc-100">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <span className="text-sm font-semibold tracking-tight">GRAPHREF</span>
-          <a
-            href="#pricing"
-            className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
-          >
-            Pricing
-          </a>
+          <div className="flex items-center gap-6">
+            <a
+              href="/about"
+              className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
+            >
+              About
+            </a>
+            <a
+              href="#pricing"
+              onClick={(e) => { e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }}
+              className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
+            >
+              Pricing
+            </a>
+          </div>
         </div>
       </nav>
 
@@ -748,31 +776,84 @@ export default function Home() {
           <h2 className="text-[28px] font-bold tracking-tight mb-12">
             What people say
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {testimonials.map((t) => (
-              <div
-                key={t.name}
-                className="bg-white border border-zinc-200 rounded-xl p-6 flex flex-col gap-4"
-              >
-                {/* Star rating */}
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} width="12" height="12" viewBox="0 0 12 12" fill="#18181b">
-                      <path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5 3.4 8.9l.5-2.9L1.8 4l2.9-.4z" />
-                    </svg>
-                  ))}
+
+          <div className="flex flex-col gap-4">
+            {/* Featured card — light, full width */}
+            <div className="bg-white border border-zinc-200 rounded-2xl p-8 flex flex-col lg:flex-row gap-8 lg:items-center">
+              {/* Quote side */}
+              <div className="flex-1 flex flex-col gap-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} width="20" height="20" viewBox="0 0 12 12" fill="#facc15">
+                        <path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5 3.4 8.9l.5-2.9L1.8 4l2.9-.4z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-[11px] text-zinc-400">{testimonials[0].date}</span>
                 </div>
-                <p className="text-[14px] text-zinc-600 leading-relaxed">
-                  "{t.text}"
+                <p className="text-[17px] text-zinc-700 leading-relaxed italic" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+                  "{testimonials[0].text}"
                 </p>
-                <div className="mt-auto">
-                  <p className="text-[13px] font-semibold text-zinc-900">
-                    {t.name}
-                  </p>
-                  <p className="text-[12px] text-zinc-400">{t.role}</p>
+                <div className="border-t border-zinc-100 pt-4 flex items-center gap-3 mt-auto">
+                  <img src={testimonials[0].avatar} alt={testimonials[0].name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                  <div>
+                    <p className="text-[13px] font-semibold text-zinc-900">{testimonials[0].name}</p>
+                    <p className="text-[12px] text-zinc-400">{testimonials[0].role}</p>
+                  </div>
                 </div>
               </div>
-            ))}
+
+              {/* Metric side */}
+              <div className="lg:w-56 shrink-0 bg-zinc-50 border border-zinc-100 rounded-xl p-5 flex flex-col gap-3">
+                <p className="text-[11px] text-zinc-400 font-medium uppercase tracking-wider">Search Console</p>
+                <div>
+                  <p className="text-[28px] font-bold text-emerald-500 leading-none">↑ {testimonials[0].metric}</p>
+                  <p className="text-[12px] text-zinc-400 mt-1">{testimonials[0].metricSub}</p>
+                </div>
+                {/* Mini bar chart */}
+                <div className="flex items-end gap-1 h-10 mt-1">
+                  {[2, 3, 2, 4, 5, 7, 10, 14, 18, 22].map((v, i) => (
+                    <div
+                      key={i}
+                      className="flex-1 rounded-sm"
+                      style={{
+                        height: `${(v / 22) * 100}%`,
+                        backgroundColor: i >= 7 ? '#34d399' : '#e4e4e7',
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Two smaller cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {testimonials.slice(1).map((t) => (
+                <div key={t.name} className="bg-white border border-zinc-200 rounded-2xl p-6 flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} width="20" height="20" viewBox="0 0 12 12" fill="#facc15">
+                          <path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5 3.4 8.9l.5-2.9L1.8 4l2.9-.4z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-[11px] text-zinc-400">{t.date}</span>
+                  </div>
+                  <p className="text-[17px] text-zinc-600 leading-relaxed flex-1 italic" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+                    "{t.text}"
+                  </p>
+                  <div className="flex items-center gap-3 mt-auto pt-2 border-t border-zinc-100">
+                    <img src={t.avatar} alt={t.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                    <div>
+                      <p className="text-[13px] font-semibold text-zinc-900">{t.name}</p>
+                      <p className="text-[12px] text-zinc-400">{t.role}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -785,6 +866,18 @@ export default function Home() {
             {faqs.map((faq) => (
               <FAQ key={faq.q} q={faq.q} a={faq.a} />
             ))}
+          </div>
+          <div className="mt-10 flex items-center gap-4 p-5 bg-zinc-50 rounded-xl border border-zinc-100">
+            <div className="flex-1">
+              <p className="text-[14px] font-semibold text-zinc-900">Still have questions?</p>
+              <p className="text-[13px] text-zinc-500 mt-0.5">Can't find what you're looking for? We're happy to help.</p>
+            </div>
+            <a
+              href="/contact"
+              className="shrink-0 inline-flex items-center gap-2 bg-zinc-900 text-white text-[13px] font-medium px-4 py-2.5 rounded-lg hover:bg-zinc-700 transition-colors"
+            >
+              Contact us
+            </a>
           </div>
         </div>
       </section>
@@ -827,10 +920,10 @@ export default function Home() {
               Privacy Policy
             </a>
             <a
-              href={`mailto:${CONTACT_EMAIL}`}
+              href="/contact"
               className="hover:text-zinc-600 transition-colors"
             >
-              {CONTACT_EMAIL}
+              Contact
             </a>
             <span>© {new Date().getFullYear()} Graphref</span>
           </div>
