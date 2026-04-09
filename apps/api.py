@@ -12,11 +12,6 @@ from rq.job import Job
 from decimal import Decimal, ROUND_HALF_UP
 
 try:
-    from lemonsqueezy import verify_webhook_signature
-except ModuleNotFoundError:
-    from apps.lemonsqueezy import verify_webhook_signature
-
-try:
     from paypal import (
         PayPalError,
         capture_order as capture_paypal_order,
@@ -48,7 +43,6 @@ except ModuleNotFoundError:
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 QUEUE_NAME = os.getenv("RQ_QUEUE", "jobs")
 JOB_TIMEOUT = int(os.getenv("JOB_TIMEOUT", "1800"))
-LEMON_SQUEEZY_WEBHOOK_SECRET = os.getenv("LEMON_SQUEEZY_WEBHOOK_SECRET", "")
 
 app = FastAPI()
 
@@ -97,7 +91,7 @@ def get_user_store() -> SupabaseStore:
     return SupabaseStore.from_env()
 
 
-def ensure_user_exists(chat_id: str, source: str = "lemonsqueezy_webhook") -> None:
+def ensure_user_exists(chat_id: str, source: str = "payment") -> None:
     store = get_user_store()
     if store.get_user(chat_id) is None:
         store.register_user(
@@ -174,50 +168,6 @@ def create_jobs(payload: JobsRequest):
         job_ids.append(rq_job.id)
 
     return {"batch_id": batch_id, "job_ids": job_ids}
-
-
-@app.post("/lemonsqueezy/webhook")
-async def lemonsqueezy_webhook(request: Request):
-    if not LEMON_SQUEEZY_WEBHOOK_SECRET:
-        raise HTTPException(status_code=500, detail="Missing LEMON_SQUEEZY_WEBHOOK_SECRET")
-
-    raw_body = await request.body()
-    signature = request.headers.get("X-Signature", "")
-    if not verify_webhook_signature(raw_body, signature, LEMON_SQUEEZY_WEBHOOK_SECRET):
-        raise HTTPException(status_code=401, detail="Invalid webhook signature")
-
-    payload = await request.json()
-    meta = payload.get("meta") or {}
-    event_name = meta.get("event_name")
-    if event_name != "order_created":
-        return {"ok": True, "ignored": event_name}
-
-    data = payload.get("data") or {}
-    attributes = data.get("attributes") or {}
-    custom = (meta.get("custom_data") or {})
-
-    chat_id = str(custom.get("chat_id") or "").strip()
-    package_key = str(custom.get("package_key") or "").strip()
-    credits = int(custom.get("credits") or 0)
-    if not chat_id or credits <= 0:
-        raise HTTPException(status_code=400, detail="Missing custom_data.chat_id or credits")
-
-    ensure_user_exists(chat_id)
-    applied, balance = get_user_store().record_lemonsqueezy_order(
-        order_id=str(data.get("id") or ""),
-        chat_id=chat_id,
-        package_key=package_key,
-        credits_added=credits,
-        identifier=str(attributes.get("identifier") or ""),
-        order_number=int(attributes.get("order_number") or 0),
-        user_email=attributes.get("user_email"),
-        currency=str(attributes.get("currency") or ""),
-        total=int(attributes.get("total") or 0),
-        status=str(attributes.get("status") or ""),
-        raw=payload,
-    )
-
-    return {"ok": True, "applied": applied, "balance": balance}
 
 
 @app.post("/paypal/webhook")

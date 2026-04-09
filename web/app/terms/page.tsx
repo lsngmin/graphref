@@ -161,10 +161,10 @@ export default function Terms() {
             </h2>
             <p className="text-zinc-500">
               Payments may be processed by third-party providers, including
-              Lemon Squeezy and Telegram-native payment mechanisms such as
-              Telegram Stars. Your purchase may also be subject to the terms,
-              policies, fees, exchange rates, tax handling, and dispute rules of
-              those third parties.
+              PayPal and Telegram-native payment mechanisms such as Telegram
+              Stars. Your purchase may also be subject to the terms, policies,
+              fees, exchange rates, tax handling, and dispute rules of those
+              third parties.
             </p>
             <p className="text-zinc-500">
               Graphref does not store full card numbers or full payment

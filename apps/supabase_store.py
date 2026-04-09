@@ -167,38 +167,6 @@ class SupabaseStore:
         ) or {}
         return bool(result.get("applied")), int(result.get("balance", 0))
 
-    def record_lemonsqueezy_order(
-        self,
-        order_id: str,
-        chat_id: str,
-        package_key: str,
-        credits_added: int,
-        identifier: str,
-        order_number: int,
-        user_email: Optional[str],
-        currency: str,
-        total: int,
-        status: str,
-        raw: Optional[dict] = None,
-    ) -> tuple[bool, int]:
-        result = self.rpc(
-            "tg_record_lemonsqueezy_order",
-            {
-                "p_order_id": order_id,
-                "p_chat_id": chat_id,
-                "p_package_key": package_key,
-                "p_credits_added": int(credits_added),
-                "p_identifier": identifier,
-                "p_order_number": int(order_number),
-                "p_user_email": user_email,
-                "p_currency": currency,
-                "p_total": int(total),
-                "p_status": status,
-                "p_raw": raw or {},
-            },
-        ) or {}
-        return bool(result.get("applied")), int(result.get("balance", 0))
-
     def record_paypal_order(
         self,
         order_id: str,

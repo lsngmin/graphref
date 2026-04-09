@@ -114,8 +114,8 @@ export default function Privacy() {
                 widget or interact with the Graphref bot.
               </li>
               <li>
-                From payment providers, including Lemon Squeezy and Telegram
-                payment features such as Telegram Stars, when they notify us of
+                From payment providers, including PayPal and Telegram payment
+                features such as Telegram Stars, when they notify us of
                 purchase status, checkout identifiers, or refunds.
               </li>
               <li>
@@ -202,9 +202,9 @@ export default function Privacy() {
                 flows.
               </li>
               <li>
-                <strong className="text-zinc-900">Lemon Squeezy:</strong> for
-                hosted checkout, payment processing, transaction reporting, and
-                refund administration.
+                <strong className="text-zinc-900">PayPal:</strong> for hosted
+                checkout, payment processing, transaction reporting, and refund
+                administration.
               </li>
               <li>
                 <strong className="text-zinc-900">
@@ -239,9 +239,9 @@ export default function Privacy() {
             </h2>
             <p className="text-zinc-500">
               Graphref operates online and may use service providers that
-              process data in multiple countries. Telegram, Lemon Squeezy, and
-              infrastructure providers may process information outside your home
-              jurisdiction. Where required by applicable law, we will take
+              process data in multiple countries. Telegram, PayPal, and
+              infrastructure providers may process information outside your
+              home jurisdiction. Where required by applicable law, we will take
               reasonable steps to use legally recognized transfer mechanisms or
               comparable safeguards for cross-border transfers.
             </p>
