@@ -910,14 +910,23 @@ export default function Home() {
             GRAPHREF
           </span>
           <div className="flex flex-wrap items-center gap-6 text-[12px] text-zinc-400">
+            <a href="/about" className="hover:text-zinc-600 transition-colors">
+              About
+            </a>
+            <a
+              href="/contact"
+              className="hover:text-zinc-600 transition-colors"
+            >
+              Contact
+            </a>
             <a href="/terms" className="hover:text-zinc-600 transition-colors">
-              Terms of Service
+              Terms
             </a>
             <a
               href="/privacy"
               className="hover:text-zinc-600 transition-colors"
             >
-              Privacy Policy
+              Privacy
             </a>
             <a
               href="/contact"
