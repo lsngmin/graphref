@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MessageCircle, CheckCircle, ChevronDown, Search, Terminal, TrendingUp, Zap, Users, MousePointerClick } from "lucide-react";
 import MarketingHeader from "@/components/MarketingHeader";
+import PricingCards from "@/components/PricingCards";
 
 const TELEGRAM_URL = "https://t.me/graphrefbot";
 const CONTACT_EMAIL = "support@graphref.org";
@@ -671,56 +672,7 @@ export default function Home() {
             Credits never expire. No subscription.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {plans.map((plan) => (
-              <div
-                key={plan.key}
-                className={`rounded-xl border p-6 flex flex-col gap-4 ${
-                  plan.highlight
-                    ? "border-zinc-900 bg-zinc-900 text-white"
-                    : "border-zinc-200 bg-white text-zinc-900"
-                }`}
-              >
-                <div>
-                  <p className="text-[13px] font-medium mb-3 text-zinc-400">
-                    {plan.name}
-                  </p>
-                  <p className="text-[32px] font-bold tracking-tight leading-none mb-1">
-                    {plan.price}
-                  </p>
-                  <p
-                    className={`text-[13px] mt-2 ${plan.highlight ? "text-zinc-400" : "text-zinc-500"}`}
-                  >
-                    {plan.credits.toLocaleString()} credits
-                  </p>
-                </div>
-                <ul className="flex flex-col gap-2">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-[13px]">
-                      <CheckCircle
-                        size={13}
-                        className={`shrink-0 ${plan.highlight ? "text-zinc-400" : "text-zinc-400"}`}
-                      />
-                      <span className={plan.highlight ? "text-zinc-300" : "text-zinc-600"}>
-                        {f}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href={TELEGRAM_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`mt-auto inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-lg transition-colors ${
-                    plan.highlight
-                      ? "bg-white text-zinc-900 hover:bg-zinc-100"
-                      : "bg-zinc-900 text-white hover:bg-zinc-700"
-                  }`}
-                >
-                  <MessageCircle size={14} />
-                  Get started
-                </a>
-              </div>
-            ))}
+            <PricingCards plans={plans} />
           </div>
           <div className="mt-8 flex flex-wrap gap-4 text-[13px] text-zinc-400">
             <span className="flex items-center gap-1.5">
