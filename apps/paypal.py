@@ -199,6 +199,7 @@ def capture_order(order_id: str) -> dict:
     return _paypal_request(
         f"/v2/checkout/orders/{urllib.parse.quote(order_id)}/capture",
         method="POST",
+        payload={},
         access_token=access_token,
         headers={"Prefer": "return=representation"},
     )
