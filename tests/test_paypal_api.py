@@ -62,9 +62,23 @@ def test_paypal_webhook_records_completed_capture(monkeypatch):
 def test_paypal_webhook_captures_approved_order(monkeypatch):
     client = TestClient(api.app)
     capture_calls = []
+    record_calls = []
+
+    class FakeStore:
+        def get_user(self, chat_id: str):
+            return {"chat_id": chat_id, "credits": 50}
+
+        def record_paypal_order(self, **kwargs):
+            record_calls.append(kwargs)
+            return True, 150
 
     monkeypatch.setattr(api, "verify_paypal_webhook_event", lambda headers, payload: True)
-    monkeypatch.setattr(api, "capture_paypal_order", lambda order_id: capture_calls.append(order_id) or _sample_order(order_id=order_id))
+    monkeypatch.setattr(
+        api,
+        "capture_paypal_order",
+        lambda order_id: capture_calls.append(order_id) or _sample_order(order_id=order_id),
+    )
+    monkeypatch.setattr(api, "get_user_store", lambda: FakeStore())
 
     payload = {
         "event_type": "CHECKOUT.ORDER.APPROVED",
@@ -76,8 +90,17 @@ def test_paypal_webhook_captures_approved_order(monkeypatch):
     response = client.post("/paypal/webhook", json=payload)
 
     assert response.status_code == 200
-    assert response.json() == {"ok": True, "captured": True, "order_id": "ORDER-123"}
+    assert response.json() == {
+        "ok": True,
+        "captured": True,
+        "applied": True,
+        "balance": 150,
+        "order_id": "ORDER-123",
+    }
     assert capture_calls == ["ORDER-123"]
+    assert record_calls[0]["order_id"] == "ORDER-123"
+    assert record_calls[0]["package_key"] == "starter"
+    assert record_calls[0]["credits_added"] == 100
 
 
 def test_paypal_webhook_ignores_unrelated_events(monkeypatch):

@@ -191,11 +191,18 @@ async def paypal_webhook(request: Request):
             raise HTTPException(status_code=400, detail="Missing PayPal order_id")
 
         try:
-            capture_paypal_order(order_id)
+            order = capture_paypal_order(order_id)
         except PayPalError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
 
-        return {"ok": True, "captured": True, "order_id": order_id}
+        applied, balance = _record_paypal_order(order, raw=payload)
+        return {
+            "ok": True,
+            "captured": True,
+            "applied": applied,
+            "balance": balance,
+            "order_id": order_id,
+        }
 
     if event_type != "PAYMENT.CAPTURE.COMPLETED":
         return {"ok": True, "ignored": event_type}
