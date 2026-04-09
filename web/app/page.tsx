@@ -444,6 +444,12 @@ export default function Home() {
               About
             </a>
             <a
+              href="/roadmap"
+              className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
+            >
+              Roadmap
+            </a>
+            <a
               href="#pricing"
               onClick={(e) => { e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }}
               className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
@@ -483,12 +489,6 @@ export default function Home() {
               >
                 <MessageCircle size={16} />
                 Open on Telegram
-              </a>
-              <a
-                href="#pricing"
-                className="inline-flex items-center gap-2 text-sm text-zinc-500 px-5 py-3 rounded-lg border border-zinc-200 hover:border-zinc-400 transition-colors"
-              >
-                View pricing
               </a>
             </div>
             <p className="mt-5 text-[13px] text-zinc-400">
@@ -910,9 +910,6 @@ export default function Home() {
             GRAPHREF
           </span>
           <div className="flex flex-wrap items-center gap-6 text-[12px] text-zinc-400">
-            <a href="/about" className="hover:text-zinc-600 transition-colors">
-              About
-            </a>
             <a
               href="/contact"
               className="hover:text-zinc-600 transition-colors"
@@ -927,12 +924,6 @@ export default function Home() {
               className="hover:text-zinc-600 transition-colors"
             >
               Privacy
-            </a>
-            <a
-              href="/contact"
-              className="hover:text-zinc-600 transition-colors"
-            >
-              Contact
             </a>
             <span>© {new Date().getFullYear()} Graphref</span>
           </div>

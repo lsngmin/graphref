@@ -18,7 +18,7 @@ def test_handle_run_refunds_when_enqueue_fails(monkeypatch):
 
     monkeypatch.setattr(telegram_bot, "add_credits", fake_add)
 
-    telegram_bot.handle_run(redis=object(), queue=object(), chat_id="user-1", text="/run hello world | example.com")
+    telegram_bot.handle_run(redis=object(), queue=object(), chat_id="user-1", text="/run hello world example.com")
 
     assert add_calls == [
         (
@@ -48,7 +48,7 @@ def test_handle_run_success_awards_referral_after_enqueue(monkeypatch):
 
     monkeypatch.setattr(telegram_bot, "add_credits", fake_add)
 
-    telegram_bot.handle_run(redis=object(), queue=object(), chat_id="user-1", text="/run hello world | example.com")
+    telegram_bot.handle_run(redis=object(), queue=object(), chat_id="user-1", text="/run hello world example.com")
 
     assert add_calls == [
         (
@@ -90,6 +90,142 @@ def test_handle_buy_package_sends_checkout_url(monkeypatch):
             "user-1",
             "Checkout ready for 100 credits.\nhttps://checkout.example/test\n\n"
             "Credits will be added automatically after payment confirmation.",
+        )
+    ]
+
+
+def test_parse_run_command_uses_last_token_as_domain():
+    keyword, domain = telegram_bot.parse_run_command("/run hello world example.com")
+
+    assert keyword == "hello world"
+    assert domain == "example.com"
+
+
+def test_parse_run_command_keeps_legacy_pipe_compatible():
+    keyword, domain = telegram_bot.parse_run_command("/run hello world | example.com")
+
+    assert keyword == "hello world"
+    assert domain == "example.com"
+
+
+def test_handle_status_without_job_id_uses_active_job(monkeypatch):
+    sent_messages = []
+
+    class FakeJob:
+        def __init__(self, status: str):
+            self._status = status
+
+        def get_status(self, refresh: bool = False) -> str:
+            return self._status
+
+    jobs = {
+        "job-done": FakeJob("finished"),
+        "job-active": FakeJob("started"),
+    }
+
+    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text)))
+    monkeypatch.setattr(telegram_bot, "get_recent_job_ids", lambda redis, chat_id, limit=5: ["job-done", "job-active"])
+    monkeypatch.setattr(telegram_bot.Job, "fetch", lambda job_id, connection=None: jobs[job_id])
+    monkeypatch.setattr(
+        telegram_bot,
+        "get_job_meta",
+        lambda redis, job_id: {"chat_id": "user-1", "keyword": "hello world", "domain": "example.com"},
+    )
+    monkeypatch.setattr(telegram_bot, "format_job_message", lambda redis, job, keyword, domain: f"{job.get_status()} {keyword} {domain}")
+
+    telegram_bot.handle_status(redis=object(), chat_id="user-1", text="/status")
+
+    assert sent_messages == [("user-1", "started hello world example.com")]
+
+
+def test_handle_status_without_job_id_reports_when_no_active_job(monkeypatch):
+    sent_messages = []
+
+    class FakeJob:
+        def __init__(self, status: str):
+            self._status = status
+
+        def get_status(self, refresh: bool = False) -> str:
+            return self._status
+
+    jobs = {
+        "job-1": FakeJob("finished"),
+        "job-2": FakeJob("failed"),
+    }
+
+    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text)))
+    monkeypatch.setattr(telegram_bot, "get_recent_job_ids", lambda redis, chat_id, limit=5: ["job-1", "job-2"])
+    monkeypatch.setattr(telegram_bot.Job, "fetch", lambda job_id, connection=None: jobs[job_id])
+    monkeypatch.setattr(
+        telegram_bot,
+        "get_job_meta",
+        lambda redis, job_id: {"chat_id": "user-1", "keyword": "hello world", "domain": "example.com"},
+    )
+
+    telegram_bot.handle_status(redis=object(), chat_id="user-1", text="/status")
+
+    assert sent_messages == [("user-1", "No active jobs.")]
+
+
+def test_handle_jobs_requires_limit(monkeypatch):
+    sent_messages = []
+
+    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text)))
+
+    telegram_bot.handle_jobs(redis=object(), chat_id="user-1", text="/jobs")
+
+    assert sent_messages == [("user-1", "Please enter a number. Example: /jobs 5")]
+
+
+def test_handle_credits_uses_dashboard_layout(monkeypatch):
+    sent_messages = []
+
+    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text, parse_mode)))
+    monkeypatch.setattr(telegram_bot, "get_credits", lambda redis, chat_id: 150)
+
+    telegram_bot.handle_credits(redis=object(), chat_id="123")
+
+    assert sent_messages == [
+        (
+            "123",
+            "<b>💳 Your Credit Dashboard</b>\n\n"
+            "👤 <b>Account:</b> User_123\n"
+            "━━━━━━━━━━━━━━━━━━\n"
+            "💰 <b>Current Credits:</b> <code>150</code>\n"
+            "🚀 <b>Estimated Runs:</b> <code>15</code> times\n"
+            "━━━━━━━━━━━━━━━━━━\n\n"
+            "💡 <i>Tip: Each run costs 10 credits.</i>\n"
+            "✨ <i>Need more power? Click the button below!</i>\n\n"
+            "🛒 <b>Top up with</b> /buy",
+            "HTML",
+        )
+    ]
+
+
+def test_handle_referral_uses_invite_layout(monkeypatch):
+    sent_messages = []
+
+    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text, parse_mode)))
+    monkeypatch.setattr(telegram_bot, "get_bot_username", lambda: "graphref_bot")
+    monkeypatch.setattr(telegram_bot, "get_referral_code", lambda chat_id: chat_id)
+
+    telegram_bot.handle_referral(chat_id="123")
+
+    assert sent_messages == [
+        (
+            "123",
+            "<b>🎁 Invite Friends & Earn Credits</b>\n\n"
+            "Share the power of <b>Graphref</b> and get rewarded!\n\n"
+            "<b>🔗 Your Unique Link:</b>\n"
+            "<code>https://t.me/graphref_bot?start=123</code>\n\n"
+            "━━━━━━━━━━━━━━━━━━\n"
+            "<b>✨ Reward details:</b>\n"
+            "• <b>Step 1:</b> Share your link with friends.\n"
+            "• <b>Step 2:</b> When they run their <b>first job</b>,\n"
+            "• <b>Step 3:</b> You instantly earn <b>30 credits!</b> 💰\n"
+            "━━━━━━━━━━━━━━━━━━\n\n"
+            "🚀 <i>There is no limit to how much you can earn. Start sharing now!</i>",
+            "HTML",
         )
     ]
 

@@ -213,20 +213,19 @@ def parse_run_command(text: str) -> tuple[Optional[str], Optional[str]]:
     if not raw_args:
         return None, None
 
-    if "|" in raw_args:
-        keyword, domain = raw_args.split("|", 1)
-        return keyword.strip(), normalize_domain(domain)
+    parts = [part for part in raw_args.split() if part]
+    if len(parts) < 2:
+        return None, None
 
-    lines = [line.strip() for line in raw_args.splitlines() if line.strip()]
-    if len(lines) >= 2:
-        domain = normalize_domain(lines[-1])
-        keyword = " ".join(lines[:-1]).strip()
-        return keyword, domain
+    domain = normalize_domain(parts[-1].lstrip("|"))
+    keyword_parts = parts[:-1]
+    if keyword_parts and keyword_parts[-1] == "|":
+        keyword_parts = keyword_parts[:-1]
 
-    keyword, separator, domain = raw_args.rpartition(" ")
-    if separator:
-        return keyword.strip(), normalize_domain(domain)
-    return None, None
+    keyword = " ".join(keyword_parts).strip()
+    if not keyword or not domain:
+        return None, None
+    return keyword, domain
 
 
 def command_name(text: str) -> str:
@@ -242,15 +241,14 @@ def usage_text() -> str:
     lines = [
         "<b>📖 Graphref Bot Commands</b>",
         "",
-        "<b>[ Core Actions ]</b>",
-        "<code>/run &lt;keyword&gt; | &lt;domain&gt;</code>",
+        "<code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
         " → Start a new task. (Costs <b>10 credits</b>)",
         "",
         "<code>/status [job_id]</code>",
         " → Check a job. Omit ID for latest.",
         "",
-        "<code>/jobs [n]</code>",
-        " → Show recent jobs. (Default: 5)",
+        "<code>/jobs &lt;n&gt;</code>",
+        " → Show recent jobs.",
         "",
         "<code>/queue</code>",
         " → Show server load & queue.",
@@ -258,7 +256,6 @@ def usage_text() -> str:
         "<code>/cancel [job_id]</code>",
         " → Cancel a <b>queued</b> job. Refunds 10 credits.",
         "",
-        "<b>[ Account & Growth ]</b>",
         "<code>/credits</code> → Check your balance.",
         "<code>/buy</code> → Top up credits.",
         "<code>/referral</code> → Get your invite link. (+30 credits when referral runs first job)",
@@ -285,7 +282,7 @@ def start_text(redis: Redis, chat_id: str) -> str:
         f"🎫 <b>Cost:</b> 10 credits per task",
         "",
         "<b>[ Run a Task ]</b>",
-        "<code>/run &lt;keyword&gt; | &lt;domain&gt;</code>",
+        "<code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
         "",
         "⚠️ <b>Important Notes:</b>",
         "• The <b>keyword</b> must be indexed in Search Console for at least 24h.",
@@ -469,11 +466,24 @@ def handle_status(redis: Redis, chat_id: str, text: str) -> None:
     _, _, raw_job_id = text.partition(" ")
     job_id = raw_job_id.strip()
     if not job_id:
-        recent_jobs = get_recent_job_ids(redis, chat_id, limit=1)
-        if not recent_jobs:
-            send_message(chat_id, "No recent jobs. Start one with /run")
+        for candidate_job_id in get_recent_job_ids(redis, chat_id, limit=RECENT_JOB_LIMIT):
+            try:
+                candidate_job = Job.fetch(candidate_job_id, connection=redis)
+            except Exception:
+                continue
+
+            meta = get_job_meta(redis, candidate_job_id)
+            owner_chat_id = meta.get("chat_id")
+            if owner_chat_id and owner_chat_id != chat_id:
+                continue
+
+            if candidate_job.get_status(refresh=True) in {"queued", "started"}:
+                job_id = candidate_job_id
+                break
+
+        if not job_id:
+            send_message(chat_id, "No active jobs.")
             return
-        job_id = recent_jobs[0]
 
     try:
         job = Job.fetch(job_id, connection=redis)
@@ -495,13 +505,15 @@ def handle_status(redis: Redis, chat_id: str, text: str) -> None:
 def handle_jobs(redis: Redis, chat_id: str, text: str) -> None:
     _, _, raw_limit = text.partition(" ")
     raw_limit = raw_limit.strip()
-    limit = 5
-    if raw_limit:
-        try:
-            limit = max(1, min(int(raw_limit), 10))
-        except ValueError:
-            send_message(chat_id, "Please enter a number. Example: /jobs 5")
-            return
+    if not raw_limit:
+        send_message(chat_id, "Please enter a number. Example: /jobs 5")
+        return
+
+    try:
+        limit = max(1, min(int(raw_limit), 10))
+    except ValueError:
+        send_message(chat_id, "Please enter a number. Example: /jobs 5")
+        return
 
     job_ids = get_recent_job_ids(redis, chat_id, limit=limit)
     if not job_ids:
@@ -592,14 +604,21 @@ def handle_cancel(redis: Redis, chat_id: str, text: str) -> None:
 def handle_credits(redis: Redis, chat_id: str) -> None:
     balance = get_credits(redis, chat_id)
     runs_left = balance // CREDITS_PER_RUN
-    send_message(
-        chat_id,
-        (
-            f"Credits: {balance}\n"
-            f"Runs available: {runs_left}\n\n"
-            "Top up with /buy"
-        ),
-    )
+    lines = [
+        "<b>💳 Your Credit Dashboard</b>",
+        "",
+        f"👤 <b>Account:</b> User_{chat_id}",
+        "━━━━━━━━━━━━━━━━━━",
+        f"💰 <b>Current Credits:</b> <code>{balance}</code>",
+        f"🚀 <b>Estimated Runs:</b> <code>{runs_left}</code> times",
+        "━━━━━━━━━━━━━━━━━━",
+        "",
+        f"💡 <i>Tip: Each run costs {CREDITS_PER_RUN} credits.</i>",
+        "✨ <i>Need more power? Click the button below!</i>",
+        "",
+        "🛒 <b>Top up with</b> /buy",
+    ]
+    send_message(chat_id, "\n".join(lines), parse_mode="HTML")
 
 
 def handle_buy(chat_id: str) -> None:
@@ -630,14 +649,24 @@ def handle_referral(chat_id: str) -> None:
     bot_username = get_bot_username()
     code = get_referral_code(chat_id)
     link = f"https://t.me/{bot_username}?start={code}"
-    send_message(
-        chat_id,
-        (
-            f"Your referral link:\n{link}\n\n"
-            f"When someone joins via your link and runs their first job,\n"
-            f"you earn {CREDITS_REFERRAL_BONUS} credits."
-        ),
-    )
+    lines = [
+        "<b>🎁 Invite Friends & Earn Credits</b>",
+        "",
+        "Share the power of <b>Graphref</b> and get rewarded!",
+        "",
+        "<b>🔗 Your Unique Link:</b>",
+        f"<code>{link}</code>",
+        "",
+        "━━━━━━━━━━━━━━━━━━",
+        "<b>✨ Reward details:</b>",
+        "• <b>Step 1:</b> Share your link with friends.",
+        "• <b>Step 2:</b> When they run their <b>first job</b>,",
+        f"• <b>Step 3:</b> You instantly earn <b>{CREDITS_REFERRAL_BONUS} credits!</b> 💰",
+        "━━━━━━━━━━━━━━━━━━",
+        "",
+        "🚀 <i>There is no limit to how much you can earn. Start sharing now!</i>",
+    ]
+    send_message(chat_id, "\n".join(lines), parse_mode="HTML")
 
 
 # ---------------------------------------------------------------------------
