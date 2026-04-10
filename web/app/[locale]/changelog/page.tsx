@@ -70,8 +70,7 @@ export default function ChangelogPage() {
       {/* Hero */}
       <section className="pt-28 pb-12 px-6 border-b border-zinc-100">
         <div className="max-w-2xl mx-auto">
-          <p className="text-[11px] font-mono text-zinc-400 uppercase tracking-widest mb-3">Changelog</p>
-          <h1 className="text-[32px] font-bold tracking-tight text-zinc-900 mb-3">What&apos;s new</h1>
+          <h1 className="text-[32px] font-bold tracking-tight text-zinc-900 mb-3">Changelog</h1>
           <p className="text-[15px] text-zinc-500 leading-relaxed">
             Updates, fixes, and improvements to the Graphref bot — newest first.
           </p>
@@ -83,18 +82,25 @@ export default function ChangelogPage() {
         <div className="max-w-2xl mx-auto">
           <div className="relative">
             {/* vertical line */}
-            <div className="absolute left-[7px] top-2 bottom-2 w-px bg-zinc-100" />
+            <div className="absolute left-[7px] top-2 bottom-2 w-px bg-zinc-200" />
 
-            <div className="space-y-14">
-              {entries.map((entry) => (
+            <div className="space-y-12">
+              {entries.map((entry, idx) => (
                 <div key={entry.version} className="relative pl-8">
-                  {/* dot */}
-                  <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-white border-2 border-zinc-300" />
+                  {/* dot — filled for latest, hollow for older */}
+                  <div className={`absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full border-2 ${
+                    idx === 0
+                      ? "bg-zinc-900 border-zinc-900"
+                      : "bg-white border-zinc-300"
+                  }`} />
 
                   {/* version + date */}
-                  <div className="flex items-baseline gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-4">
                     <span className="text-[15px] font-bold text-zinc-900 font-mono">{entry.version}</span>
-                    <span className="text-[12px] text-zinc-400">{entry.date}</span>
+                    {idx === 0 && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-zinc-900 text-white">Latest</span>
+                    )}
+                    <span className="text-[12px] text-zinc-400 ml-auto">{entry.date}</span>
                   </div>
 
                   {/* items */}
@@ -117,6 +123,11 @@ export default function ChangelogPage() {
               ))}
             </div>
           </div>
+
+          {/* Bottom note */}
+          <p className="mt-16 text-[12px] text-zinc-400 text-center">
+            Older versions are not listed. Bot updates are applied automatically.
+          </p>
         </div>
       </section>
     </main>
