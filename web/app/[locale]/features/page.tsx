@@ -257,40 +257,40 @@ export default function FeaturesPage() {
         </section>
 
         {/* Job statuses */}
-        <section className="py-20 px-6 border-b border-zinc-200 bg-white">
+        <section className="py-20 px-6 border-b border-zinc-800 bg-zinc-950">
           <div className="max-w-5xl mx-auto">
 
             {/* Paper-style header */}
-            <div className="mb-10 pb-6 border-b-2 border-zinc-900">
-              <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-[0.2em] mb-3">§ 2 — State machine</p>
-              <h2 className="text-[28px] font-bold tracking-tight text-zinc-900">Job lifecycle</h2>
-              <p className="text-[13px] text-zinc-500 mt-2 max-w-2xl leading-relaxed">
+            <div className="mb-10 pb-6 border-b border-zinc-700">
+              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em] mb-3">§ 2 — State machine</p>
+              <h2 className="text-[28px] font-bold tracking-tight text-white">Job lifecycle</h2>
+              <p className="text-[13px] text-zinc-400 mt-2 max-w-2xl leading-relaxed">
                 Every job transitions through a finite set of states. State changes are atomic; the bot delivers a notification on each terminal transition.
               </p>
             </div>
 
             {/* Table-style status list */}
-            <div className="border border-zinc-200 overflow-hidden rounded-sm mb-10">
+            <div className="border border-zinc-700 overflow-hidden rounded-sm mb-10">
               <table className="w-full text-[13px] border-collapse">
                 <thead>
-                  <tr className="bg-zinc-50 border-b border-zinc-200">
-                    <th className="text-left px-5 py-2.5 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest w-36">State</th>
-                    <th className="text-left px-5 py-2.5 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Description</th>
-                    <th className="text-left px-5 py-2.5 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest w-24 hidden sm:table-cell">Terminal</th>
+                  <tr className="bg-zinc-900 border-b border-zinc-700">
+                    <th className="text-left px-5 py-2.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-widest w-36">State</th>
+                    <th className="text-left px-5 py-2.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Description</th>
+                    <th className="text-left px-5 py-2.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-widest w-24 hidden sm:table-cell">Terminal</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {jobStatuses.map((s, i) => (
-                    <tr key={s.status} className="border-b border-zinc-100 last:border-0">
+                  {jobStatuses.map((s) => (
+                    <tr key={s.status} className="border-b border-zinc-800 last:border-0">
                       <td className="px-5 py-3.5 align-top">
                         <div className="flex items-center gap-2">
                           <s.icon size={13} className={s.iconColor} />
                           <code className={`text-[12px] font-mono font-semibold ${s.textColor}`}>{s.status}</code>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-zinc-500 leading-relaxed text-[12px]">{s.desc}</td>
+                      <td className="px-5 py-3.5 text-zinc-400 leading-relaxed text-[12px]">{s.desc}</td>
                       <td className="px-5 py-3.5 hidden sm:table-cell">
-                        <span className={`text-[11px] font-mono ${["finished","failed","canceled"].includes(s.status) ? "text-zinc-400" : "text-zinc-200"}`}>
+                        <span className={`text-[11px] font-mono ${["finished","failed","canceled"].includes(s.status) ? "text-zinc-400" : "text-zinc-700"}`}>
                           {["finished","failed","canceled"].includes(s.status) ? "yes" : "—"}
                         </span>
                       </td>
@@ -301,8 +301,8 @@ export default function FeaturesPage() {
             </div>
 
             {/* State transition diagram */}
-            <div className="border border-zinc-200 rounded-sm p-6 overflow-x-auto bg-zinc-50/50">
-              <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest mb-1">Figure 1.</p>
+            <div className="border border-zinc-700 rounded-sm p-6 overflow-x-auto bg-zinc-900">
+              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">Figure 1.</p>
               <p className="text-[12px] text-zinc-500 mb-6">State transition diagram — solid lines denote nominal flow; dashed lines denote error / cancellation paths with automatic credit refund.</p>
               <svg viewBox="0 0 680 122" className="w-full min-w-[500px]" height="122">
                 <defs>
@@ -315,24 +315,24 @@ export default function FeaturesPage() {
                 </defs>
 
                 {/* Boxes */}
-                <rect x="20"  y="14" width="104" height="36" rx="3" fill="#ffffff" stroke="#d97706" strokeWidth="1.5" />
-                <text x="72"  y="37" textAnchor="middle" fontSize="11" fontFamily="monospace" fill="#1c1917">queued</text>
+                <rect x="20"  y="14" width="104" height="36" rx="3" fill="#18181b" stroke="#d97706" strokeWidth="1.5" />
+                <text x="72"  y="37" textAnchor="middle" fontSize="11" fontFamily="monospace" fill="#e4e4e7">queued</text>
 
-                <rect x="192" y="14" width="104" height="36" rx="3" fill="#ffffff" stroke="#3b82f6" strokeWidth="1.5" />
-                <text x="244" y="37" textAnchor="middle" fontSize="11" fontFamily="monospace" fill="#1c1917">started</text>
+                <rect x="192" y="14" width="104" height="36" rx="3" fill="#18181b" stroke="#3b82f6" strokeWidth="1.5" />
+                <text x="244" y="37" textAnchor="middle" fontSize="11" fontFamily="monospace" fill="#e4e4e7">started</text>
 
-                <rect x="364" y="14" width="104" height="36" rx="3" fill="#ffffff" stroke="#10b981" strokeWidth="1.5" />
-                <text x="416" y="37" textAnchor="middle" fontSize="11" fontFamily="monospace" fill="#1c1917">finished</text>
+                <rect x="364" y="14" width="104" height="36" rx="3" fill="#18181b" stroke="#10b981" strokeWidth="1.5" />
+                <text x="416" y="37" textAnchor="middle" fontSize="11" fontFamily="monospace" fill="#e4e4e7">finished</text>
 
-                <rect x="536" y="14" width="120" height="36" rx="3" fill="#ffffff" stroke="#ef4444" strokeWidth="1.5" />
-                <text x="596" y="29" textAnchor="middle" fontSize="10" fontFamily="monospace" fill="#1c1917">failed /</text>
-                <text x="596" y="43" textAnchor="middle" fontSize="10" fontFamily="monospace" fill="#1c1917">stopped</text>
+                <rect x="536" y="14" width="120" height="36" rx="3" fill="#18181b" stroke="#ef4444" strokeWidth="1.5" />
+                <text x="596" y="29" textAnchor="middle" fontSize="10" fontFamily="monospace" fill="#e4e4e7">failed /</text>
+                <text x="596" y="43" textAnchor="middle" fontSize="10" fontFamily="monospace" fill="#e4e4e7">stopped</text>
 
                 {/* Main arrows */}
                 <path d="M124 32 L188 32" stroke="#71717a" strokeWidth="1.5" fill="none" markerEnd="url(#arr)" />
                 <path d="M296 32 L360 32" stroke="#71717a" strokeWidth="1.5" fill="none" markerEnd="url(#arr)" />
-                <text x="156" y="10" fontSize="9" fill="#a1a1aa" textAnchor="middle">worker picks up</text>
-                <text x="328" y="10" fontSize="9" fill="#a1a1aa" textAnchor="middle">exit 0</text>
+                <text x="156" y="10" fontSize="9" fill="#52525b" textAnchor="middle">worker picks up</text>
+                <text x="328" y="10" fontSize="9" fill="#52525b" textAnchor="middle">exit 0</text>
 
                 {/* Error paths */}
                 <path d="M244 50 L244 78 L596 78 L596 50" stroke="#f87171" strokeWidth="1.2" fill="none" strokeDasharray="4,2.5" markerEnd="url(#arrf)" />
