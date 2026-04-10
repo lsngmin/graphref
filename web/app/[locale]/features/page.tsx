@@ -151,34 +151,34 @@ export default function FeaturesPage() {
         </section>
 
         {/* Pipeline diagram */}
-        <section className="py-20 px-6 bg-zinc-50 border-b border-zinc-100">
+        <section className="py-20 px-6 bg-zinc-950 border-b border-zinc-800">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-[22px] font-bold tracking-tight mb-2">Job pipeline</h2>
-            <p className="text-[14px] text-zinc-500 mb-12">From your command to a click in Google — every step in the process.</p>
+            <h2 className="text-[22px] font-bold tracking-tight mb-2 text-white">Job pipeline</h2>
+            <p className="text-[14px] text-zinc-400 mb-12">From your command to a click in Google — every step in the process.</p>
 
             <div className="relative">
               {/* Desktop horizontal flow */}
               <div className="hidden md:flex items-stretch gap-0">
                 {[
-                  { icon: MessageCircle, label: "You send", detail: "/run keyword domain", sub: "via Telegram bot", color: "bg-blue-50 border-blue-200", iconColor: "text-blue-500" },
-                  { icon: List, label: "Job enqueued", detail: "Redis queue", sub: "10 credits deducted", color: "bg-amber-50 border-amber-200", iconColor: "text-amber-500" },
-                  { icon: Cpu, label: "Worker picks up", detail: "Real device executes", sub: "run.py subprocess", color: "bg-violet-50 border-violet-200", iconColor: "text-violet-500" },
-                  { icon: Search, label: "Google search", detail: "Searches keyword", sub: "clicks your domain", color: "bg-emerald-50 border-emerald-200", iconColor: "text-emerald-500" },
-                  { icon: Bell, label: "You're notified", detail: "Bot sends result", sub: "visible in GSC", color: "bg-zinc-50 border-zinc-200", iconColor: "text-zinc-500" },
+                  { icon: MessageCircle, label: "You send", detail: "/run keyword domain", sub: "via Telegram bot", iconColor: "text-blue-400" },
+                  { icon: List, label: "Job enqueued", detail: "Redis queue", sub: "10 credits deducted", iconColor: "text-amber-400" },
+                  { icon: Cpu, label: "Worker picks up", detail: "Real device executes", sub: "run.py subprocess", iconColor: "text-violet-400" },
+                  { icon: Search, label: "Google search", detail: "Searches keyword", sub: "clicks your domain", iconColor: "text-emerald-400" },
+                  { icon: Bell, label: "You're notified", detail: "Bot sends result", sub: "visible in GSC", iconColor: "text-zinc-400" },
                 ].map((step, i, arr) => (
                   <div key={i} className="flex items-stretch flex-1">
-                    <div className={`flex-1 border rounded-xl p-5 flex flex-col items-center text-center gap-2.5 ${step.color}`}>
-                      <div className={`w-9 h-9 rounded-full bg-white border flex items-center justify-center shrink-0 ${step.color}`}>
+                    <div className="flex-1 border border-zinc-700 rounded-xl p-5 flex flex-col items-center text-center gap-2.5 bg-zinc-900">
+                      <div className="w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
                         <step.icon size={16} className={step.iconColor} />
                       </div>
-                      <p className="text-[13px] font-semibold text-zinc-700 leading-snug">{step.label}</p>
-                      <p className="text-[11px] font-mono text-zinc-700 bg-white/70 px-2 py-0.5 rounded">{step.detail}</p>
-                      <p className="text-[11px] text-zinc-400">{step.sub}</p>
+                      <p className="text-[13px] font-semibold text-zinc-100 leading-snug">{step.label}</p>
+                      <p className="text-[11px] font-mono text-zinc-300 bg-zinc-800 px-2 py-0.5 rounded">{step.detail}</p>
+                      <p className="text-[11px] text-zinc-500">{step.sub}</p>
                     </div>
                     {i < arr.length - 1 && (
                       <div className="flex items-center px-1.5 shrink-0">
-                        <svg width="16" height="10" viewBox="0 0 16 10">
-                          <path d="M0 5 L10 5 M7 2 L10 5 L7 8" stroke="#d4d4d8" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        <svg width="18" height="12" viewBox="0 0 18 12">
+                          <path d="M0 6 L12 6 M9 2 L13 6 L9 10" stroke="#71717a" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>
                     )}
@@ -189,24 +189,28 @@ export default function FeaturesPage() {
               {/* Mobile vertical flow */}
               <div className="flex md:hidden flex-col gap-3">
                 {[
-                  { icon: MessageCircle, label: "You send /run keyword domain", sub: "via Telegram bot", color: "bg-blue-50 border-blue-200", iconColor: "text-blue-500" },
-                  { icon: List, label: "Job enqueued in Redis queue", sub: "10 credits deducted", color: "bg-amber-50 border-amber-200", iconColor: "text-amber-500" },
-                  { icon: Cpu, label: "Worker picks up and executes", sub: "run.py subprocess on real device", color: "bg-violet-50 border-violet-200", iconColor: "text-violet-500" },
-                  { icon: Search, label: "Google search performed", sub: "Finds your domain, clicks it", color: "bg-emerald-50 border-emerald-200", iconColor: "text-emerald-500" },
-                  { icon: Bell, label: "Bot notifies you with result", sub: "Appears in Google Search Console", color: "bg-zinc-50 border-zinc-200", iconColor: "text-zinc-500" },
+                  { icon: MessageCircle, label: "You send /run keyword domain", sub: "via Telegram bot", iconColor: "text-blue-400" },
+                  { icon: List, label: "Job enqueued in Redis queue", sub: "10 credits deducted", iconColor: "text-amber-400" },
+                  { icon: Cpu, label: "Worker picks up and executes", sub: "run.py subprocess on real device", iconColor: "text-violet-400" },
+                  { icon: Search, label: "Google search performed", sub: "Finds your domain, clicks it", iconColor: "text-emerald-400" },
+                  { icon: Bell, label: "Bot notifies you with result", sub: "Appears in Google Search Console", iconColor: "text-zinc-400" },
                 ].map((step, i, arr) => (
                   <div key={i} className="flex flex-col items-center">
-                    <div className={`w-full border rounded-xl p-4 flex items-center gap-3 ${step.color}`}>
-                      <div className={`w-9 h-9 rounded-full bg-white border flex items-center justify-center shrink-0 ${step.color}`}>
+                    <div className="w-full border border-zinc-700 rounded-xl p-4 flex items-center gap-3 bg-zinc-900">
+                      <div className="w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
                         <step.icon size={16} className={step.iconColor} />
                       </div>
                       <div>
-                        <p className="text-[13px] font-semibold text-zinc-800">{step.label}</p>
-                        <p className="text-[11px] text-zinc-400 mt-0.5">{step.sub}</p>
+                        <p className="text-[13px] font-semibold text-zinc-100">{step.label}</p>
+                        <p className="text-[11px] text-zinc-500 mt-0.5">{step.sub}</p>
                       </div>
                     </div>
                     {i < arr.length - 1 && (
-                      <div className="py-1 text-zinc-300 text-lg">↓</div>
+                      <div className="py-1">
+                        <svg width="12" height="18" viewBox="0 0 12 18">
+                          <path d="M6 0 L6 12 M2 9 L6 13 L10 9" stroke="#71717a" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
                     )}
                   </div>
                 ))}
