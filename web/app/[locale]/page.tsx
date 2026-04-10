@@ -734,9 +734,10 @@ export default function Home() {
                 </p>
                 <div className="border-t border-zinc-100 pt-4 flex items-center gap-3 mt-auto">
                   <img src={testimonials[0].avatar} alt={testimonials[0].name} className="w-9 h-9 rounded-full object-cover shrink-0" />
-                <div>
-                  <p className="text-[13px] font-semibold text-zinc-900">{testimonials[0].name}</p>
-                  <p className="text-[12px] text-zinc-400">{testimonials[0].role}</p>
+                  <div>
+                    <p className="text-[13px] font-semibold text-zinc-900">{testimonials[0].name}</p>
+                    <p className="text-[12px] text-zinc-400">{testimonials[0].role}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -770,7 +771,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </div>
       </section>
 
       {/* FAQ */}
@@ -845,5 +845,8 @@ export default function Home() {
         </div>
       </footer>
     </main>
+  );
+}
+main>
   );
 }
