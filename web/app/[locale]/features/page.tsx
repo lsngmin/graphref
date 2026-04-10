@@ -266,15 +266,15 @@ export default function FeaturesPage() {
             {/* Job log feed */}
             <div className="rounded-2xl border border-zinc-200 overflow-hidden mb-10">
               {/* Terminal bar */}
-              <div className="bg-zinc-900 px-4 py-2.5 flex items-center gap-2">
+              <div className="bg-slate-800 px-4 py-2.5 flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
                 <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/70" />
-                <span className="ml-2 text-[11px] font-mono text-zinc-500">job a3f9-bc12 · log</span>
+                <span className="ml-2 text-[11px] font-mono text-slate-400">job a3f9-bc12 · log</span>
               </div>
 
               {/* Log lines */}
-              <div className="bg-zinc-950 px-5 py-4 font-mono text-[12px] space-y-0 divide-y divide-zinc-800/60">
+              <div className="bg-slate-900 px-5 py-4 font-mono text-[12px] space-y-0 divide-y divide-slate-700/50">
                 {[
                   { time: "10:42:01", status: "queued",   dot: "bg-amber-400",   label: "text-amber-400",  desc: "Job is waiting in the Redis queue. Position depends on server load." },
                   { time: "10:42:08", status: "started",  dot: "bg-blue-400",    label: "text-blue-400",   desc: "A worker has picked up the job and is executing the search + click process." },
@@ -284,19 +284,19 @@ export default function FeaturesPage() {
                   { time: "—",        status: "canceled", dot: "bg-zinc-500",    label: "text-zinc-400",   desc: "User cancelled the job before it started. 10 credits refunded immediately." },
                 ].map((row, i) => (
                   <div key={row.status} className={`flex items-start gap-4 py-3 ${i >= 3 ? "opacity-60" : ""}`}>
-                    <span className="text-zinc-600 w-16 shrink-0 pt-0.5">{row.time}</span>
+                    <span className="text-slate-500 w-16 shrink-0 pt-0.5">{row.time}</span>
                     <span className="flex items-center gap-1.5 w-24 shrink-0 pt-0.5">
                       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />
                       <span className={`font-semibold ${row.label}`}>{row.status}</span>
                     </span>
-                    <span className="text-zinc-400 leading-relaxed">{row.desc}</span>
+                    <span className="text-slate-400 leading-relaxed">{row.desc}</span>
                   </div>
                 ))}
               </div>
 
               {/* Footer note */}
-              <div className="bg-zinc-900 px-5 py-2.5 border-t border-zinc-800">
-                <span className="text-[11px] font-mono text-zinc-600">failed / stopped / canceled → credits refunded automatically</span>
+              <div className="bg-slate-800 px-5 py-2.5 border-t border-slate-700">
+                <span className="text-[11px] font-mono text-slate-500">failed / stopped / canceled → credits refunded automatically</span>
               </div>
             </div>
 
