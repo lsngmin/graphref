@@ -219,35 +219,35 @@ export default function FeaturesPage() {
 
             {/* Queue detail */}
             <div className="mt-12 grid md:grid-cols-2 gap-6">
-              <div className="bg-white border border-zinc-200 rounded-2xl p-6">
+              <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Radio size={15} className="text-violet-500" />
-                  <h3 className="text-[14px] font-semibold text-zinc-900">Queue &amp; workers</h3>
+                  <Radio size={15} className="text-violet-400" />
+                  <h3 className="text-[14px] font-semibold text-zinc-100">Queue &amp; workers</h3>
                 </div>
-                <p className="text-[13px] text-zinc-500 leading-relaxed mb-4">
+                <p className="text-[13px] text-zinc-400 leading-relaxed mb-4">
                   Jobs are stored in a Redis-backed queue (RQ). Workers continuously pull jobs in order and execute them. Multiple workers can run in parallel, which is why server load affects queue time.
                 </p>
-                <div className="bg-zinc-50 rounded-xl p-4 font-mono text-[11px] text-zinc-600 space-y-1">
-                  <div><span className="text-zinc-400">queue</span> <span className="text-emerald-600">jobs</span></div>
-                  <div><span className="text-zinc-400">position</span> 3 <span className="text-zinc-400">of</span> 14</div>
-                  <div><span className="text-zinc-400">timeout</span> 30 min max</div>
-                  <div><span className="text-zinc-400">on timeout</span> <span className="text-amber-600">auto-refund</span></div>
+                <div className="bg-zinc-800 rounded-xl p-4 font-mono text-[11px] text-zinc-400 space-y-1">
+                  <div><span className="text-zinc-500">queue</span> <span className="text-emerald-400">jobs</span></div>
+                  <div><span className="text-zinc-500">position</span> 3 <span className="text-zinc-500">of</span> 14</div>
+                  <div><span className="text-zinc-500">timeout</span> 30 min max</div>
+                  <div><span className="text-zinc-500">on timeout</span> <span className="text-amber-400">auto-refund</span></div>
                 </div>
               </div>
 
-              <div className="bg-white border border-zinc-200 rounded-2xl p-6">
+              <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <RotateCcw size={15} className="text-emerald-500" />
-                  <h3 className="text-[14px] font-semibold text-zinc-900">Auto-refund policy</h3>
+                  <RotateCcw size={15} className="text-emerald-400" />
+                  <h3 className="text-[14px] font-semibold text-zinc-100">Auto-refund policy</h3>
                 </div>
-                <p className="text-[13px] text-zinc-500 leading-relaxed mb-4">
+                <p className="text-[13px] text-zinc-400 leading-relaxed mb-4">
                   Credits are refunded automatically for any job that doesn&apos;t complete successfully — network errors, invalid domain, worker interruption, or timeout. No manual request needed.
                 </p>
                 <div className="space-y-2">
                   {["failed (non-zero exit)", "stopped (worker restart)", "canceled by user", "timeout after 30 min"].map((reason) => (
                     <div key={reason} className="flex items-center gap-2 text-[12px]">
-                      <span className="text-emerald-500">+10</span>
-                      <span className="text-zinc-500">{reason}</span>
+                      <span className="text-emerald-400">+10</span>
+                      <span className="text-zinc-400">{reason}</span>
                     </div>
                   ))}
                 </div>
