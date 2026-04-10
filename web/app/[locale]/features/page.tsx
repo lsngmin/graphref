@@ -1,4 +1,5 @@
 import { MessageCircle, Search, Cpu, Bell, CreditCard, RotateCcw, List, Radio } from "lucide-react";
+import MarketingHeader from "@/components/MarketingHeader";
 
 export const metadata = {
   title: "Features — Graphref",
@@ -100,7 +101,7 @@ function ChatBubble({ lines, isUser }: { lines: string; isUser?: boolean }) {
   );
 }
 
-function CommandCard({ cmd, cost, desc, example, response, index }: {
+function CommandCard({ cmd, cost, desc, example, response }: {
   cmd: string; cost: string; desc: string; example: string; response: string; index: number;
 }) {
   const isCredit = cost.startsWith("−") || cost === "10 credits";
@@ -123,7 +124,6 @@ function CommandCard({ cmd, cost, desc, example, response, index }: {
         </div>
         <p className="text-[13px] text-zinc-500 mt-2.5 leading-relaxed">{desc}</p>
       </div>
-      {/* Mini chat preview */}
       <div className="bg-[#f0f2f5] px-4 py-4 flex flex-col gap-2">
         <ChatBubble lines={example} isUser />
         <ChatBubble lines={response} />
@@ -135,17 +135,7 @@ function CommandCard({ cmd, cost, desc, example, response, index }: {
 export default function FeaturesPage() {
   return (
     <div className="min-h-screen bg-white text-zinc-900">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur border-b border-zinc-100">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <a href="/" className="text-sm font-semibold tracking-tight">GRAPHREF</a>
-          <div className="flex items-center gap-6">
-            <a href="/features" className="text-sm font-medium text-zinc-900">Features</a>
-            <a href="/about" className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors">About</a>
-            <a href="/#pricing" className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors">Pricing</a>
-          </div>
-        </div>
-      </nav>
+      <MarketingHeader theme="light" />
 
       <main className="pt-14">
         {/* Hero */}
@@ -170,51 +160,15 @@ export default function FeaturesPage() {
             <h2 className="text-[22px] font-bold tracking-tight mb-2">Job pipeline</h2>
             <p className="text-[14px] text-zinc-500 mb-12">From your command to a click in Google — every step in the process.</p>
 
-            {/* Flow diagram */}
             <div className="relative">
               {/* Desktop horizontal flow */}
               <div className="hidden md:flex items-stretch gap-0">
                 {[
-                  {
-                    icon: MessageCircle,
-                    label: "You send",
-                    detail: "/run keyword domain",
-                    sub: "via Telegram bot",
-                    color: "bg-blue-50 border-blue-200",
-                    iconColor: "text-blue-500",
-                  },
-                  {
-                    icon: List,
-                    label: "Job enqueued",
-                    detail: "Redis queue",
-                    sub: "10 credits deducted",
-                    color: "bg-amber-50 border-amber-200",
-                    iconColor: "text-amber-500",
-                  },
-                  {
-                    icon: Cpu,
-                    label: "Worker picks up",
-                    detail: "Real device executes",
-                    sub: "run.py subprocess",
-                    color: "bg-violet-50 border-violet-200",
-                    iconColor: "text-violet-500",
-                  },
-                  {
-                    icon: Search,
-                    label: "Google search",
-                    detail: "Searches your keyword",
-                    sub: "clicks your domain",
-                    color: "bg-emerald-50 border-emerald-200",
-                    iconColor: "text-emerald-500",
-                  },
-                  {
-                    icon: Bell,
-                    label: "You're notified",
-                    detail: "Bot sends result",
-                    sub: "visible in GSC",
-                    color: "bg-zinc-50 border-zinc-200",
-                    iconColor: "text-zinc-500",
-                  },
+                  { icon: MessageCircle, label: "You send", detail: "/run keyword domain", sub: "via Telegram bot", color: "bg-blue-50 border-blue-200", iconColor: "text-blue-500" },
+                  { icon: List, label: "Job enqueued", detail: "Redis queue", sub: "10 credits deducted", color: "bg-amber-50 border-amber-200", iconColor: "text-amber-500" },
+                  { icon: Cpu, label: "Worker picks up", detail: "Real device executes", sub: "run.py subprocess", color: "bg-violet-50 border-violet-200", iconColor: "text-violet-500" },
+                  { icon: Search, label: "Google search", detail: "Searches your keyword", sub: "clicks your domain", color: "bg-emerald-50 border-emerald-200", iconColor: "text-emerald-500" },
+                  { icon: Bell, label: "You're notified", detail: "Bot sends result", sub: "visible in GSC", color: "bg-zinc-50 border-zinc-200", iconColor: "text-zinc-500" },
                 ].map((step, i, arr) => (
                   <div key={i} className="flex items-center flex-1">
                     <div className={`flex-1 border rounded-xl p-4 flex flex-col items-center text-center gap-2 ${step.color}`}>
@@ -268,7 +222,7 @@ export default function FeaturesPage() {
               <div className="bg-white border border-zinc-200 rounded-2xl p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Radio size={15} className="text-violet-500" />
-                  <h3 className="text-[14px] font-semibold text-zinc-900">Queue & workers</h3>
+                  <h3 className="text-[14px] font-semibold text-zinc-900">Queue &amp; workers</h3>
                 </div>
                 <p className="text-[13px] text-zinc-500 leading-relaxed mb-4">
                   Jobs are stored in a Redis-backed queue (RQ). Workers continuously pull jobs in order and execute them. Multiple workers can run in parallel, which is why server load affects queue time.
@@ -287,7 +241,7 @@ export default function FeaturesPage() {
                   <h3 className="text-[14px] font-semibold text-zinc-900">Auto-refund policy</h3>
                 </div>
                 <p className="text-[13px] text-zinc-500 leading-relaxed mb-4">
-                  Credits are refunded automatically for any job that doesn't complete successfully — network errors, invalid domain, worker interruption, or timeout. No manual request needed.
+                  Credits are refunded automatically for any job that doesn&apos;t complete successfully — network errors, invalid domain, worker interruption, or timeout. No manual request needed.
                 </p>
                 <div className="space-y-2">
                   {["failed (non-zero exit)", "stopped (worker restart)", "canceled by user", "timeout after 30 min"].map((reason) => (
@@ -323,28 +277,20 @@ export default function FeaturesPage() {
             <div className="mt-10 bg-zinc-50 border border-zinc-200 rounded-2xl p-6 overflow-x-auto">
               <p className="text-[12px] font-semibold text-zinc-500 uppercase tracking-wider mb-5">State transitions</p>
               <svg viewBox="0 0 680 80" className="w-full min-w-[500px]" height="80">
-                {/* nodes */}
                 {[
                   { x: 30, label: "queued", fill: "#fef3c7", stroke: "#f59e0b" },
                   { x: 190, label: "started", fill: "#dbeafe", stroke: "#3b82f6" },
-                  { x: 370, label: "finished", fill: "#d1fae5", stroke: "#10b981" },
-                  { x: 370, label: "", fill: "none", stroke: "none" },
-                ].filter(n => n.label).map((n) => (
+                ].map((n) => (
                   <g key={n.x + n.label}>
                     <rect x={n.x} y="20" width="100" height="36" rx="8" fill={n.fill} stroke={n.stroke} strokeWidth="1.5" />
                     <text x={n.x + 50} y="43" textAnchor="middle" fontSize="11" fontFamily="monospace" fill="#374151">{n.label}</text>
                   </g>
                 ))}
-                {/* finished node */}
                 <rect x={370} y="20" width="100" height="36" rx="8" fill="#d1fae5" stroke="#10b981" strokeWidth="1.5" />
                 <text x={420} y="43" textAnchor="middle" fontSize="11" fontFamily="monospace" fill="#374151">finished</text>
-                {/* failed/canceled/stopped node */}
                 <rect x={540} y="20" width="110" height="36" rx="8" fill="#fee2e2" stroke="#ef4444" strokeWidth="1.5" />
                 <text x={595} y="38" textAnchor="middle" fontSize="10" fontFamily="monospace" fill="#374151">failed /</text>
                 <text x={595} y="50" textAnchor="middle" fontSize="10" fontFamily="monospace" fill="#374151">stopped</text>
-                {/* canceled node below queued */}
-                <rect x={30} y="62" width="100" height="0" rx="8" fill="none" stroke="none" />
-                {/* arrows */}
                 <path d="M130 38 L185 38" stroke="#d4d4d8" strokeWidth="1.5" fill="none" markerEnd="url(#arr)" />
                 <path d="M290 38 L365 38" stroke="#d4d4d8" strokeWidth="1.5" fill="none" markerEnd="url(#arr)" />
                 <path d="M290 44 Q330 72 535 44" stroke="#fca5a5" strokeWidth="1.5" fill="none" strokeDasharray="3,2" markerEnd="url(#arrf)" />
