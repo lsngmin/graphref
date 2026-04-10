@@ -84,12 +84,25 @@ export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
     script.src = "https://telegram.org/js/telegram-widget.js?22";
     script.setAttribute("data-telegram-login", botUsername);
     script.setAttribute("data-size", "large");
+    script.setAttribute("data-radius", "8");
     script.setAttribute("data-onauth", "onTelegramAuth(user)");
     script.setAttribute("data-request-access", "write");
     script.async = true;
 
     containerRef.current.innerHTML = "";
     containerRef.current.appendChild(script);
+
+    // Stretch iframe to fill modal width once it mounts
+    const observer = new MutationObserver(() => {
+      const iframe = containerRef.current?.querySelector("iframe");
+      if (iframe) {
+        iframe.style.width = "100%";
+        iframe.style.minWidth = "0";
+        observer.disconnect();
+      }
+    });
+    observer.observe(containerRef.current, { childList: true, subtree: true });
+    return () => observer.disconnect();
 
     return () => {
       delete (window as unknown as Record<string, unknown>).onTelegramAuth;
@@ -126,7 +139,7 @@ export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
           </button>
         </div>
 
-        <div ref={containerRef} className="flex justify-center min-h-[48px]" />
+        <div ref={containerRef} className="w-full min-h-[48px]" />
 
         {error ? (
           <p className="text-[12px] text-red-500 text-center">{error}</p>
