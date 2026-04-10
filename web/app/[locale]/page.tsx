@@ -463,9 +463,11 @@ export default function Home() {
               <MessageCircle size={16} />
               {t("hero.cta")}
             </a>
-            <p className="mt-4 text-[13px] text-zinc-400 text-center md:text-left">
-              {t("hero.freeCredits")}
-            </p>
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-zinc-500 justify-center md:justify-start">
+              <span className="flex items-center gap-1"><CheckCircle size={12} className="text-emerald-500" />{t("hero.trustCredits")}</span>
+              <span className="flex items-center gap-1"><CheckCircle size={12} className="text-emerald-500" />{t("hero.trustNoCard")}</span>
+              <span className="flex items-center gap-1"><CheckCircle size={12} className="text-emerald-500" />{t("hero.trustInstant")}</span>
+            </div>
           </div>
 
           {/* Right: Telegram mock chat — hidden on mobile */}

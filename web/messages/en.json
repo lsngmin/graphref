@@ -10,7 +10,10 @@
       "headline2": "Send it yourself.",
       "sub": "Type a keyword. Pick your site. Graphref drives real search visits to your listing — so you don't have to wait months to move up.",
       "cta": "Open on Telegram",
-      "freeCredits": "New users get 50 free credits — no card required."
+      "freeCredits": "New users get 50 free credits — no card required.",
+      "trustCredits": "50 free credits",
+      "trustNoCard": "No card required",
+      "trustInstant": "Start instantly"
     },
     "stats": {
       "clicks": "Clicks delivered",

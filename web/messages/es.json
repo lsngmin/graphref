@@ -10,7 +10,10 @@
       "headline2": "Envíalo tú mismo.",
       "sub": "Escribe una palabra clave. Elige tu sitio. Graphref lleva visitas de búsqueda reales a tu página — para que no tengas que esperar meses para subir posiciones.",
       "cta": "Abrir en Telegram",
-      "freeCredits": "Los nuevos usuarios reciben 50 créditos gratis — sin tarjeta."
+      "freeCredits": "Los nuevos usuarios reciben 50 créditos gratis — sin tarjeta.",
+      "trustCredits": "50 créditos gratis",
+      "trustNoCard": "Sin tarjeta",
+      "trustInstant": "Empieza ya"
     },
     "stats": {
       "clicks": "Clics entregados",
