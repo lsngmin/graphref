@@ -1,6 +1,16 @@
 import { useTranslations } from "next-intl";
 import MarketingHeader from "@/components/MarketingHeader";
 
+export const metadata = {
+  title: "About — Graphref",
+  description: "The story behind Graphref — why we built a Telegram bot that drives real search visits.",
+  openGraph: {
+    title: "About — Graphref",
+    description: "The story behind Graphref — why we built a Telegram bot that drives real search visits.",
+    url: "https://graphref.com/about",
+  },
+};
+
 // ── Brand hex mark (background decoration) ───────────────────────
 function BgHex({ size = 480 }: { size?: number }) {
   return (
@@ -306,7 +316,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-zinc-100 px-8 py-8 flex items-center justify-between">
+      <footer className="border-t border-zinc-100 px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
         <span className="font-mono text-xs tracking-[0.2em] text-zinc-400 flex items-center">
           <span style={{ opacity: 0.5 }}>GRAP</span>
           <span

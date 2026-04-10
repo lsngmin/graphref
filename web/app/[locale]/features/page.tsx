@@ -4,6 +4,11 @@ import MarketingHeader from "@/components/MarketingHeader";
 export const metadata = {
   title: "Features — Graphref",
   description: "How Graphref works: commands, job pipeline, queue system, and credit mechanics.",
+  openGraph: {
+    title: "Features — Graphref",
+    description: "How Graphref works: commands, job pipeline, queue system, and credit mechanics.",
+    url: "https://graphref.com/features",
+  },
 };
 
 const commands = [

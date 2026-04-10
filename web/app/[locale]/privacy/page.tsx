@@ -4,6 +4,11 @@ import MarketingHeader from "@/components/MarketingHeader";
 export const metadata = {
   title: "Privacy Policy — Graphref",
   description: "How Graphref collects, uses, and protects your personal information.",
+  openGraph: {
+    title: "Privacy Policy — Graphref",
+    description: "How Graphref collects, uses, and protects your personal information.",
+    url: "https://graphref.com/privacy",
+  },
 };
 
 export default function Privacy() {
@@ -13,7 +18,7 @@ export default function Privacy() {
     <main className="min-h-screen bg-white">
       <MarketingHeader theme="light" />
       <div className="max-w-3xl mx-auto px-6 pt-32 pb-24">
-        <h1 className="text-[36px] font-bold tracking-tight mb-2">
+        <h1 className="text-[32px] font-bold tracking-tight mb-2">
           {t("privacy.title")}
         </h1>
         <p className="text-[13px] text-zinc-400 mb-6">
@@ -394,6 +399,18 @@ export default function Privacy() {
           </section>
         </div>
       </div>
+
+      <footer className="border-t border-zinc-100 py-8 px-6">
+        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px] text-zinc-400">
+          <span>© {new Date().getFullYear()} Graphref</span>
+          <div className="flex gap-5">
+            <a href="/features" className="hover:text-zinc-700 transition-colors">Features</a>
+            <a href="/about" className="hover:text-zinc-700 transition-colors">About</a>
+            <a href="/contact" className="hover:text-zinc-700 transition-colors">Contact</a>
+            <a href="/terms" className="hover:text-zinc-700 transition-colors">Terms</a>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
