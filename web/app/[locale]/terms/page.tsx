@@ -1,18 +1,18 @@
 import { useTranslations } from "next-intl";
+import MarketingHeader from "@/components/MarketingHeader";
+
+export const metadata = {
+  title: "Terms of Service — Graphref",
+  description: "The terms and conditions governing your use of the Graphref service.",
+};
 
 export default function Terms() {
   const t = useTranslations();
 
   return (
-    <main className="min-h-screen bg-white px-6 py-24">
-      <div className="max-w-3xl mx-auto">
-        <a
-          href="/"
-          className="text-[13px] text-zinc-400 hover:text-zinc-700 transition-colors mb-12 inline-block"
-        >
-          {t("terms.back")}
-        </a>
-
+    <main className="min-h-screen bg-white">
+      <MarketingHeader theme="light" />
+      <div className="max-w-3xl mx-auto px-6 pt-32 pb-24">
         <h1 className="text-[36px] font-bold tracking-tight mb-2">
           {t("terms.title")}
         </h1>

@@ -135,7 +135,7 @@ function CommandCard({ cmd, cost, desc, example, response }: {
 export default function FeaturesPage() {
   return (
     <div className="min-h-screen bg-white text-zinc-900">
-      <MarketingHeader theme="light" />
+      <MarketingHeader activePage="features" theme="light" />
 
       <main className="pt-14">
         {/* Hero */}

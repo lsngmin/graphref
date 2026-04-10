@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 
 type MarketingHeaderProps = {
-  activePage?: "about";
+  activePage?: "about" | "features" | "changelog";
   pricingHref?: string;
   theme?: "dark" | "light";
 };
@@ -165,14 +165,14 @@ export default function MarketingHeader({
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
-          <a href={`${prefix}/features`} className={linkClass}>
+          <a href={`${prefix}/features`} className={activePage === "features" ? activeLinkClass : linkClass}>
             {t("features")}
           </a>
           <a href={aboutHref} className={activePage === "about" ? activeLinkClass : linkClass}>
             {t("about")}
           </a>
-          <a href={`${prefix}/changelog`} className={linkClass}>
-            Changelog
+          <a href={`${prefix}/changelog`} className={activePage === "changelog" ? activeLinkClass : linkClass}>
+            {t("changelog")}
           </a>
           <a href={pricingHrefResolved} className={linkClass} onClick={handlePricingClick}>
             {t("pricing")}
@@ -200,14 +200,14 @@ export default function MarketingHeader({
       {/* Mobile drawer */}
       {open && (
         <div className={`md:hidden ${drawerClass}`}>
-          <a href={`${prefix}/features`} className={drawerLinkClass} onClick={() => setOpen(false)}>
+          <a href={`${prefix}/features`} className={activePage === "features" ? activeLinkClass : drawerLinkClass} onClick={() => setOpen(false)}>
             {t("features")}
           </a>
-          <a href={aboutHref} className={drawerLinkClass} onClick={() => setOpen(false)}>
+          <a href={aboutHref} className={activePage === "about" ? activeLinkClass : drawerLinkClass} onClick={() => setOpen(false)}>
             {t("about")}
           </a>
-          <a href={`${prefix}/changelog`} className={drawerLinkClass} onClick={() => setOpen(false)}>
-            Changelog
+          <a href={`${prefix}/changelog`} className={activePage === "changelog" ? activeLinkClass : drawerLinkClass} onClick={() => setOpen(false)}>
+            {t("changelog")}
           </a>
           <a href={pricingHrefResolved} className={drawerLinkClass} onClick={handlePricingClick}>
             {t("pricing")}
