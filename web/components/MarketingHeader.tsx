@@ -171,6 +171,9 @@ export default function MarketingHeader({
           <a href={aboutHref} className={activePage === "about" ? activeLinkClass : linkClass}>
             {t("about")}
           </a>
+          <a href={`${prefix}/changelog`} className={linkClass}>
+            Changelog
+          </a>
           <a href={pricingHrefResolved} className={linkClass} onClick={handlePricingClick}>
             {t("pricing")}
           </a>
@@ -202,6 +205,9 @@ export default function MarketingHeader({
           </a>
           <a href={aboutHref} className={drawerLinkClass} onClick={() => setOpen(false)}>
             {t("about")}
+          </a>
+          <a href={`${prefix}/changelog`} className={drawerLinkClass} onClick={() => setOpen(false)}>
+            Changelog
           </a>
           <a href={pricingHrefResolved} className={drawerLinkClass} onClick={handlePricingClick}>
             {t("pricing")}
