@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Space_Mono, Noto_Sans_KR } from "next/font/google";
+import { DM_Sans, Space_Mono, Noto_Sans_KR, Noto_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -22,6 +22,13 @@ const notoSansKr = Noto_Sans_KR({
   subsets: ["latin"],
   weight: ["400", "500", "700", "900"],
   variable: "--font-sans-kr",
+});
+
+// Cyrillic support for Russian
+const notoSans = Noto_Sans({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "700", "900"],
+  variable: "--font-sans-cyr",
 });
 
 export const metadata: Metadata = {
@@ -57,14 +64,16 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
-  const isKorean = locale === "ko";
+
+  const localeFontClass =
+    locale === "ko" ? "font-sans-kr"
+    : locale === "ru" ? "font-sans-cyr"
+    : "";
 
   return (
     <html lang={locale}>
       <body
-        className={`${dmSans.variable} ${spaceMono.variable} ${notoSansKr.variable} antialiased ${
-          isKorean ? "font-sans-kr" : ""
-        }`}
+        className={`${dmSans.variable} ${spaceMono.variable} ${notoSansKr.variable} ${notoSans.variable} antialiased ${localeFontClass}`}
       >
         <NextIntlClientProvider messages={messages}>
           <HashScrollHandler />

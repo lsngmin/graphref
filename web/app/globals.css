@@ -8,6 +8,11 @@ body.font-sans-kr {
   font-family: var(--font-sans-kr), sans-serif;
 }
 
+/* Russian locale — override sans font with Cyrillic support */
+body.font-sans-cyr {
+  font-family: var(--font-sans-cyr), sans-serif;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

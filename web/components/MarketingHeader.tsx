@@ -3,8 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, Menu, X, ChevronDown } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { usePathname } from "@/i18n/navigation";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 
 type MarketingHeaderProps = {
   activePage?: "about";
@@ -15,6 +14,8 @@ type MarketingHeaderProps = {
 const LANGUAGES = [
   { code: "en", label: "English", display: "EN" },
   { code: "ko", label: "한국어", display: "KO" },
+  { code: "ru", label: "Русский", display: "RU" },
+  { code: "es", label: "Español", display: "ES" },
 ];
 
 export default function MarketingHeader({
@@ -24,26 +25,31 @@ export default function MarketingHeader({
 }: MarketingHeaderProps) {
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  const langRef = useRef<HTMLDivElement>(null);
+  const desktopLangRef = useRef<HTMLDivElement>(null);
+  const mobileLangRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("nav");
   const isDark = theme === "dark";
 
-  // useLocale() returns current locale ("en"|"ko")
+  // useLocale() returns current locale ("en"|"ko"|"ru"|"es")
   // usePathname() from next-intl returns path WITHOUT locale prefix (e.g. "/about")
   const locale = useLocale();
   const currentLang = LANGUAGES.find((l) => l.code === locale) ?? LANGUAGES[0];
 
-  // prefix for building hrefs in <a> tags
-  const prefix = locale === "ko" ? "/ko" : "";
+  // prefix for building hrefs in <a> tags (en has no prefix)
+  const prefix = locale === "en" ? "" : `/${locale}`;
 
   const resolvedPricingHref = pricingHref ?? (pathname === "/" ? "#pricing" : "/#pricing");
 
   // Close lang dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const insideDesktop = desktopLangRef.current?.contains(target);
+      const insideMobile = mobileLangRef.current?.contains(target);
+
+      if (!insideDesktop && !insideMobile) {
         setLangOpen(false);
       }
     };
@@ -53,16 +59,9 @@ export default function MarketingHeader({
 
   function switchLocale(targetLocale: string) {
     setLangOpen(false);
-    const current = window.location.pathname;
-    let next: string;
-    if (targetLocale === "ko") {
-      next = current.startsWith("/ko") ? current : "/ko" + (current === "/" ? "" : current);
-    } else {
-      next = current.startsWith("/ko") ? current.slice(3) || "/" : current;
-    }
-    // Update cookie BEFORE navigating so middleware serves the correct locale
+    const next = `${pathname || "/"}${window.location.search}${window.location.hash}`;
     document.cookie = `NEXT_LOCALE=${targetLocale}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
-    window.location.href = next;
+    router.replace(next, { locale: targetLocale });
   }
 
   const navClass = isDark
@@ -104,8 +103,9 @@ export default function MarketingHeader({
       ? resolvedPricingHref
       : `${prefix}${resolvedPricingHref}`;
 
-  const LangDropdown = (
-    <div ref={langRef} className="relative">
+  function renderLangDropdown(ref: React.RefObject<HTMLDivElement | null>) {
+    return (
+    <div ref={ref} className="relative">
       <button
         onClick={() => setLangOpen(v => !v)}
         className={triggerClass}
@@ -129,7 +129,8 @@ export default function MarketingHeader({
         </div>
       )}
     </div>
-  );
+    );
+  }
 
   const Logo = (
     <a href={prefix || "/"} className={brandClass}>
@@ -170,7 +171,7 @@ export default function MarketingHeader({
           <a href={pricingHrefResolved} className={linkClass} onClick={handlePricingClick}>
             {t("pricing")}
           </a>
-          {LangDropdown}
+          {renderLangDropdown(desktopLangRef)}
           <a href="https://t.me/graphrefbot" target="_blank" rel="noopener noreferrer" className={ctaClass}>
             <MessageCircle size={15} />
             {t("openTelegram")}
@@ -179,7 +180,7 @@ export default function MarketingHeader({
 
         {/* Mobile right: lang + hamburger */}
         <div className="md:hidden flex items-center gap-3">
-          {LangDropdown}
+          {renderLangDropdown(mobileLangRef)}
           <button
             className={hamburgerClass}
             onClick={() => setOpen(!open)}
