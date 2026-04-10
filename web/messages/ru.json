@@ -2,7 +2,8 @@
   "nav": {
     "about": "О нас",
     "pricing": "Цены",
-    "openTelegram": "Открыть в Telegram"
+    "openTelegram": "Открыть в Telegram",
+    "features": "Функции"
   },
   "home": {
     "hero": {

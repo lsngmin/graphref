@@ -704,22 +704,24 @@ export default function Home() {
 
           <div className="flex flex-col gap-4">
             {/* Featured card — light, full width */}
-            <div className="bg-white border border-zinc-200 rounded-2xl p-8 flex flex-col gap-5">
-              <div className="flex items-center justify-between">
-                <div className="flex gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} width="20" height="20" viewBox="0 0 12 12" fill="#facc15">
-                      <path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5 3.4 8.9l.5-2.9L1.8 4l2.9-.4z" />
-                    </svg>
-                  ))}
+            <div className="bg-white border border-zinc-200 rounded-2xl p-8 flex flex-col lg:flex-row gap-8 lg:items-center">
+              {/* Quote side */}
+              <div className="flex-1 flex flex-col gap-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} width="20" height="20" viewBox="0 0 12 12" fill="#facc15">
+                        <path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5 3.4 8.9l.5-2.9L1.8 4l2.9-.4z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-[11px] text-zinc-400">{testimonials[0].date}</span>
                 </div>
-                <span className="text-[11px] text-zinc-400">{testimonials[0].date}</span>
-              </div>
-              <p className="text-[20px] text-zinc-700 leading-relaxed italic" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-                &ldquo;{testimonials[0].text}&rdquo;
-              </p>
-              <div className="border-t border-zinc-100 pt-4 flex items-center gap-3">
-                <img src={testimonials[0].avatar} alt={testimonials[0].name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                <p className="text-[17px] text-zinc-700 leading-relaxed italic" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+                  &ldquo;{testimonials[0].text}&rdquo;
+                </p>
+                <div className="border-t border-zinc-100 pt-4 flex items-center gap-3 mt-auto">
+                  <img src={testimonials[0].avatar} alt={testimonials[0].name} className="w-9 h-9 rounded-full object-cover shrink-0" />
                 <div>
                   <p className="text-[13px] font-semibold text-zinc-900">{testimonials[0].name}</p>
                   <p className="text-[12px] text-zinc-400">{testimonials[0].role}</p>

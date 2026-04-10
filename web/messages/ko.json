@@ -2,7 +2,8 @@
   "nav": {
     "about": "소개",
     "pricing": "요금제",
-    "openTelegram": "텔레그램 열기"
+    "openTelegram": "텔레그램 열기",
+    "features": "기능"
   },
   "home": {
     "hero": {
