@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MessageCircle, CheckCircle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import TelegramLoginModal from "./TelegramLoginModal";
@@ -16,7 +16,7 @@ interface Plan {
 }
 
 interface TelegramState {
-  status: "loading" | "connected" | "disconnected";
+  status: "unknown" | "connected" | "disconnected";
   username?: string;
 }
 
@@ -27,26 +27,57 @@ interface CheckoutEntry {
 
 export default function PricingCards({ plans }: { plans: Plan[] }) {
   const t = useTranslations("plans");
-  const [tg, setTg] = useState<TelegramState>({ status: "loading" });
+  const [tg, setTg] = useState<TelegramState>({ status: "unknown" });
   const [showModal, setShowModal] = useState(false);
   const [checkout, setCheckout] = useState<Record<string, CheckoutEntry>>({});
-
-  useEffect(() => {
-    fetch("/api/telegram/me")
-      .then((r) => r.json())
-      .then((data) => {
-        setTg(
-          data.connected
-            ? { status: "connected", username: data.user?.username }
-            : { status: "disconnected" }
-        );
-      })
-      .catch(() => setTg({ status: "disconnected" }));
-  }, []);
 
   function handleLoginSuccess(username: string) {
     setTg({ status: "connected", username });
     setShowModal(false);
+  }
+
+  async function ensureTelegramConnection(packageKey: string) {
+    if (tg.status === "connected") {
+      return true;
+    }
+
+    try {
+      const res = await fetch("/api/telegram/me", { cache: "no-store" });
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.connected) {
+        setTg({ status: "connected", username: data.user?.username });
+        return true;
+      }
+
+      if (res.status === 401) {
+        setTg({ status: "disconnected" });
+        setCheckout((prev) => ({
+          ...prev,
+          [packageKey]: { loading: false, error: null },
+        }));
+        setShowModal(true);
+        return false;
+      }
+
+      setCheckout((prev) => ({
+        ...prev,
+        [packageKey]: {
+          loading: false,
+          error: data?.error ?? "Unable to verify your Telegram login right now.",
+        },
+      }));
+      return false;
+    } catch {
+      setCheckout((prev) => ({
+        ...prev,
+        [packageKey]: {
+          loading: false,
+          error: "Unable to verify your Telegram login right now.",
+        },
+      }));
+      return false;
+    }
   }
 
   async function handleCheckout(packageKey: string) {
@@ -54,6 +85,12 @@ export default function PricingCards({ plans }: { plans: Plan[] }) {
       ...prev,
       [packageKey]: { loading: true, error: null },
     }));
+
+    const connected = await ensureTelegramConnection(packageKey);
+    if (!connected) {
+      return;
+    }
+
     try {
       const res = await fetch("/api/paypal/checkout", {
         method: "POST",
@@ -138,13 +175,7 @@ export default function PricingCards({ plans }: { plans: Plan[] }) {
             </ul>
 
             <div className="mt-auto flex flex-col gap-2">
-              {tg.status === "loading" ? (
-                <div
-                  className={`h-9 rounded-lg animate-pulse ${
-                    plan.highlight ? "bg-zinc-700" : "bg-zinc-100"
-                  }`}
-                />
-              ) : tg.status === "disconnected" ? (
+              {tg.status === "disconnected" ? (
                 <button
                   onClick={() => setShowModal(true)}
                   className={`inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-lg transition-colors ${
