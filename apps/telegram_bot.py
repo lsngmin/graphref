@@ -518,12 +518,14 @@ def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
     send_message(
         chat_id,
         (
-            f"Job queued. Credits remaining: {balance}\n"
-            f"job_id: {job.id}\n"
-            f"keyword: {keyword}\n"
-            f"domain: {domain}\n\n"
-            f"Check progress: /status {job.id}"
+            f"✅ <b>Job Queued!</b>\n\n"
+            f"<b>Keyword:</b> <code>{escape_html(keyword)}</code>\n"
+            f"<b>Domain:</b> <code>{escape_html(domain)}</code>\n"
+            f"<b>Credits remaining:</b> {balance}\n\n"
+            f"<b>Job ID:</b>\n<code>{escape_html(job.id)}</code>\n\n"
+            f"Track progress: /status {escape_html(job.id)}"
         ),
+        parse_mode="HTML",
     )
 
 
@@ -547,19 +549,33 @@ def handle_status(redis: Redis, chat_id: str, text: str) -> None:
                 break
 
         if not job_id:
-            send_message(chat_id, "No active jobs.")
+            send_message(
+                chat_id,
+                "💤 <b>No Active Jobs</b>\n\nYou have no queued or running jobs right now.\n\n"
+                "Start one with <code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
+                parse_mode="HTML",
+            )
             return
 
     try:
         job = Job.fetch(job_id, connection=redis)
     except Exception:
-        send_message(chat_id, f"Job not found: {job_id}")
+        send_message(
+            chat_id,
+            f"❌ <b>Job Not Found</b>\n\n<code>{escape_html(job_id)}</code>\n\n"
+            "Use <code>/jobs 5</code> to list recent jobs.",
+            parse_mode="HTML",
+        )
         return
 
     meta = get_job_meta(redis, job_id)
     owner_chat_id = meta.get("chat_id")
     if owner_chat_id and owner_chat_id != chat_id:
-        send_message(chat_id, "This job belongs to a different chat.")
+        send_message(
+            chat_id,
+            "🚫 <b>Access Denied</b>\n\nThis job belongs to a different chat.",
+            parse_mode="HTML",
+        )
         return
 
     keyword = meta.get("keyword") or "unknown"
