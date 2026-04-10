@@ -165,6 +165,9 @@ export default function MarketingHeader({
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
+          <a href={`${prefix}/features`} className={linkClass}>
+            {t("features")}
+          </a>
           <a href={aboutHref} className={activePage === "about" ? activeLinkClass : linkClass}>
             {t("about")}
           </a>
@@ -194,6 +197,9 @@ export default function MarketingHeader({
       {/* Mobile drawer */}
       {open && (
         <div className={`md:hidden ${drawerClass}`}>
+          <a href={`${prefix}/features`} className={drawerLinkClass} onClick={() => setOpen(false)}>
+            {t("features")}
+          </a>
           <a href={aboutHref} className={drawerLinkClass} onClick={() => setOpen(false)}>
             {t("about")}
           </a>
