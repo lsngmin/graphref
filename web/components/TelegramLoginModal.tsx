@@ -21,10 +21,40 @@ interface Props {
 export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const botUsername =
-    process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME?.trim() || "graphrefbot";
+  const [botUsername, setBotUsername] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/telegram/config")
+      .then(async (res) => {
+        if (!res.ok) {
+          const message = await res.text();
+          throw new Error(message || "Failed to load Telegram config.");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!cancelled) {
+          setBotUsername(String(data.botUsername || "").trim() || null);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load Telegram config.");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!botUsername || !containerRef.current) {
+      return;
+    }
+
     (window as unknown as Record<string, unknown>).onTelegramAuth = async (
       user: TelegramUser
     ) => {
@@ -58,12 +88,14 @@ export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
     script.setAttribute("data-request-access", "write");
     script.async = true;
 
-    if (containerRef.current) {
-      containerRef.current.appendChild(script);
-    }
+    containerRef.current.innerHTML = "";
+    containerRef.current.appendChild(script);
 
     return () => {
       delete (window as unknown as Record<string, unknown>).onTelegramAuth;
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+      }
     };
   }, [botUsername, onSuccess]);
 
@@ -98,6 +130,8 @@ export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
 
         {error ? (
           <p className="text-[12px] text-red-500 text-center">{error}</p>
+        ) : !botUsername ? (
+          <p className="text-[12px] text-zinc-400 text-center">Loading Telegram login…</p>
         ) : null}
 
         <p className="text-[11px] text-zinc-400 text-center">
