@@ -263,19 +263,41 @@ export default function FeaturesPage() {
             <h2 className="text-[22px] font-bold tracking-tight mb-2">Job lifecycle</h2>
             <p className="text-[14px] text-zinc-500 mb-10">Every job moves through these states. The bot notifies you when a job leaves the active states.</p>
 
-            {/* Status cards — icon + badge + desc */}
-            <div className="grid sm:grid-cols-2 gap-3 mb-10">
-              {jobStatuses.map((s) => (
-                <div key={s.status} className="flex gap-4 p-4 rounded-xl border border-zinc-100 bg-white hover:border-zinc-200 transition-colors">
-                  <div className="mt-0.5 shrink-0">
-                    <s.icon size={15} className={s.iconColor} />
+            {/* Job log feed */}
+            <div className="rounded-2xl border border-zinc-200 overflow-hidden mb-10">
+              {/* Terminal bar */}
+              <div className="bg-zinc-900 px-4 py-2.5 flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/70" />
+                <span className="ml-2 text-[11px] font-mono text-zinc-500">job a3f9-bc12 · log</span>
+              </div>
+
+              {/* Log lines */}
+              <div className="bg-zinc-950 px-5 py-4 font-mono text-[12px] space-y-0 divide-y divide-zinc-800/60">
+                {[
+                  { time: "10:42:01", status: "queued",   dot: "bg-amber-400",   label: "text-amber-400",  desc: "Job is waiting in the Redis queue. Position depends on server load." },
+                  { time: "10:42:08", status: "started",  dot: "bg-blue-400",    label: "text-blue-400",   desc: "A worker has picked up the job and is executing the search + click process." },
+                  { time: "10:43:11", status: "finished", dot: "bg-emerald-400", label: "text-emerald-400",desc: "Job completed successfully. Visit will appear in Google Search Console." },
+                  { time: "—",        status: "failed",   dot: "bg-red-400",     label: "text-red-400",    desc: "Execution returned a non-zero exit code. 10 credits are automatically refunded." },
+                  { time: "—",        status: "stopped",  dot: "bg-orange-400",  label: "text-orange-400", desc: "Worker was interrupted mid-execution (e.g. server restart). Credits refunded." },
+                  { time: "—",        status: "canceled", dot: "bg-zinc-500",    label: "text-zinc-400",   desc: "User cancelled the job before it started. 10 credits refunded immediately." },
+                ].map((row, i) => (
+                  <div key={row.status} className={`flex items-start gap-4 py-3 ${i >= 3 ? "opacity-60" : ""}`}>
+                    <span className="text-zinc-600 w-16 shrink-0 pt-0.5">{row.time}</span>
+                    <span className="flex items-center gap-1.5 w-24 shrink-0 pt-0.5">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${row.dot}`} />
+                      <span className={`font-semibold ${row.label}`}>{row.status}</span>
+                    </span>
+                    <span className="text-zinc-400 leading-relaxed">{row.desc}</span>
                   </div>
-                  <div>
-                    <code className={`text-[12px] font-mono font-semibold ${s.textColor}`}>{s.status}</code>
-                    <p className="text-[12px] text-zinc-500 leading-relaxed mt-1">{s.desc}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* Footer note */}
+              <div className="bg-zinc-900 px-5 py-2.5 border-t border-zinc-800">
+                <span className="text-[11px] font-mono text-zinc-600">failed / stopped / canceled → credits refunded automatically</span>
+              </div>
             </div>
 
             {/* State transition diagram */}
