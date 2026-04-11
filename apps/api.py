@@ -46,16 +46,22 @@ except ModuleNotFoundError:
 
 try:
     from telegram_bot import (
+        BOT_ALLOWED_CHAT_IDS,
+        command_name,
         get_redis as get_bot_redis,
         get_queue as get_bot_queue,
+        handle_start_async,
         notify_completed_jobs,
         process_callback_query,
         process_message,
     )
 except ModuleNotFoundError:
     from apps.telegram_bot import (
+        BOT_ALLOWED_CHAT_IDS,
+        command_name,
         get_redis as get_bot_redis,
         get_queue as get_bot_queue,
+        handle_start_async,
         notify_completed_jobs,
         process_callback_query,
         process_message,
@@ -282,7 +288,19 @@ async def telegram_webhook(request: Request):
         if update.get("callback_query"):
             await asyncio.to_thread(process_callback_query, redis, update["callback_query"])
         elif update.get("message"):
-            await asyncio.to_thread(process_message, redis, queue, update["message"])
+            message = update["message"]
+            chat = message.get("chat") or {}
+            chat_id = str(chat.get("id", ""))
+            chat_type = str(chat.get("type", ""))
+            text = (message.get("text") or "").strip()
+
+            if chat_id and chat_type == "private" and not (BOT_ALLOWED_CHAT_IDS and chat_id not in BOT_ALLOWED_CHAT_IDS):
+                if command_name(text) == "/start":
+                    await handle_start_async(redis, chat_id, text)
+                else:
+                    await asyncio.to_thread(process_message, redis, queue, message)
+            else:
+                await asyncio.to_thread(process_message, redis, queue, message)
     except Exception:
         logger.error("telegram webhook handler error", exc_info=True)
 

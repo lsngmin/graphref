@@ -1,3 +1,4 @@
+import asyncio
 import html
 import json
 import logging
@@ -8,6 +9,8 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from typing import Optional
+
+import aiohttp
 
 from redis import Redis, ConnectionPool
 from rq import Queue
@@ -482,6 +485,40 @@ def handle_start(redis: Redis, chat_id: str, text: str) -> None:
     referrer_id = referral_code if referral_code and referral_code != chat_id else None
     ensure_user(redis, chat_id, referrer_id=referrer_id)
     send_message(chat_id, start_text(redis, chat_id), parse_mode="HTML")
+
+
+async def async_send_message(
+    chat_id: str,
+    text: str,
+    parse_mode: Optional[str] = None,
+    reply_markup: Optional[dict] = None,
+) -> None:
+    message = text.strip()
+    if len(message) > TELEGRAM_MESSAGE_LIMIT:
+        message = message[: TELEGRAM_MESSAGE_LIMIT - 20] + "\n\n...[truncated]"
+    payload: dict = {"chat_id": chat_id, "text": message}
+    if parse_mode:
+        payload["parse_mode"] = parse_mode
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
+    timeout = aiohttp.ClientTimeout(total=30)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.post(
+            f"{TELEGRAM_API_BASE}/sendMessage", json=payload
+        ) as resp:
+            result = await resp.json()
+            if not result.get("ok"):
+                raise RuntimeError(f"Telegram API error sendMessage: {result}")
+
+
+async def handle_start_async(redis: Redis, chat_id: str, text: str) -> None:
+    _, _, raw_args = text.partition(" ")
+    referral_code = raw_args.strip() or None
+    referrer_id = referral_code if referral_code and referral_code != chat_id else None
+
+    await asyncio.to_thread(ensure_user, redis, chat_id, referrer_id=referrer_id)
+    body = await asyncio.to_thread(start_text, redis, chat_id)
+    await async_send_message(chat_id, body, parse_mode="HTML")
 
 
 def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
