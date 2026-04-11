@@ -997,6 +997,7 @@ def notify_completed_jobs(redis: Redis) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    """Long-polling entry point. Use only for local dev without a public URL."""
     if not TELEGRAM_BOT_TOKEN:
         raise SystemExit("Missing TELEGRAM_BOT_TOKEN")
 
@@ -1007,7 +1008,7 @@ def main() -> None:
 
     redis = get_redis()
     queue = get_queue(redis)
-    logger.info("telegram bot started")
+    logger.info("telegram bot started (long-polling)")
 
     while True:
         try:
