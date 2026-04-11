@@ -29,7 +29,7 @@ def test_handle_run_refunds_when_enqueue_fails(monkeypatch):
         )
     ]
     assert sent_messages == [
-        ("user-1", "Failed to queue the job. Your credits were refunded.\nBalance: 50")
+        ("user-1", f"⚠️ <b>Failed to Queue</b>\n\nCould not add the job to the queue. Your <b>{telegram_bot.CREDITS_PER_RUN} credits</b> have been refunded.\n💰 Balance: 50")
     ]
 
 
@@ -37,7 +37,7 @@ def test_handle_run_success_awards_referral_after_enqueue(monkeypatch):
     sent_messages = []
     add_calls = []
 
-    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text)))
+    monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text, parse_mode)))
     monkeypatch.setattr(telegram_bot, "deduct_credits", lambda redis, chat_id, amount, reason=None, metadata=None: (True, 40))
     monkeypatch.setattr(telegram_bot, "enqueue_job", lambda *args, **kwargs: SimpleNamespace(id="job-123"))
     monkeypatch.setattr(telegram_bot, "begin_first_run", lambda *args, **kwargs: (True, "ref-1"))
@@ -62,6 +62,7 @@ def test_handle_run_success_awards_referral_after_enqueue(monkeypatch):
         "ref-1",
         "Referral bonus! Your referral just ran their first job.\n"
         f"+{telegram_bot.CREDITS_REFERRAL_BONUS} credits added. Balance: 80",
+        "HTML",
     )
     assert sent_messages[1] == (
         "user-1",
@@ -70,7 +71,8 @@ def test_handle_run_success_awards_referral_after_enqueue(monkeypatch):
         "<b>Domain:</b> <code>example.com</code>\n"
         "<b>Credits remaining:</b> 40\n\n"
         "<b>Job ID:</b>\n<code>job-123</code>\n\n"
-        "Track progress: /status job-123",
+        "Track progress: /status",
+        "HTML",
     )
 
 
@@ -80,7 +82,7 @@ def test_handle_buy_package_sends_checkout_url(monkeypatch):
     monkeypatch.setattr(
         telegram_bot,
         "send_message",
-        lambda chat_id, text, parse_mode=None, reply_markup=None: sent_messages.append((chat_id, text)),
+        lambda chat_id, text, parse_mode=None, reply_markup=None: sent_messages.append((chat_id, text, parse_mode)),
     )
     monkeypatch.setattr(
         telegram_bot,
@@ -95,6 +97,7 @@ def test_handle_buy_package_sends_checkout_url(monkeypatch):
             "user-1",
             "Checkout ready for 100 credits.\nhttps://checkout.example/test\n\n"
             "Credits will be added automatically after payment confirmation.",
+            "HTML",
         )
     ]
 
@@ -152,24 +155,16 @@ def test_parse_run_command_keeps_legacy_pipe_compatible():
     assert domain == "example.com"
 
 
-def test_handle_status_without_job_id_uses_active_job(monkeypatch):
+def test_handle_status_shows_most_recent_job(monkeypatch):
     sent_messages = []
 
     class FakeJob:
-        def __init__(self, status: str):
-            self._status = status
-
         def get_status(self, refresh: bool = False) -> str:
-            return self._status
-
-    jobs = {
-        "job-done": FakeJob("finished"),
-        "job-active": FakeJob("started"),
-    }
+            return "finished"
 
     monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text, parse_mode)))
-    monkeypatch.setattr(telegram_bot, "get_recent_job_ids", lambda redis, chat_id, limit=5: ["job-done", "job-active"])
-    monkeypatch.setattr(telegram_bot.Job, "fetch", lambda job_id, connection=None: jobs[job_id])
+    monkeypatch.setattr(telegram_bot, "get_recent_job_ids", lambda redis, chat_id, limit=1: ["job-latest"])
+    monkeypatch.setattr(telegram_bot.Job, "fetch", lambda job_id, connection=None: FakeJob())
     monkeypatch.setattr(
         telegram_bot,
         "get_job_meta",
@@ -177,41 +172,23 @@ def test_handle_status_without_job_id_uses_active_job(monkeypatch):
     )
     monkeypatch.setattr(telegram_bot, "format_job_message", lambda redis, job, keyword, domain: f"{job.get_status()} {keyword} {domain}")
 
-    telegram_bot.handle_status(redis=object(), chat_id="user-1", text="/status")
+    telegram_bot.handle_status(redis=object(), chat_id="user-1")
 
-    assert sent_messages == [("user-1", "started hello world example.com", "HTML")]
+    assert sent_messages == [("user-1", "finished hello world example.com", "HTML")]
 
 
-def test_handle_status_without_job_id_reports_when_no_active_job(monkeypatch):
+def test_handle_status_reports_when_no_jobs(monkeypatch):
     sent_messages = []
 
-    class FakeJob:
-        def __init__(self, status: str):
-            self._status = status
-
-        def get_status(self, refresh: bool = False) -> str:
-            return self._status
-
-    jobs = {
-        "job-1": FakeJob("finished"),
-        "job-2": FakeJob("failed"),
-    }
-
     monkeypatch.setattr(telegram_bot, "send_message", lambda chat_id, text, parse_mode=None: sent_messages.append((chat_id, text, parse_mode)))
-    monkeypatch.setattr(telegram_bot, "get_recent_job_ids", lambda redis, chat_id, limit=5: ["job-1", "job-2"])
-    monkeypatch.setattr(telegram_bot.Job, "fetch", lambda job_id, connection=None: jobs[job_id])
-    monkeypatch.setattr(
-        telegram_bot,
-        "get_job_meta",
-        lambda redis, job_id: {"chat_id": "user-1", "keyword": "hello world", "domain": "example.com"},
-    )
+    monkeypatch.setattr(telegram_bot, "get_recent_job_ids", lambda redis, chat_id, limit=1: [])
 
-    telegram_bot.handle_status(redis=object(), chat_id="user-1", text="/status")
+    telegram_bot.handle_status(redis=object(), chat_id="user-1")
 
     assert sent_messages == [
         (
             "user-1",
-            "💤 <b>No Active Jobs</b>\n\nYou have no queued or running jobs right now.\n\n"
+            "💤 <b>No Jobs Yet</b>\n\nYou haven't run any jobs yet.\n\n"
             "Start one with <code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
             "HTML",
         )
@@ -271,7 +248,7 @@ def test_handle_jobs_requires_limit(monkeypatch):
 
     telegram_bot.handle_jobs(redis=object(), chat_id="user-1", text="/jobs")
 
-    assert sent_messages == [("user-1", "Please enter a number. Example: /jobs 5")]
+    assert sent_messages == [("user-1", "📋 <b>How many jobs?</b>\n\nPlease enter a number, e.g. <code>/jobs 5</code>")]
 
 
 def test_handle_credits_uses_dashboard_layout(monkeypatch):

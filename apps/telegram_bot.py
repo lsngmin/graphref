@@ -317,8 +317,8 @@ def usage_text() -> str:
         "<code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
         " → Start a new task. (Costs <b>10 credits</b>)",
         "",
-        "<code>/status [job_id]</code>",
-        " → Check a job. Omit ID for latest.",
+        "<code>/status</code>",
+        " → Check your most recent job.",
         "",
         "<code>/jobs &lt;n&gt;</code>",
         " → Show recent jobs.",
@@ -500,7 +500,10 @@ def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
     if not success:
         send_message(
             chat_id,
-            f"Not enough credits. You have {balance} credits but need {CREDITS_PER_RUN}.\n\nTop up with /buy",
+            f"💳 <b>Not Enough Credits</b>\n\n"
+            f"You have <b>{balance}</b> credits but need <b>{CREDITS_PER_RUN}</b> to run a job.\n\n"
+            "Top up with /buy",
+            parse_mode="HTML",
         )
         return
 
@@ -516,10 +519,10 @@ def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
         )
         send_message(
             chat_id,
-            (
-                "Failed to queue the job. Your credits were refunded.\n"
-                f"Balance: {refunded_balance}"
-            ),
+            f"⚠️ <b>Failed to Queue</b>\n\n"
+            f"Could not add the job to the queue. Your <b>{CREDITS_PER_RUN} credits</b> have been refunded.\n"
+            f"💰 Balance: {refunded_balance}",
+            parse_mode="HTML",
         )
         return
 
@@ -538,6 +541,7 @@ def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
                 referrer_id,
                 f"Referral bonus! Your referral just ran their first job.\n"
                 f"+{CREDITS_REFERRAL_BONUS} credits added. Balance: {new_referrer_balance}",
+                parse_mode="HTML",
             )
         except Exception:
             logger.warning("failed to notify referrer %s", referrer_id, exc_info=True)
@@ -550,63 +554,37 @@ def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
             f"<b>Domain:</b> <code>{escape_html(domain)}</code>\n"
             f"<b>Credits remaining:</b> {balance}\n\n"
             f"<b>Job ID:</b>\n<code>{escape_html(job.id)}</code>\n\n"
-            f"Track progress: /status {escape_html(job.id)}"
+            "Track progress: /status"
         ),
         parse_mode="HTML",
     )
 
 
-def handle_status(redis: Redis, chat_id: str, text: str) -> None:
-    _, _, raw_job_id = text.partition(" ")
-    job_id = raw_job_id.strip()
-    if not job_id:
-        for candidate_job_id in get_recent_job_ids(redis, chat_id, limit=RECENT_JOB_LIMIT):
-            try:
-                candidate_job = Job.fetch(candidate_job_id, connection=redis)
-            except Exception:
-                logger.debug("could not fetch job %s during status scan", candidate_job_id, exc_info=True)
-                continue
+def handle_status(redis: Redis, chat_id: str) -> None:
+    recent = get_recent_job_ids(redis, chat_id, limit=1)
+    if not recent:
+        send_message(
+            chat_id,
+            "💤 <b>No Jobs Yet</b>\n\nYou haven't run any jobs yet.\n\n"
+            "Start one with <code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
+            parse_mode="HTML",
+        )
+        return
 
-            meta = get_job_meta(redis, candidate_job_id)
-            owner_chat_id = meta.get("chat_id")
-            if owner_chat_id and owner_chat_id != chat_id:
-                continue
-
-            if candidate_job.get_status(refresh=True) in {"queued", "started"}:
-                job_id = candidate_job_id
-                break
-
-        if not job_id:
-            send_message(
-                chat_id,
-                "💤 <b>No Active Jobs</b>\n\nYou have no queued or running jobs right now.\n\n"
-                "Start one with <code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
-                parse_mode="HTML",
-            )
-            return
-
+    job_id = recent[0]
     try:
         job = Job.fetch(job_id, connection=redis)
     except Exception:
         logger.warning("job %s not found in Redis", job_id, exc_info=True)
         send_message(
             chat_id,
-            f"❌ <b>Job Not Found</b>\n\n<code>{escape_html(job_id)}</code>\n\n"
+            "❌ <b>Job Not Found</b>\n\nCould not retrieve your last job.\n\n"
             "Use <code>/jobs 5</code> to list recent jobs.",
             parse_mode="HTML",
         )
         return
 
     meta = get_job_meta(redis, job_id)
-    owner_chat_id = meta.get("chat_id")
-    if owner_chat_id and owner_chat_id != chat_id:
-        send_message(
-            chat_id,
-            "🚫 <b>Access Denied</b>\n\nThis job belongs to a different chat.",
-            parse_mode="HTML",
-        )
-        return
-
     keyword = meta.get("keyword") or "unknown"
     domain = meta.get("domain") or "unknown"
     send_message(chat_id, format_job_message(redis, job, keyword, domain), parse_mode="HTML")
@@ -616,13 +594,21 @@ def handle_jobs(redis: Redis, chat_id: str, text: str) -> None:
     _, _, raw_limit = text.partition(" ")
     raw_limit = raw_limit.strip()
     if not raw_limit:
-        send_message(chat_id, "Please enter a number. Example: /jobs 5")
+        send_message(
+            chat_id,
+            "📋 <b>How many jobs?</b>\n\nPlease enter a number, e.g. <code>/jobs 5</code>",
+            parse_mode="HTML",
+        )
         return
 
     try:
         limit = max(1, min(int(raw_limit), 10))
     except ValueError:
-        send_message(chat_id, "Please enter a number. Example: /jobs 5")
+        send_message(
+            chat_id,
+            "📋 <b>Invalid number.</b>\n\nPlease enter a number, e.g. <code>/jobs 5</code>",
+            parse_mode="HTML",
+        )
         return
 
     job_ids = get_recent_job_ids(redis, chat_id, limit=limit)
@@ -692,7 +678,11 @@ def handle_cancel(redis: Redis, chat_id: str, text: str) -> None:
     if not job_id:
         recent_jobs = get_recent_job_ids(redis, chat_id, limit=1)
         if not recent_jobs:
-            send_message(chat_id, "No recent job to cancel.")
+            send_message(
+                chat_id,
+                "💤 <b>No Recent Job</b>\n\nYou have no recent jobs to cancel.\n\nStart one with <code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
+                parse_mode="HTML",
+            )
             return
         job_id = recent_jobs[0]
 
@@ -805,6 +795,7 @@ def handle_buy_package(redis: Redis, chat_id: str, package_key: str) -> None:
             f"{checkout_url}\n\n"
             "Credits will be added automatically after payment confirmation."
         ),
+        parse_mode="HTML",
     )
 
 
@@ -904,7 +895,7 @@ def process_message(redis: Redis, queue: Queue, message: dict) -> None:
         handle_run(redis, queue, chat_id, text)
         return
     if name == "/status":
-        handle_status(redis, chat_id, text)
+        handle_status(redis, chat_id)
         return
     if name == "/jobs":
         handle_jobs(redis, chat_id, text)
@@ -971,10 +962,18 @@ def notify_completed_jobs(redis: Redis) -> None:
             job = Job.fetch(job_id, connection=redis)
         except Exception:
             logger.error("lost track of job %s for chat %s", job_id, chat_id, exc_info=True)
+            refunded_balance = add_credits(
+                redis,
+                chat_id,
+                CREDITS_PER_RUN,
+                reason="lost_job_refund",
+                metadata={"job_id": job_id},
+            )
             send_message(
                 chat_id,
                 f"⚠️ <b>Job tracking error</b>\n\n<code>{escape_html(job_id)}</code>\n\n"
-                "We lost track of this job. If credits were deducted, they will be refunded automatically.",
+                f"We lost track of this job and have refunded <b>{CREDITS_PER_RUN} credits</b>.\n"
+                f"💰 Balance: {refunded_balance}",
                 parse_mode="HTML",
             )
             redis.srem(REDIS_PENDING_JOBS_KEY, job_id)
