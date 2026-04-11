@@ -344,29 +344,39 @@ def usage_text() -> str:
 def start_text(redis: Redis, chat_id: str) -> str:
     credits = get_credits(redis, chat_id)
     job_ids = get_recent_job_ids(redis, chat_id, limit=3)
+    is_new = not job_ids and credits == CREDITS_NEW_USER
 
     lines = [
         "<b>🚀 Welcome to Graphref!</b>",
         "",
-        "✨ <b>How to use:</b>",
-        "Simply provide a <b>keyword</b> and a <b>domain</b> to trigger organic search & clicks.",
+    ]
+
+    if is_new:
+        lines += [
+            "🎁 <b>You've received 50 free credits to get started!</b>",
+            "",
+        ]
+
+    lines += [
+        "Send a keyword and domain — Graphref will perform a real Google search and click your result.",
         "",
-        f"💰 <b>Your Credits:</b> {credits}",
-        f"🎫 <b>Cost:</b> 10 credits per task",
-        "",
-        "<b>[ Run a Task ]</b>",
+        "<b>▶ Run a job</b>",
         "<code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
+        "<i>Example: /run best coffee grinder mycoffeeshop.com</i>",
         "",
-        "⚠️ <b>Important Notes:</b>",
-        "• The <b>keyword</b> must be indexed in Search Console for at least 24h.",
-        "• The <b>domain</b> must start with <code>https://</code> and be visible in Google search results.",
+        "⚠️ <b>Requirements:</b>",
+        "• Keyword must appear in Google search results for your domain.",
+        "• Domain must include <code>https://</code>.",
         "",
-        "📖 Type /help to see all commands.",
+        f"💰 <b>Balance:</b> {credits} credits  ({credits // CREDITS_PER_RUN} runs left)",
+        f"💳 <b>Cost:</b> {CREDITS_PER_RUN} credits per run  •  /buy to top up",
+        "",
+        "📖 /help — all commands",
     ]
 
     if job_ids:
         lines.append("")
-        lines.append("Recent jobs")
+        lines.append("<b>Recent jobs:</b>")
         for job_id in job_ids:
             try:
                 job = Job.fetch(job_id, connection=redis)
@@ -374,9 +384,9 @@ def start_text(redis: Redis, chat_id: str) -> str:
                 keyword = meta.get("keyword") or "unknown"
                 domain = meta.get("domain") or "unknown"
                 status = job.get_status(refresh=True)
-                lines.append(f"- {status} | {keyword} | {domain}")
+                lines.append(f"• <code>{status}</code> — {escape_html(keyword)}")
             except Exception:
-                lines.append(f"- {job_id}: missing")
+                pass
 
     return "\n".join(lines)
 
@@ -617,24 +627,38 @@ def handle_jobs(redis: Redis, chat_id: str, text: str) -> None:
 
     job_ids = get_recent_job_ids(redis, chat_id, limit=limit)
     if not job_ids:
-        send_message(chat_id, "No recent jobs.")
+        send_message(
+            chat_id,
+            "📭 <b>No recent jobs.</b>\n\nStart one with <code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
+            parse_mode="HTML",
+        )
         return
 
-    lines = ["Recent jobs"]
+    STATUS_EMOJI = {
+        "queued": "⏳", "started": "🚀", "finished": "✅",
+        "failed": "❌", "stopped": "⚠️", "canceled": "🚫",
+    }
+
+    lines = [f"<b>📋 Last {len(job_ids)} job(s):</b>", ""]
     for job_id in job_ids:
         try:
             job = Job.fetch(job_id, connection=redis)
         except Exception:
             logger.debug("job %s missing from Redis in /jobs listing", job_id, exc_info=True)
-            lines.append(f"- {job_id}: missing")
             continue
 
         meta = get_job_meta(redis, job_id)
         keyword = meta.get("keyword") or "unknown"
-        domain = meta.get("domain") or "unknown"
-        lines.append(f"- {job.get_status(refresh=True)} | {keyword} | {domain}")
+        status = job.get_status(refresh=True)
+        emoji = STATUS_EMOJI.get(status, "•")
+        ts = ""
+        if job.ended_at:
+            ts = f"  <i>{job.ended_at.strftime('%m/%d %H:%M')}</i>"
+        elif job.started_at:
+            ts = f"  <i>{job.started_at.strftime('%m/%d %H:%M')}</i>"
+        lines.append(f"{emoji} <code>{status}</code> — {escape_html(keyword)}{ts}")
 
-    send_message(chat_id, "\n".join(lines))
+    send_message(chat_id, "\n".join(lines), parse_mode="HTML")
 
 
 def handle_queue(redis: Redis, chat_id: str) -> None:
@@ -649,14 +673,16 @@ def handle_queue(redis: Redis, chat_id: str) -> None:
         if job.get_status(refresh=True) in {"queued", "started"}:
             pending_own_jobs += 1
 
+    total = len(queue)
     send_message(
         chat_id,
         (
-            "Queue status\n"
-            f"queue: {QUEUE_NAME}\n"
-            f"queued_jobs: {len(queue)}\n"
-            f"your_active_jobs: {pending_own_jobs}"
+            "<b>📊 Queue Status</b>\n\n"
+            f"🌐 <b>Jobs in queue:</b> {total}\n"
+            f"👤 <b>Your active jobs:</b> {pending_own_jobs}\n\n"
+            + ("<i>Your job will start soon.</i>" if pending_own_jobs else "<i>No active jobs. Start one with /run</i>")
         ),
+        parse_mode="HTML",
     )
 
 
@@ -673,14 +699,14 @@ def handle_cancel(redis: Redis, chat_id: str, text: str) -> None:
     meta = get_job_meta(redis, job_id)
     owner_chat_id = meta.get("chat_id")
     if owner_chat_id and owner_chat_id != chat_id:
-        send_message(chat_id, "Cannot cancel a job from another chat.")
+        send_message(chat_id, "🚫 <b>Access Denied</b>\n\nThis job belongs to a different chat.", parse_mode="HTML")
         return
 
     try:
         job = Job.fetch(job_id, connection=redis)
     except Exception:
         logger.warning("job %s not found during /cancel", job_id, exc_info=True)
-        send_message(chat_id, f"Job not found: {job_id}")
+        send_message(chat_id, f"❌ <b>Job not found:</b> <code>{escape_html(job_id)}</code>\n\nUse /jobs to see your recent jobs.", parse_mode="HTML")
         return
 
     status = job.get_status(refresh=True)
@@ -695,13 +721,26 @@ def handle_cancel(redis: Redis, chat_id: str, text: str) -> None:
             reason="cancel_refund",
             metadata={"job_id": job_id},
         )
-        send_message(chat_id, f"Job cancelled: {job_id}\n{CREDITS_PER_RUN} credits refunded. Balance: {new_balance}")
+        send_message(
+            chat_id,
+            f"🛑 <b>Job Cancelled</b>\n\n<code>{escape_html(job_id)}</code>\n\n"
+            f"✅ {CREDITS_PER_RUN} credits refunded. Balance: <b>{new_balance}</b>",
+            parse_mode="HTML",
+        )
         return
     if status in {"finished", "failed", "canceled", "stopped"}:
-        send_message(chat_id, f"Job already finished: {job_id} ({status})")
+        send_message(
+            chat_id,
+            f"ℹ️ <b>Already finished</b>\n\nJob <code>{escape_html(job_id)}</code> has status <code>{status}</code> and cannot be cancelled.",
+            parse_mode="HTML",
+        )
         return
 
-    send_message(chat_id, f"Cannot cancel a running job: {job_id} ({status})")
+    send_message(
+        chat_id,
+        f"⚠️ <b>Cannot cancel</b>\n\nJob <code>{escape_html(job_id)}</code> is already running (<code>{status}</code>).",
+        parse_mode="HTML",
+    )
 
 
 def handle_credits(redis: Redis, chat_id: str) -> None:
@@ -730,7 +769,8 @@ def handle_buy(redis: Redis, chat_id: str) -> None:
         try:
             checkout_url, _package_credits = create_checkout_url(chat_id, label)
         except PayPalError as exc:
-            send_message(chat_id, f"Failed to create checkout: {exc}")
+            logger.error("PayPal checkout failed for %s package=%s: %s", chat_id, label, exc)
+            send_message(chat_id, "⚠️ <b>Payment setup failed.</b>\n\nPlease try again in a moment or contact support.", parse_mode="HTML")
             return
 
         rows.append(
@@ -754,7 +794,8 @@ def handle_buy_package(redis: Redis, chat_id: str, package_key: str) -> None:
     try:
         checkout_url, credits = create_checkout_url(chat_id, package_key)
     except PayPalError as exc:
-        send_message(chat_id, f"Failed to create checkout: {exc}")
+        logger.error("PayPal checkout failed for %s package=%s: %s", chat_id, package_key, exc)
+        send_message(chat_id, "⚠️ <b>Payment setup failed.</b>\n\nPlease try again in a moment or contact support.", parse_mode="HTML")
         return
 
     send_message(
@@ -838,14 +879,14 @@ def process_message(redis: Redis, queue: Queue, message: dict) -> None:
 
     if chat_type != "private":
         if text:
-            send_message(chat_id, "This bot works in private chat only. Open DM with the bot and try again.")
+            send_message(chat_id, "🔒 <b>Private chat only.</b>\n\nOpen a DM with the bot and try again.", parse_mode="HTML")
         return
 
     if not text:
         return
 
     if BOT_ALLOWED_CHAT_IDS and chat_id not in BOT_ALLOWED_CHAT_IDS:
-        send_message(chat_id, "This chat is not authorized.")
+        send_message(chat_id, "🚫 <b>Access Denied.</b>\n\nThis account is not authorized to use this bot.", parse_mode="HTML")
         return
 
     name = command_name(text)
@@ -930,7 +971,12 @@ def notify_completed_jobs(redis: Redis) -> None:
             job = Job.fetch(job_id, connection=redis)
         except Exception:
             logger.error("lost track of job %s for chat %s", job_id, chat_id, exc_info=True)
-            send_message(chat_id, f"Lost track of job: {job_id}")
+            send_message(
+                chat_id,
+                f"⚠️ <b>Job tracking error</b>\n\n<code>{escape_html(job_id)}</code>\n\n"
+                "We lost track of this job. If credits were deducted, they will be refunded automatically.",
+                parse_mode="HTML",
+            )
             redis.srem(REDIS_PENDING_JOBS_KEY, job_id)
             redis.delete(meta_key)
             continue
