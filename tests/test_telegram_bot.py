@@ -65,11 +65,12 @@ def test_handle_run_success_awards_referral_after_enqueue(monkeypatch):
     )
     assert sent_messages[1] == (
         "user-1",
-        "Job queued. Credits remaining: 40\n"
-        "job_id: job-123\n"
-        "keyword: hello world\n"
-        "domain: example.com\n\n"
-        "Check progress: /status job-123",
+        "✅ <b>Job Queued!</b>\n\n"
+        "<b>Keyword:</b> <code>hello world</code>\n"
+        "<b>Domain:</b> <code>example.com</code>\n"
+        "<b>Credits remaining:</b> 40\n\n"
+        "<b>Job ID:</b>\n<code>job-123</code>\n\n"
+        "Track progress: /status job-123",
     )
 
 
@@ -207,7 +208,14 @@ def test_handle_status_without_job_id_reports_when_no_active_job(monkeypatch):
 
     telegram_bot.handle_status(redis=object(), chat_id="user-1", text="/status")
 
-    assert sent_messages == [("user-1", "No active jobs.", None)]
+    assert sent_messages == [
+        (
+            "user-1",
+            "💤 <b>No Active Jobs</b>\n\nYou have no queued or running jobs right now.\n\n"
+            "Start one with <code>/run &lt;keyword&gt; &lt;domain&gt;</code>",
+            "HTML",
+        )
+    ]
 
 
 def test_format_job_message_for_started_job():

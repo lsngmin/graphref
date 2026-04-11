@@ -1,17 +1,24 @@
 import html
 import json
+import logging
 import os
 import time
-import traceback
 import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from typing import Optional
 
-from redis import Redis
+from redis import Redis, ConnectionPool
 from rq import Queue
 from rq.job import Job
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 try:
     from paypal import PayPalError, create_checkout_url, get_packages
@@ -56,8 +63,18 @@ USER_STORE: Optional[SupabaseStore] = None
 # Redis helpers
 # ---------------------------------------------------------------------------
 
+_redis_pool: Optional[ConnectionPool] = None
+
+
+def get_redis_pool() -> ConnectionPool:
+    global _redis_pool
+    if _redis_pool is None:
+        _redis_pool = ConnectionPool.from_url(REDIS_URL)
+    return _redis_pool
+
+
 def get_redis() -> Redis:
-    return Redis.from_url(REDIS_URL)
+    return Redis(connection_pool=get_redis_pool())
 
 
 def get_queue(redis: Redis) -> Queue:
@@ -513,7 +530,7 @@ def handle_run(redis: Redis, queue: Queue, chat_id: str, text: str) -> None:
                 f"+{CREDITS_REFERRAL_BONUS} credits added. Balance: {new_referrer_balance}",
             )
         except Exception:
-            pass
+            logger.warning("failed to notify referrer %s", referrer_id, exc_info=True)
 
     send_message(
         chat_id,
@@ -537,6 +554,7 @@ def handle_status(redis: Redis, chat_id: str, text: str) -> None:
             try:
                 candidate_job = Job.fetch(candidate_job_id, connection=redis)
             except Exception:
+                logger.debug("could not fetch job %s during status scan", candidate_job_id, exc_info=True)
                 continue
 
             meta = get_job_meta(redis, candidate_job_id)
@@ -560,6 +578,7 @@ def handle_status(redis: Redis, chat_id: str, text: str) -> None:
     try:
         job = Job.fetch(job_id, connection=redis)
     except Exception:
+        logger.warning("job %s not found in Redis", job_id, exc_info=True)
         send_message(
             chat_id,
             f"❌ <b>Job Not Found</b>\n\n<code>{escape_html(job_id)}</code>\n\n"
@@ -606,6 +625,7 @@ def handle_jobs(redis: Redis, chat_id: str, text: str) -> None:
         try:
             job = Job.fetch(job_id, connection=redis)
         except Exception:
+            logger.debug("job %s missing from Redis in /jobs listing", job_id, exc_info=True)
             lines.append(f"- {job_id}: missing")
             continue
 
@@ -624,6 +644,7 @@ def handle_queue(redis: Redis, chat_id: str) -> None:
         try:
             job = Job.fetch(job_id, connection=redis)
         except Exception:
+            logger.debug("job %s missing from Redis in /queue scan", job_id, exc_info=True)
             continue
         if job.get_status(refresh=True) in {"queued", "started"}:
             pending_own_jobs += 1
@@ -658,6 +679,7 @@ def handle_cancel(redis: Redis, chat_id: str, text: str) -> None:
     try:
         job = Job.fetch(job_id, connection=redis)
     except Exception:
+        logger.warning("job %s not found during /cancel", job_id, exc_info=True)
         send_message(chat_id, f"Job not found: {job_id}")
         return
 
@@ -907,6 +929,7 @@ def notify_completed_jobs(redis: Redis) -> None:
         try:
             job = Job.fetch(job_id, connection=redis)
         except Exception:
+            logger.error("lost track of job %s for chat %s", job_id, chat_id, exc_info=True)
             send_message(chat_id, f"Lost track of job: {job_id}")
             redis.srem(REDIS_PENDING_JOBS_KEY, job_id)
             redis.delete(meta_key)
@@ -939,7 +962,7 @@ def main() -> None:
 
     redis = get_redis()
     queue = get_queue(redis)
-    print("telegram bot started")
+    logger.info("telegram bot started")
 
     while True:
         try:
@@ -947,9 +970,8 @@ def main() -> None:
             poll_updates(redis, queue)
         except KeyboardInterrupt:
             raise
-        except Exception as exc:
-            print(f"telegram bot loop error: {exc}")
-            traceback.print_exc()
+        except Exception:
+            logger.error("telegram bot loop error", exc_info=True)
             time.sleep(3)
 
 
