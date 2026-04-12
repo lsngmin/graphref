@@ -1,6 +1,16 @@
 import { useTranslations } from "next-intl";
 import MarketingHeader from "@/components/MarketingHeader";
 
+export const metadata = {
+  title: "Contact — Graphref",
+  description: "Get in touch with the Graphref team. We respond within 24 hours.",
+  openGraph: {
+    title: "Contact — Graphref",
+    description: "Get in touch with the Graphref team. We respond within 24 hours.",
+    url: "https://graphref.com/contact",
+  },
+};
+
 export default function ContactPage() {
   const t = useTranslations();
 
@@ -93,7 +103,7 @@ export default function ContactPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-zinc-100 px-8 py-8 flex items-center justify-between">
+      <footer className="border-t border-zinc-100 px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
         <span className="font-mono text-xs tracking-[0.2em] text-zinc-400">
           GRAPHREF
         </span>

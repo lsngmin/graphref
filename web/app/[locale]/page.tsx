@@ -678,7 +678,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <PricingCards plans={plans} />
           </div>
-          <div className="mt-8 flex flex-wrap gap-4 text-[13px] text-zinc-400">
+          <div className="mt-8 flex flex-wrap items-center gap-4 text-[13px] text-zinc-400">
             <span className="flex items-center gap-1.5">
               <CheckCircle size={13} />
               {t("pricing.badgeNoSub")}
@@ -690,6 +690,18 @@ export default function Home() {
             <span className="flex items-center gap-1.5">
               <CheckCircle size={13} />
               {t("pricing.badgeFree")}
+            </span>
+            <span className="flex items-center gap-1.5 ml-auto opacity-60">
+              <svg viewBox="0 0 10 14" width="8" height="11" fill="none" aria-hidden="true">
+                <rect x="1" y="5" width="8" height="8" rx="1.5" stroke="#71717a" strokeWidth="1.3"/>
+                <path d="M3 5V3.5a2 2 0 0 1 4 0V5" stroke="#71717a" strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
+              <svg viewBox="0 0 56 14" width="42" height="11" aria-label="PayPal" role="img">
+                <text y="12" fontFamily="Arial, Helvetica, sans-serif" fontWeight="bold" fontSize="13">
+                  <tspan fill="#253B80">Pay</tspan>
+                  <tspan fill="#179BD7">Pal</tspan>
+                </text>
+              </svg>
             </span>
           </div>
         </div>
@@ -722,9 +734,10 @@ export default function Home() {
                 </p>
                 <div className="border-t border-zinc-100 pt-4 flex items-center gap-3 mt-auto">
                   <img src={testimonials[0].avatar} alt={testimonials[0].name} className="w-9 h-9 rounded-full object-cover shrink-0" />
-                <div>
-                  <p className="text-[13px] font-semibold text-zinc-900">{testimonials[0].name}</p>
-                  <p className="text-[12px] text-zinc-400">{testimonials[0].role}</p>
+                  <div>
+                    <p className="text-[13px] font-semibold text-zinc-900">{testimonials[0].name}</p>
+                    <p className="text-[12px] text-zinc-400">{testimonials[0].role}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -758,7 +771,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </div>
       </section>
 
       {/* FAQ */}

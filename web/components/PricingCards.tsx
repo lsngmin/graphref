@@ -5,6 +5,19 @@ import { MessageCircle, CheckCircle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import TelegramLoginModal from "./TelegramLoginModal";
 
+function PayPalBadge({ light = false }: { light?: boolean }) {
+  const payColor  = light ? "rgba(255,255,255,0.85)" : "#253B80";
+  const palColor  = light ? "rgba(255,255,255,0.55)" : "#179BD7";
+  return (
+    <svg viewBox="0 0 52 14" width="44" height="12" aria-label="PayPal" role="img">
+      <text y="12" fontFamily="Arial, Helvetica, sans-serif" fontWeight="bold" fontSize="13">
+        <tspan fill={payColor}>Pay</tspan>
+        <tspan fill={palColor}>Pal</tspan>
+      </text>
+    </svg>
+  );
+}
+
 interface Plan {
   key: string;
   name: string;
@@ -213,6 +226,11 @@ export default function PricingCards({ plans }: { plans: Plan[] }) {
                   {error}
                 </p>
               )}
+
+              <div className={`flex items-center justify-center gap-1 pt-0.5 ${plan.highlight ? "opacity-50" : "opacity-40"}`}>
+                <span className={`text-[10px] ${plan.highlight ? "text-zinc-300" : "text-zinc-500"}`}>via</span>
+                <PayPalBadge light={plan.highlight} />
+              </div>
             </div>
           </div>
         );

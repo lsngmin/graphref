@@ -32,9 +32,21 @@ const notoSans = Noto_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "GrapHref",
-  description: "Traffic orchestration & web intelligence pipeline.",
+  title: "Graphref — Drive Real Search Visits via Telegram",
+  description: "Type a keyword, pick your site. Graphref drives real search visits to your listing via Telegram bot — so you stop waiting months to move up.",
   manifest: "/site.webmanifest",
+  openGraph: {
+    type: "website",
+    siteName: "Graphref",
+    title: "Graphref — Drive Real Search Visits via Telegram",
+    description: "Type a keyword, pick your site. Graphref drives real search visits to your listing via Telegram bot — so you stop waiting months to move up.",
+    url: "https://graphref.com",
+  },
+  twitter: {
+    card: "summary",
+    title: "Graphref — Drive Real Search Visits via Telegram",
+    description: "Type a keyword, pick your site. Graphref drives real search visits to your listing via Telegram bot.",
+  },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
