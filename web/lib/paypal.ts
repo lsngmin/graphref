@@ -147,4 +147,78 @@ export async function createCheckoutUrl(chatId: string, packageKey: string) {
   };
 }
 
+export async function createOrder(chatId: string, packageKey: string) {
+  const details = getPackageDetails(packageKey);
+  const currencyCode = process.env.PAYPAL_CURRENCY?.trim() || "USD";
+  const brandName = process.env.PAYPAL_BRAND_NAME?.trim() || "Graphref";
+  const accessToken = await getAccessToken();
+
+  const response = await fetch(`${getApiBase()}/v2/checkout/orders`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          reference_id: packageKey,
+          custom_id: `${chatId}:${packageKey}`,
+          description: details.description,
+          amount: {
+            currency_code: currencyCode,
+            value: details.price,
+          },
+        },
+      ],
+      application_context: {
+        brand_name: brandName,
+        shipping_preference: "NO_SHIPPING",
+      },
+    }),
+    cache: "no-store",
+  });
+
+  const raw = await response.text();
+  const data = raw ? JSON.parse(raw) : {};
+
+  if (!response.ok) {
+    throw new Error(`PayPal HTTP ${response.status}: ${raw}`);
+  }
+
+  return {
+    orderId: String(data.id || ""),
+    credits: details.credits,
+    packageKey,
+    name: details.name,
+    price: details.price,
+  };
+}
+
+export async function captureOrder(orderId: string) {
+  const accessToken = await getAccessToken();
+
+  const response = await fetch(`${getApiBase()}/v2/checkout/orders/${orderId}/capture`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+
+  const raw = await response.text();
+  const data = raw ? JSON.parse(raw) : {};
+
+  if (!response.ok) {
+    throw new Error(`PayPal capture HTTP ${response.status}: ${raw}`);
+  }
+
+  return { status: String(data.status || "") };
+}
+
 export { PayPalConfigError };

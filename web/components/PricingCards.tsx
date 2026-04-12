@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import TelegramLoginModal from "./TelegramLoginModal";
 
@@ -28,124 +28,58 @@ interface Plan {
   features: string[];
 }
 
-interface TelegramState {
-  status: "unknown" | "connected" | "disconnected";
-  username?: string;
-}
-
-interface CheckoutEntry {
-  loading: boolean;
-  error: string | null;
-}
+type TgStatus = "unknown" | "connected" | "disconnected";
 
 export default function PricingCards({ plans }: { plans: Plan[] }) {
   const t = useTranslations("plans");
-  const [tg, setTg] = useState<TelegramState>({ status: "unknown" });
-  const [showModal, setShowModal] = useState(false);
-  const [checkout, setCheckout] = useState<Record<string, CheckoutEntry>>({});
+  const [tgStatus, setTgStatus] = useState<TgStatus>("unknown");
+  const [pendingPlan, setPendingPlan] = useState<Plan | null>(null);
+  const [checkingKey, setCheckingKey] = useState<string | null>(null);
 
-  function handleLoginSuccess(username: string) {
-    setTg({ status: "connected", username });
-    setShowModal(false);
-  }
-
-  async function ensureTelegramConnection(packageKey: string) {
-    if (tg.status === "connected") {
-      return true;
-    }
-
-    try {
-      const res = await fetch("/api/telegram/me", { cache: "no-store" });
-      const data = await res.json().catch(() => null);
-
-      if (res.ok && data?.connected) {
-        setTg({ status: "connected", username: data.user?.username });
-        return true;
-      }
-
-      if (res.status === 401) {
-        setTg({ status: "disconnected" });
-        setCheckout((prev) => ({
-          ...prev,
-          [packageKey]: { loading: false, error: null },
-        }));
-        setShowModal(true);
-        return false;
-      }
-
-      setCheckout((prev) => ({
-        ...prev,
-        [packageKey]: {
-          loading: false,
-          error: data?.error ?? "Unable to verify your Telegram login right now.",
-        },
-      }));
-      return false;
-    } catch {
-      setCheckout((prev) => ({
-        ...prev,
-        [packageKey]: {
-          loading: false,
-          error: "Unable to verify your Telegram login right now.",
-        },
-      }));
-      return false;
-    }
-  }
-
-  async function handleCheckout(packageKey: string) {
-    setCheckout((prev) => ({
-      ...prev,
-      [packageKey]: { loading: true, error: null },
-    }));
-
-    const connected = await ensureTelegramConnection(packageKey);
-    if (!connected) {
+  async function handleBuy(plan: Plan) {
+    if (tgStatus === "connected") {
+      setPendingPlan(plan);
       return;
     }
 
+    // Check cookies server-side before opening modal
+    setCheckingKey(plan.key);
     try {
-      const res = await fetch("/api/paypal/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageKey }),
-      });
-      const data = await res.json();
-      if (data.ok && data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      const res = await fetch("/api/telegram/me", { cache: "no-store" });
+      const data = await res.json().catch(() => null) as { connected?: boolean; user?: { username?: string } } | null;
+      if (res.ok && data?.connected) {
+        setTgStatus("connected");
       } else {
-        setCheckout((prev) => ({
-          ...prev,
-          [packageKey]: {
-            loading: false,
-            error: data.error ?? "Something went wrong. Please try again.",
-          },
-        }));
+        setTgStatus("disconnected");
       }
     } catch {
-      setCheckout((prev) => ({
-        ...prev,
-        [packageKey]: {
-          loading: false,
-          error: "Something went wrong. Please try again.",
-        },
-      }));
+      setTgStatus("disconnected");
     }
+    setCheckingKey(null);
+    setPendingPlan(plan);
+  }
+
+  function handleModalClose() {
+    setPendingPlan(null);
+  }
+
+  function handlePaymentSuccess() {
+    setPendingPlan(null);
   }
 
   return (
     <>
-      {showModal && (
+      {pendingPlan && (
         <TelegramLoginModal
-          onSuccess={handleLoginSuccess}
-          onClose={() => setShowModal(false)}
+          plan={pendingPlan}
+          initialStep={tgStatus === "connected" ? "payment" : "telegram"}
+          onPaymentSuccess={handlePaymentSuccess}
+          onClose={handleModalClose}
         />
       )}
 
       {plans.map((plan) => {
-        const entry = checkout[plan.key];
-        const isLoading = entry?.loading ?? false;
-        const error = entry?.error ?? null;
+        const isChecking = checkingKey === plan.key;
 
         return (
           <div
@@ -188,44 +122,18 @@ export default function PricingCards({ plans }: { plans: Plan[] }) {
             </ul>
 
             <div className="mt-auto flex flex-col gap-2">
-              {tg.status === "disconnected" ? (
-                <button
-                  onClick={() => setShowModal(true)}
-                  className={`inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-lg transition-colors ${
-                    plan.highlight
-                      ? "bg-white text-zinc-900 hover:bg-zinc-100"
-                      : "bg-zinc-900 text-white hover:bg-zinc-700"
-                  }`}
-                >
-                  <MessageCircle size={14} />
-                  {t("connectTelegram")}
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleCheckout(plan.key)}
-                  disabled={isLoading}
-                  className={`inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
-                    plan.highlight
-                      ? "bg-white text-zinc-900 hover:bg-zinc-100"
-                      : "bg-zinc-900 text-white hover:bg-zinc-700"
-                  }`}
-                >
-                  {isLoading ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : null}
-                  {isLoading ? t("redirecting") : t("buyNow")}
-                </button>
-              )}
-
-              {error && (
-                <p
-                  className={`text-[12px] ${
-                    plan.highlight ? "text-red-300" : "text-red-500"
-                  }`}
-                >
-                  {error}
-                </p>
-              )}
+              <button
+                onClick={() => handleBuy(plan)}
+                disabled={isChecking}
+                className={`inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+                  plan.highlight
+                    ? "bg-white text-zinc-900 hover:bg-zinc-100"
+                    : "bg-zinc-900 text-white hover:bg-zinc-700"
+                }`}
+              >
+                {isChecking ? <Loader2 size={14} className="animate-spin" /> : null}
+                {t("buyNow")}
+              </button>
 
               <div className={`flex items-center justify-center gap-1 pt-0.5 ${plan.highlight ? "opacity-50" : "opacity-40"}`}>
                 <span className={`text-[10px] ${plan.highlight ? "text-zinc-300" : "text-zinc-500"}`}>via</span>

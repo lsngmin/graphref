@@ -1,4 +1,4 @@
-import MarketingHeader from "@/components/MarketingHeader";
+import Header from "@/components/Header";
 import { Zap, Bug, Wrench, Sparkles } from "lucide-react";
 
 export const metadata = {
@@ -70,7 +70,7 @@ const entries = [
 export default function ChangelogPage() {
   return (
     <main className="min-h-screen bg-white">
-      <MarketingHeader activePage="changelog" theme="light" />
+      <Header activePage="changelog" theme="light" />
 
       {/* Hero */}
       <section className="pt-28 pb-12 px-6 border-b border-zinc-100">

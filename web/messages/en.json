@@ -8,8 +8,8 @@
   },
   "home": {
     "hero": {
-      "headline1": "Stop waiting for traffic.",
-      "headline2": "Send it yourself.",
+      "headline1": "Stop waiting for traffic",
+      "headline2": "Send it yourself",
       "sub": "Type a keyword. Pick your site. Graphref drives real search visits to your listing — so you don't have to wait months to move up.",
       "cta": "Open on Telegram",
       "freeCredits": "New users get 50 free credits — no card required.",
@@ -141,8 +141,8 @@
       "block1p1": "We ran sites. We wrote content. We built backlinks. Google still took months to notice. Meanwhile, big players with established authority kept ranking — not because their content was better, but because they had history.",
       "block1p2": "We asked: what if we could simulate the signal Google actually cares about — real people searching, finding your site, clicking through?",
       "block2Title": "A traffic engine, not an SEO tool",
-      "block2p1": "Graphref doesn't touch your site. No plugins, no code, no access needed. You type a keyword and a domain. We drive organic-looking visits to your listing. You see it in Search Console within hours.",
-      "block2p2": "Simple because we wanted it to be usable. Telegram-first because nobody wants another dashboard."
+      "block2p1": "Graphref simulates the click signal — searches for your keyword, clicks to your listing. It's artificial by design. But so is every other tool that tries to influence ranking.",
+      "block2p2": "No plugins, no code, no site access needed. Telegram-first because nobody wants another dashboard. You see the signal in Search Console within hours."
     },
     "stats": {
       "clicks": "Clicks delivered",
@@ -170,7 +170,7 @@
         },
         {
           "title": "Transparency over hype.",
-          "body": "We don't promise #1 rankings. We deliver real visit signals to Google — the same kind that naturally occur when people search for your keyword."
+          "body": "We don't promise #1 rankings. Click signals sit in a grey area with Google's guidelines — we say that clearly. Test small, watch Search Console, make your own call."
         },
         {
           "title": "Built for builders.",
@@ -179,20 +179,24 @@
         {
           "title": "Credits, not subscriptions.",
           "body": "Your money shouldn't evaporate every month. Credits don't expire. Use them when you need them."
+        },
+        {
+          "title": "We don't pretend this is risk-free.",
+          "body": "Injecting click signals is a grey area. Google may detect patterns over time. We say this upfront. Start with 50 free credits, watch Search Console, and decide if it's worth it for your situation."
         }
       ]
     },
     "sponsor": {
-      "headline1": "We're looking for",
-      "headline2": "sponsors and supporters.",
-      "p1": "Graphref is still early. We're actively looking for sponsors, partners, and supporters who want to help fund the product and shape what we build next.",
-      "p2": "If you want to support the project, explore sponsorship, or talk about a partnership, reach out. We're open to the right fit.",
-      "cta": "Contact us about sponsorship →"
+      "headline1": "Built in public.",
+      "headline2": "Open to collaboration.",
+      "p1": "Graphref is an indie project. If you're in SEO, run a newsletter, or build tools for founders — we're open to partnerships that make sense for both sides.",
+      "p2": "No pitch decks. Just reach out.",
+      "cta": "Get in touch →"
     },
     "cta": {
       "headline1": "50 free credits.",
-      "headline2": "No card required.",
-      "sub": "Open the bot, type a command, see results in Search Console.",
+      "headline2": "Test the signal yourself.",
+      "sub": "Watch Search Console. If it moves, buy more. If it doesn't, you lost nothing.",
       "button": "Open on Telegram →"
     },
     "footer": {

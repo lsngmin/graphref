@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { X, CheckCircle } from "lucide-react";
+import PayPalButtons from "./PayPalButtons";
 
 interface TelegramUser {
   id: number;
@@ -13,68 +14,67 @@ interface TelegramUser {
   hash: string;
 }
 
+interface Plan {
+  key: string;
+  name: string;
+  price: string;
+  credits: number;
+}
+
 interface Props {
-  onSuccess: (username: string) => void;
+  plan: Plan;
+  initialStep: "telegram" | "payment";
+  onPaymentSuccess: () => void;
   onClose: () => void;
 }
 
-export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
+type Step = "telegram" | "payment" | "success";
+
+export default function TelegramLoginModal({ plan, initialStep, onPaymentSuccess, onClose }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [step, setStep] = useState<Step>(initialStep);
   const [error, setError] = useState<string | null>(null);
   const [botUsername, setBotUsername] = useState<string | null>(null);
 
+  // Load bot username only when on telegram step
   useEffect(() => {
+    if (step !== "telegram") return;
+
     let cancelled = false;
 
     fetch("/api/telegram/config")
       .then(async (res) => {
-        if (!res.ok) {
-          const message = await res.text();
-          throw new Error(message || "Failed to load Telegram config.");
-        }
+        if (!res.ok) throw new Error(await res.text() || "Failed to load Telegram config.");
         return res.json();
       })
-      .then((data) => {
-        if (!cancelled) {
-          setBotUsername(String(data.botUsername || "").trim() || null);
-        }
+      .then((data: { botUsername?: string }) => {
+        if (!cancelled) setBotUsername(String(data.botUsername || "").trim() || null);
       })
       .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load Telegram config.");
-        }
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load Telegram config.");
       });
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    return () => { cancelled = true; };
+  }, [step]);
 
+  // Inject Telegram widget
   useEffect(() => {
-    if (!botUsername || !containerRef.current) {
-      return;
-    }
+    if (step !== "telegram" || !botUsername || !containerRef.current) return;
 
-    (window as unknown as Record<string, unknown>).onTelegramAuth = async (
-      user: TelegramUser
-    ) => {
+    (window as unknown as Record<string, unknown>).onTelegramAuth = async (user: TelegramUser) => {
       setError(null);
-
       try {
         const res = await fetch("/api/telegram/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(user),
         });
-
         if (!res.ok) {
-          const message = await res.text();
-          setError(message || "Telegram verification failed.");
+          setError(await res.text() || "Telegram verification failed.");
           return;
         }
-
-        const data = await res.json();
-        onSuccess(data.user?.username ?? user.username ?? user.first_name);
+        // Auth succeeded — move to payment step
+        setStep("payment");
       } catch {
         setError("Telegram verification failed. Please try again.");
       }
@@ -92,7 +92,6 @@ export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
     containerRef.current.innerHTML = "";
     containerRef.current.appendChild(script);
 
-    // Stretch iframe to fill modal width once it mounts
     const observer = new MutationObserver(() => {
       const iframe = containerRef.current?.querySelector("iframe");
       if (iframe) {
@@ -102,54 +101,116 @@ export default function TelegramLoginModal({ onSuccess, onClose }: Props) {
       }
     });
     observer.observe(containerRef.current, { childList: true, subtree: true });
-    return () => observer.disconnect();
 
     return () => {
+      observer.disconnect();
       delete (window as unknown as Record<string, unknown>).onTelegramAuth;
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-      }
+      if (containerRef.current) containerRef.current.innerHTML = "";
     };
-  }, [botUsername, onSuccess]);
+  }, [botUsername, step]);
+
+  function handlePaymentSuccess() {
+    setStep("success");
+  }
+
+  function handlePaymentError(message: string) {
+    setError(message);
+  }
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-      onClick={onClose}
+      onClick={step === "success" ? undefined : onClose}
     >
       <div
         className="bg-white rounded-2xl p-8 w-full max-w-sm flex flex-col gap-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-[18px] font-bold tracking-tight text-zinc-900">
-              Connect Telegram
-            </h2>
-            <p className="text-[13px] text-zinc-500 mt-1.5 leading-relaxed">
-              Log in with Telegram to purchase credits. Your account stays
-              linked for future purchases.
-            </p>
+            {step === "telegram" && (
+              <>
+                <h2 className="text-[18px] font-bold tracking-tight text-zinc-900">Connect Telegram</h2>
+                <p className="text-[13px] text-zinc-500 mt-1.5 leading-relaxed">
+                  Log in with Telegram to purchase credits. Your account stays linked for future purchases.
+                </p>
+              </>
+            )}
+            {step === "payment" && (
+              <>
+                <h2 className="text-[18px] font-bold tracking-tight text-zinc-900">Complete Purchase</h2>
+                <div className="mt-1.5 flex items-baseline gap-1.5">
+                  <span className="text-[22px] font-bold text-zinc-900">{plan.price}</span>
+                  <span className="text-[13px] text-zinc-500">· {plan.credits.toLocaleString()} credits</span>
+                </div>
+              </>
+            )}
+            {step === "success" && (
+              <>
+                <h2 className="text-[18px] font-bold tracking-tight text-zinc-900">Payment successful</h2>
+                <p className="text-[13px] text-zinc-500 mt-1.5 leading-relaxed">
+                  {plan.credits.toLocaleString()} credits will be added to your Telegram account shortly.
+                </p>
+              </>
+            )}
           </div>
-          <button
-            onClick={onClose}
-            className="shrink-0 mt-0.5 text-zinc-400 hover:text-zinc-700 transition-colors"
-          >
-            <X size={18} />
-          </button>
+          {step !== "success" && (
+            <button
+              onClick={onClose}
+              className="shrink-0 mt-0.5 text-zinc-400 hover:text-zinc-700 transition-colors"
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
 
-        <div ref={containerRef} className="w-full min-h-[48px]" />
+        {/* Step: Telegram */}
+        {step === "telegram" && (
+          <>
+            <div ref={containerRef} className="w-full min-h-[48px]" />
+            {error ? (
+              <p className="text-[12px] text-red-500 text-center">{error}</p>
+            ) : !botUsername ? (
+              <p className="text-[12px] text-zinc-400 text-center">Loading Telegram login…</p>
+            ) : null}
+            <p className="text-[11px] text-zinc-400 text-center">
+              We use your Telegram account to link website checkout with your bot credits.
+            </p>
+          </>
+        )}
 
-        {error ? (
-          <p className="text-[12px] text-red-500 text-center">{error}</p>
-        ) : !botUsername ? (
-          <p className="text-[12px] text-zinc-400 text-center">Loading Telegram login…</p>
-        ) : null}
+        {/* Step: Payment */}
+        {step === "payment" && (
+          <>
+            <PayPalButtons
+              packageKey={plan.key}
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+            />
+            {error && (
+              <p className="text-[12px] text-red-500 text-center">{error}</p>
+            )}
+            <p className="text-[11px] text-zinc-400 text-center">
+              Secured by PayPal. Credits are added within seconds of payment.
+            </p>
+          </>
+        )}
 
-        <p className="text-[11px] text-zinc-400 text-center">
-          We use your Telegram account to link website checkout with your bot credits.
-        </p>
+        {/* Step: Success */}
+        {step === "success" && (
+          <>
+            <div className="flex justify-center py-2">
+              <CheckCircle size={48} className="text-green-500" strokeWidth={1.5} />
+            </div>
+            <button
+              onClick={onPaymentSuccess}
+              className="w-full inline-flex items-center justify-center text-[13px] font-medium px-4 py-2.5 rounded-lg bg-zinc-900 text-white hover:bg-zinc-700 transition-colors"
+            >
+              Done
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

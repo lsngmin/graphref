@@ -5,7 +5,7 @@ import { MessageCircle, Menu, X, ChevronDown } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 
-type MarketingHeaderProps = {
+type HeaderProps = {
   activePage?: "about" | "features" | "changelog";
   pricingHref?: string;
   theme?: "dark" | "light";
@@ -18,11 +18,11 @@ const LANGUAGES = [
   { code: "es", label: "Español", display: "ES" },
 ];
 
-export default function MarketingHeader({
+export default function Header({
   activePage,
   pricingHref,
-  theme = "dark",
-}: MarketingHeaderProps) {
+  theme = "light",
+}: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const desktopLangRef = useRef<HTMLDivElement>(null);
@@ -40,7 +40,7 @@ export default function MarketingHeader({
   // prefix for building hrefs in <a> tags (en has no prefix)
   const prefix = locale === "en" ? "" : `/${locale}`;
 
-  const resolvedPricingHref = pricingHref ?? (pathname === "/" ? "#pricing" : "/#pricing");
+  const resolvedPricingHref = pricingHref ?? "/pricing";
 
   // Close lang dropdown on outside click
   useEffect(() => {
@@ -65,18 +65,18 @@ export default function MarketingHeader({
   }
 
   const navClass = isDark
-    ? "fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md"
-    : "fixed top-0 left-0 right-0 z-50 border-b border-zinc-100 bg-white/80 backdrop-blur-md";
+    ? "fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0a0a0a]"
+    : "fixed top-0 left-0 right-0 z-50 border-b border-zinc-100 bg-white";
   const brandClass = isDark
-    ? "font-mono text-sm tracking-[0.2em] text-white/90 hover:text-white transition"
-    : "font-mono text-sm tracking-[0.2em] text-zinc-900 hover:text-zinc-600 transition";
+    ? "font-mono text-base md:text-[17px] tracking-[0.18em] text-white/90 hover:text-white transition"
+    : "font-mono text-base md:text-[17px] tracking-[0.18em] text-zinc-900 hover:text-zinc-600 transition";
   const linkClass = isDark
-    ? "text-sm text-white/40 hover:text-white/70 transition"
-    : "text-sm text-zinc-500 hover:text-zinc-900 transition";
-  const activeLinkClass = isDark ? "text-sm text-white" : "text-sm text-zinc-900";
+    ? "text-[15px] text-white/40 hover:text-white/70 transition"
+    : "text-[15px] text-zinc-500 hover:text-zinc-900 transition";
+  const activeLinkClass = isDark ? "text-[15px] text-white" : "text-[15px] text-zinc-900";
   const ctaClass = isDark
-    ? "inline-flex items-center gap-2 bg-white text-black text-sm font-medium px-4 py-2 rounded-lg hover:bg-white/90 transition-colors"
-    : "inline-flex items-center gap-2 bg-zinc-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-zinc-700 transition-colors";
+    ? "inline-flex items-center gap-2 bg-white text-black text-[15px] font-medium px-4 py-2 rounded-xl hover:bg-white/90 transition-colors"
+    : "inline-flex items-center gap-2 bg-zinc-900 text-white text-[15px] font-medium px-4 py-2 rounded-xl hover:bg-zinc-700 transition-colors";
   const hamburgerClass = isDark
     ? "text-white/60 hover:text-white transition"
     : "text-zinc-500 hover:text-zinc-900 transition";
@@ -93,8 +93,8 @@ export default function MarketingHeader({
     ? "w-full text-left px-3 py-2 text-sm text-white/50 hover:bg-white/5 hover:text-white transition flex items-center justify-between"
     : "w-full text-left px-3 py-2 text-sm text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 transition flex items-center justify-between";
   const triggerClass = isDark
-    ? "flex items-center gap-1 text-xs font-mono text-white/40 hover:text-white/70 transition border border-white/10 hover:border-white/20 rounded px-2 py-1"
-    : "flex items-center gap-1 text-xs font-mono text-zinc-400 hover:text-zinc-700 transition border border-zinc-200 hover:border-zinc-300 rounded px-2 py-1";
+    ? "flex items-center gap-1 text-[11px] md:text-xs font-mono text-white/40 hover:text-white/70 transition border border-white/10 hover:border-white/20 rounded px-2.5 py-1.5"
+    : "flex items-center gap-1 text-[11px] md:text-xs font-mono text-zinc-400 hover:text-zinc-700 transition border border-zinc-200 hover:border-zinc-300 rounded px-2.5 py-1.5";
 
   const aboutHref = `${prefix}/about`;
   const pricingHrefResolved = pricingHref
@@ -160,11 +160,11 @@ export default function MarketingHeader({
   return (
     <nav className={navClass}>
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 md:px-8 py-4">
+      <div className="mx-auto flex w-full max-w-[1520px] items-center justify-between px-6 md:px-10 lg:px-12 py-4 md:py-5">
         {Logo}
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-7">
           <a href={`${prefix}/features`} className={activePage === "features" ? activeLinkClass : linkClass}>
             {t("features")}
           </a>

@@ -8,8 +8,8 @@
   },
   "home": {
     "hero": {
-      "headline1": "Deja de esperar tráfico.",
-      "headline2": "Envíalo tú mismo.",
+      "headline1": "Deja de esperar tráfico",
+      "headline2": "Envíalo tú mismo",
       "sub": "Escribe una palabra clave. Elige tu sitio. Graphref lleva visitas de búsqueda reales a tu página — para que no tengas que esperar meses para subir posiciones.",
       "cta": "Abrir en Telegram",
       "freeCredits": "Los nuevos usuarios reciben 50 créditos gratis — sin tarjeta.",
@@ -141,8 +141,8 @@
       "block1p1": "Teníamos sitios. Escribíamos contenido. Construíamos backlinks. Google seguía tardando meses en notarlo. Mientras tanto, los grandes jugadores con autoridad establecida seguían posicionando — no porque su contenido fuera mejor, sino porque tenían historial.",
       "block1p2": "Nos preguntamos: ¿y si pudiéramos simular la señal que Google realmente valora — personas reales buscando, encontrando tu sitio, haciendo clic?",
       "block2Title": "Un motor de tráfico, no una herramienta SEO",
-      "block2p1": "Graphref no toca tu sitio. Sin plugins, sin código, sin acceso necesario. Escribes una palabra clave y un dominio. Nosotros llevamos visitas de apariencia orgánica a tu página. Lo ves en Search Console en cuestión de horas.",
-      "block2p2": "Simple porque queríamos que fuera usable. Telegram-first porque nadie quiere otro dashboard."
+      "block2p1": "Graphref simula la señal de clics — búsquedas de tu palabra clave, clics a tu página. Es artificial por diseño. Pero también lo es cualquier otra herramienta que intenta influir en el ranking.",
+      "block2p2": "Sin plugins, sin código, sin acceso al sitio necesario. Telegram-first porque nadie quiere otro dashboard. La señal aparece en Search Console en pocas horas."
     },
     "stats": {
       "clicks": "Clics entregados",
@@ -170,7 +170,7 @@
         },
         {
           "title": "Transparencia sobre el hype.",
-          "body": "No prometemos rankings #1. Entregamos señales de visitas reales a Google — el mismo tipo que ocurre naturalmente cuando las personas buscan tu palabra clave."
+          "body": "No prometemos rankings #1. Inyectar señales de clics está en una zona gris con las directrices de Google — lo decimos claramente. Prueba en pequeño, observa Search Console, y decide tú mismo."
         },
         {
           "title": "Construido para creadores.",
@@ -179,20 +179,24 @@
         {
           "title": "Créditos, no suscripciones.",
           "body": "Tu dinero no debería evaporarse cada mes. Los créditos no vencen. Úsalos cuando los necesites."
+        },
+        {
+          "title": "No fingimos que esto es sin riesgo.",
+          "body": "Inyectar señales de clics es una zona gris. Google puede detectar patrones con el tiempo. Lo decimos de antemano. Empieza con 50 créditos gratis, observa Search Console y decide si vale la pena para tu caso."
         }
       ]
     },
     "sponsor": {
-      "headline1": "Estamos buscando",
-      "headline2": "patrocinadores y colaboradores.",
-      "p1": "Graphref aún está en sus primeras etapas. Estamos buscando activamente patrocinadores, socios y colaboradores que quieran ayudar a financiar el producto y definir lo que construimos a continuación.",
-      "p2": "Si quieres apoyar el proyecto, explorar el patrocinio o hablar sobre una asociación, contáctanos. Estamos abiertos al encaje adecuado.",
-      "cta": "Contáctanos sobre patrocinio →"
+      "headline1": "Construido en público.",
+      "headline2": "Abierto a colaboraciones.",
+      "p1": "Graphref es un proyecto indie. Si estás en SEO, gestionas una newsletter o creas herramientas para fundadores — estamos abiertos a colaboraciones que tengan sentido para ambos.",
+      "p2": "Sin pitch decks. Solo escríbenos.",
+      "cta": "Ponerse en contacto →"
     },
     "cta": {
       "headline1": "50 créditos gratis.",
-      "headline2": "Sin tarjeta.",
-      "sub": "Abre el bot, escribe un comando, ve los resultados en Search Console.",
+      "headline2": "Prueba la señal tú mismo.",
+      "sub": "Observa Search Console. Si se mueve, compra más. Si no, no pierdes nada.",
       "button": "Abrir en Telegram →"
     },
     "footer": {

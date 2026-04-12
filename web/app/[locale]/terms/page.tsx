@@ -1,5 +1,5 @@
 import { useTranslations } from "next-intl";
-import MarketingHeader from "@/components/MarketingHeader";
+import Header from "@/components/Header";
 
 export const metadata = {
   title: "Terms of Service — Graphref",
@@ -16,7 +16,7 @@ export default function Terms() {
 
   return (
     <main className="min-h-screen bg-white">
-      <MarketingHeader theme="light" />
+      <Header theme="light" />
       <div className="max-w-3xl mx-auto px-6 pt-32 pb-24">
         <h1 className="text-[32px] font-bold tracking-tight mb-2">
           {t("terms.title")}

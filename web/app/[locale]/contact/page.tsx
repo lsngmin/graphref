@@ -1,5 +1,5 @@
 import { useTranslations } from "next-intl";
-import MarketingHeader from "@/components/MarketingHeader";
+import Header from "@/components/Header";
 
 export const metadata = {
   title: "Contact — Graphref",
@@ -16,7 +16,7 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-white font-sans text-zinc-900">
-      <MarketingHeader pricingHref="/#pricing" theme="light" />
+      <Header pricingHref="/#pricing" theme="light" />
 
       {/* ── CONTENT ── */}
       <section className="pt-36 pb-24 px-8 max-w-2xl mx-auto">

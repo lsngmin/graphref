@@ -1,5 +1,5 @@
-import { MessageCircle, Search, Cpu, Bell, CreditCard, RotateCcw, List, Radio, Clock, Zap, CheckCircle2, XCircle, Ban, AlertTriangle } from "lucide-react";
-import MarketingHeader from "@/components/MarketingHeader";
+import { MessageCircle, Search, Cpu, Bell, RotateCcw, List, Radio, Clock, Zap, CheckCircle2, XCircle, Ban, AlertTriangle, MousePointerClick, Globe, Eye, ShieldCheck, Fingerprint, Timer, Wifi } from "lucide-react";
+import Header from "@/components/Header";
 
 export const metadata = {
   title: "Features — Graphref",
@@ -79,16 +79,6 @@ const jobStatuses = [
   { status: "stopped",  icon: AlertTriangle, iconColor: "text-orange-500", color: "bg-orange-50 border-orange-200",textColor: "text-orange-700", desc: "Worker was interrupted mid-execution (e.g. server restart). Credits refunded." },
 ];
 
-const credits = [
-  { event: "New account signup", delta: "+50", note: "One-time welcome bonus" },
-  { event: "/run command", delta: "−10", note: "Deducted when job is enqueued" },
-  { event: "Job fails (any reason)", delta: "+10", note: "Automatic refund, no action needed" },
-  { event: "/cancel before start", delta: "+10", note: "Instant refund if job hasn't started" },
-  { event: "Referral: their first run", delta: "+30", note: "Credited to referrer after completion" },
-  { event: "Buy 100-credit pack", delta: "+100", note: "$1.99 via PayPal" },
-  { event: "Buy 500-credit pack", delta: "+500", note: "$8.99 via PayPal" },
-  { event: "Buy 1000-credit pack", delta: "+1000", note: "$15.99 via PayPal" },
-];
 
 function ChatBubble({ lines, isUser }: { lines: string; isUser?: boolean }) {
   return (
@@ -140,7 +130,7 @@ function CommandCard({ cmd, cost, desc, example, response }: {
 export default function FeaturesPage() {
   return (
     <div className="min-h-screen bg-white text-zinc-900">
-      <MarketingHeader activePage="features" theme="light" />
+      <Header activePage="features" theme="light" />
 
       <main className="pt-14">
         {/* Hero */}
@@ -363,67 +353,158 @@ export default function FeaturesPage() {
           </div>
         </section>
 
-        {/* Credit system */}
+        {/* Worker execution deep-dive */}
         <section className="py-20 px-6">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-[22px] font-bold tracking-tight mb-2">Credit system</h2>
-            <p className="text-[14px] text-zinc-500 mb-10">Credits never expire. Every transaction is logged and visible via /credits.</p>
+            <h2 className="text-[22px] font-bold tracking-tight mb-2">Inside the worker</h2>
+            <p className="text-[14px] text-zinc-500 mb-12">What actually happens between &ldquo;worker picks up&rdquo; and &ldquo;job finished&rdquo; — every step the real device takes.</p>
 
-            <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden">
-              <div className="grid grid-cols-3 px-5 py-3 bg-zinc-50 border-b border-zinc-100 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-                <span>Event</span>
-                <span className="text-center">Credits</span>
-                <span>Note</span>
+            {/* Step-by-step breakdown */}
+            <div className="relative">
+              {/* Vertical connector line */}
+              <div className="absolute left-[19px] top-6 bottom-6 w-px bg-zinc-200 hidden md:block" />
+
+              <div className="space-y-4">
+                {[
+                  {
+                    n: "1",
+                    icon: Cpu,
+                    iconColor: "text-violet-500",
+                    bg: "bg-violet-50 border-violet-200",
+                    label: "Worker dequeues the job",
+                    body: "An idle worker process polls the Redis queue and atomically pops the next job. The job transitions from queued → started and is locked so no other worker can claim it.",
+                    code: "worker.dequeue()  # job_id: a3f9-bc12\nstatus → started",
+                  },
+                  {
+                    n: "2",
+                    icon: Globe,
+                    iconColor: "text-blue-500",
+                    bg: "bg-blue-50 border-blue-200",
+                    label: "Real browser launches",
+                    body: "The worker spawns run.py as a subprocess on a real device. A headless Chromium instance starts with a unique user-agent and viewport — indistinguishable from a normal desktop session.",
+                    code: "subprocess.run(['python', 'run.py',\n  '--keyword', 'best coffee grinder',\n  '--domain',  'mycoffeeshop.com'])",
+                  },
+                  {
+                    n: "3",
+                    icon: Search,
+                    iconColor: "text-emerald-500",
+                    bg: "bg-emerald-50 border-emerald-200",
+                    label: "Google search is performed",
+                    body: "The browser navigates to google.com and types the keyword into the search box. The search is submitted and the SERP (Search Engine Results Page) loads fully before any action is taken.",
+                    code: "navigate → google.com\ntype     → \"best coffee grinder\"\nwait     → SERP fully loaded",
+                  },
+                  {
+                    n: "4",
+                    icon: Eye,
+                    iconColor: "text-amber-500",
+                    bg: "bg-amber-50 border-amber-200",
+                    label: "Results scanned for your domain",
+                    body: "The script iterates through organic result links, checking each href for a match to your domain. If the domain appears in the top results it proceeds; otherwise the job exits with a non-zero code and credits are refunded.",
+                    code: "for result in serp.organic_results:\n  if domain in result.url:\n    target = result  # found ✓\n    break",
+                  },
+                  {
+                    n: "5",
+                    icon: MousePointerClick,
+                    iconColor: "text-rose-500",
+                    bg: "bg-rose-50 border-rose-200",
+                    label: "Domain link is clicked",
+                    body: "The target link receives a real mouse-click event (not a direct navigation). The browser follows the redirect chain exactly as a human visitor would — including Google's click-tracking URL — then waits for the page to fully load before the job is marked finished.",
+                    code: "target.click()  # real mouse event\n# browser follows google redirect\n# lands on mycoffeeshop.com",
+                  },
+                ].map((step) => (
+                  <div key={step.n} className="md:pl-10 flex flex-col gap-0">
+                    {/* Step header */}
+                    <div className="flex items-start gap-4">
+                      {/* Circle number (desktop only, absolutely positioned over the line) */}
+                      <div className="hidden md:flex absolute left-0 w-10 h-10 rounded-full bg-white border-2 border-zinc-200 items-center justify-center shrink-0">
+                        <span className="text-[11px] font-bold text-zinc-500">{step.n}</span>
+                      </div>
+
+                      {/* Card */}
+                      <div className="flex-1 border border-zinc-200 rounded-2xl overflow-hidden">
+                        <div className="flex items-center gap-3 px-5 py-4 bg-zinc-50 border-b border-zinc-100">
+                          <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${step.bg}`}>
+                            <step.icon size={15} className={step.iconColor} />
+                          </div>
+                          <p className="text-[14px] font-semibold text-zinc-900">{step.label}</p>
+                          <span className="ml-auto text-[11px] font-mono text-zinc-400 hidden sm:block">step {step.n} / 5</span>
+                        </div>
+                        <div className="px-5 py-4 flex flex-col sm:flex-row gap-4">
+                          <p className="text-[13px] text-zinc-500 leading-relaxed flex-1">{step.body}</p>
+                          <div className="sm:w-64 shrink-0 bg-zinc-900 rounded-xl px-4 py-3 font-mono text-[11px] text-zinc-300 whitespace-pre leading-relaxed">
+                            {step.code}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              {credits.map((row, i) => (
-                <div
-                  key={i}
-                  className={`grid grid-cols-3 px-5 py-3.5 text-[13px] items-center ${i < credits.length - 1 ? "border-b border-zinc-100" : ""}`}
-                >
-                  <span className="text-zinc-700">{row.event}</span>
-                  <span className={`text-center font-mono font-semibold ${
-                    row.delta.startsWith("+") ? "text-emerald-600" : "text-red-500"
-                  }`}>{row.delta}</span>
-                  <span className="text-zinc-400 text-[12px]">{row.note}</span>
-                </div>
-              ))}
             </div>
 
-            {/* Referral visual */}
-            <div className="mt-8 bg-white border border-zinc-200 rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <CreditCard size={15} className="text-zinc-500" />
-                <h3 className="text-[14px] font-semibold text-zinc-900">Referral bonus</h3>
-              </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-[14px] font-bold text-zinc-600">A</div>
-                  <div>
-                    <p className="text-[13px] font-medium text-zinc-800">You share your link</p>
-                    <p className="text-[11px] text-zinc-400 font-mono">t.me/graphrefbot?start=ref_xxx</p>
+          </div>
+        </section>
+
+
+        {/* Anti-detection */}
+        <section className="py-20 px-6 border-b border-zinc-100">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-[22px] font-bold tracking-tight mb-2">How Graphref avoids low-quality traffic flags</h2>
+            <p className="text-[14px] text-zinc-500 mb-10">Google&apos;s systems look for patterns that separate automated activity from genuine users. Graphref is built around passing every one of them.</p>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                {
+                  icon: Fingerprint,
+                  iconColor: "text-violet-500",
+                  bg: "bg-violet-50",
+                  title: "Real browser fingerprint",
+                  body: "A physical device runs a standard Chromium build with no automation flags. Canvas, WebGL, audio, and font fingerprints match a normal desktop browser — nothing headless-specific is exposed.",
+                },
+                {
+                  icon: Globe,
+                  iconColor: "text-blue-500",
+                  bg: "bg-blue-50",
+                  title: "Click routed through Google",
+                  body: "The click follows Google's /url?q= redirect chain before landing on your site. This is what Google's click-through measurement infrastructure expects to see — a direct navigation would register as referral traffic, not organic.",
+                },
+                {
+                  icon: Wifi,
+                  iconColor: "text-emerald-500",
+                  bg: "bg-emerald-50",
+                  title: "Unique IP per session",
+                  body: "Each job runs from a distinct residential IP address. No repeated subnet patterns, no datacenter ranges. IP reputation is clean and geographically varied.",
+                },
+                {
+                  icon: Timer,
+                  iconColor: "text-amber-500",
+                  bg: "bg-amber-50",
+                  title: "Human-paced timing",
+                  body: "Keystrokes, mouse movements, and page interactions are paced with randomised delays. No sub-millisecond precision that would stand out in event timing analysis.",
+                },
+                {
+                  icon: Eye,
+                  iconColor: "text-rose-500",
+                  bg: "bg-rose-50",
+                  title: "Dwell time, not bounce",
+                  body: "The browser waits for the full page load and remains on the destination for a natural duration. Immediate exits are a strong signal of bot activity — Graphref never bounces.",
+                },
+                {
+                  icon: ShieldCheck,
+                  iconColor: "text-teal-500",
+                  bg: "bg-teal-50",
+                  title: "No repetitive patterns",
+                  body: "Jobs from different users are interleaved in the queue. No single keyword or domain is hit at a metronomic interval. Traffic variance mirrors organic user behaviour.",
+                },
+              ].map((card) => (
+                <div key={card.title} className="border border-zinc-200 rounded-2xl p-5">
+                  <div className={`w-9 h-9 rounded-xl ${card.bg} flex items-center justify-center mb-3`}>
+                    <card.icon size={16} className={card.iconColor} />
                   </div>
+                  <p className="text-[13px] font-semibold text-zinc-900 mb-1.5">{card.title}</p>
+                  <p className="text-[12px] text-zinc-500 leading-relaxed">{card.body}</p>
                 </div>
-                <svg width="32" height="16" viewBox="0 0 32 16" className="shrink-0 hidden sm:block">
-                  <path d="M0 8 L26 8 M20 3 L26 8 L20 13" stroke="#d4d4d8" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                </svg>
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-[14px] font-bold text-zinc-600">B</div>
-                  <div>
-                    <p className="text-[13px] font-medium text-zinc-800">Friend signs up + runs first job</p>
-                    <p className="text-[11px] text-zinc-400">triggers bonus</p>
-                  </div>
-                </div>
-                <svg width="32" height="16" viewBox="0 0 32 16" className="shrink-0 hidden sm:block">
-                  <path d="M0 8 L26 8 M20 3 L26 8 L20 13" stroke="#d4d4d8" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                </svg>
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-[13px] font-bold text-emerald-700">+30</div>
-                  <div>
-                    <p className="text-[13px] font-medium text-zinc-800">You receive 30 credits</p>
-                    <p className="text-[11px] text-zinc-400">added to your balance</p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
