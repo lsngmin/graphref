@@ -4,7 +4,40 @@
     "pricing": "Pricing",
     "openTelegram": "Open on Telegram",
     "features": "Features",
-    "changelog": "Changelog"
+    "changelog": "Changelog",
+    "betaBanner": "We're looking for beta testers — try Graphref for free and help shape the product.",
+    "betaApply": "Apply now →"
+  },
+  "betaModal": {
+    "closeAria": "Close",
+    "success": {
+      "title": "Application submitted!",
+      "descLine1": "Your beta application has been received.",
+      "descLine2": "We'll contact you soon.",
+      "close": "Close"
+    },
+    "form": {
+      "title": "Try it first for free",
+      "subtitleLine1": "Use Graphref for free during beta,",
+      "subtitleLine2": "and your feedback will help improve the product.",
+      "nameLabel": "Name",
+      "namePlaceholder": "John Doe",
+      "emailLabel": "Email",
+      "testUrlLabel": "URL to test",
+      "testUrlPlaceholder": "https://example.com/page",
+      "searchConsoleQuestion": "Is this keyword already tracked in Google Search Console?",
+      "searchConsoleYes": "Yes",
+      "searchConsoleNo": "No",
+      "currentRankLabel": "Current rank for the keyword",
+      "currentRankHint": "e.g. #15",
+      "currentRankPlaceholder": "15",
+      "messageLabel": "Message",
+      "optional": "optional",
+      "messagePlaceholder": "Which keyword or site do you want to test?",
+      "consentLine1": "I agree to email collection and contact for beta application review.",
+      "consentLine2": "After review, we'll reach out to this email address.",
+      "submit": "Apply"
+    }
   },
   "home": {
     "hero": {
@@ -130,11 +163,31 @@
     "redirecting": "Redirecting…"
   },
   "about": {
+    "mission": {
+      "line": "Make search visibility accessible to people who ship."
+    },
     "hero": {
       "eyebrow": "/ ABOUT GRAPHREF",
       "headline1": "We got tired of",
       "headline2": "waiting for traffic.",
       "sub": "So we built a tool that sends it instead. Graphref is a small team obsessed with one problem: making search visibility accessible to people who ship things."
+    },
+    "founder": {
+      "title": "Founder / Team",
+      "whyBuiltLine1": "Graphref started because builders shouldn't wait months just to be seen in search.",
+      "whyBuiltLine2": "We're a lean team running product, infrastructure, and growth experiments as one loop.",
+      "founder": {
+        "label": "Founder",
+        "name": "Sngmin",
+        "role": "Founder · Product & Engineering",
+        "bio": "Owns product direction end-to-end, from shipping core features to designing ranking signal experiments."
+      },
+      "team": {
+        "label": "Team",
+        "name": "Graphref Core Team",
+        "role": "Product · Infrastructure · Growth",
+        "bio": "A small cross-functional team that ships fast and turns user feedback into product updates immediately."
+      }
     },
     "story": {
       "block1Title": "Built out of frustration",

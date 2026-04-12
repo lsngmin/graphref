@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, Menu, X, ChevronDown } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import BetaModal from "@/components/BetaModal";
 
 type HeaderProps = {
   activePage?: "about" | "features" | "changelog";
@@ -25,6 +26,7 @@ export default function Header({
 }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [betaOpen, setBetaOpen] = useState(false);
   const desktopLangRef = useRef<HTMLDivElement>(null);
   const mobileLangRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -159,6 +161,20 @@ export default function Header({
 
   return (
     <nav className={navClass}>
+      {/* Beta announcement banner */}
+      <div className={`w-full border-b px-6 py-2.5 flex items-center justify-center gap-2.5 ${isDark ? "bg-zinc-900 border-white/5" : "bg-amber-50 border-amber-100"}`}>
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 animate-pulse ${isDark ? "bg-amber-400" : "bg-amber-400"}`} />
+        <p className={`text-[12px] ${isDark ? "text-zinc-300" : "text-amber-900"}`}>
+          {t("betaBanner")}
+        </p>
+        <button
+          onClick={() => setBetaOpen(true)}
+          className={`text-[12px] font-semibold underline underline-offset-2 transition-colors shrink-0 ${isDark ? "text-white hover:text-zinc-300" : "text-amber-800 hover:text-amber-600"}`}
+        >
+          {t("betaApply")}
+        </button>
+      </div>
+
       {/* Top bar */}
       <div className="mx-auto flex w-full max-w-[1520px] items-center justify-between px-6 md:px-10 lg:px-12 py-4 md:py-5">
         {Logo}
@@ -196,6 +212,8 @@ export default function Header({
           </button>
         </div>
       </div>
+
+      <BetaModal open={betaOpen} onClose={() => setBetaOpen(false)} />
 
       {/* Mobile drawer */}
       {open && (

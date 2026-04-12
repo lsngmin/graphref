@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import Header from "@/components/Header";
 import AnimationWrapper from "./AnimationWrapper";
 
@@ -103,16 +104,69 @@ export default function AboutPage() {
         <Header activePage="about" theme="light" />
 
         {/* ── HERO (dark) ── */}
-        <section className="bg-[#18181b] pt-44 pb-36 px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-6xl md:text-[88px] font-black tracking-tight text-white leading-[1.0] mb-8">
-              {t("about.hero.headline1")}
-              <br />
-              <span className="text-zinc-500">{t("about.hero.headline2")}</span>
+        <section className="relative overflow-hidden bg-[#18181b] min-h-[78vh] flex items-center px-8">
+          <div aria-hidden className="pointer-events-none absolute left-6 top-16 md:left-8 md:top-18 lg:top-20">
+            <Image
+              src="/logo-mark-white.svg"
+              alt=""
+              width={900}
+              height={900}
+              className="h-auto w-[260px] md:w-[430px] lg:w-[620px] opacity-[0.1]"
+            />
+          </div>
+          <div className="relative z-10 max-w-6xl mx-auto text-center">
+            <h1 className="text-balance text-5xl md:text-7xl font-black tracking-tight text-white leading-[1.05]">
+              Make search visibility accessible to people who ship
             </h1>
-            <p className="text-zinc-400 text-lg max-w-xl mx-auto leading-relaxed">
-              {t("about.hero.sub")}
-            </p>
+          </div>
+        </section>
+
+        {/* ── FOUNDER / TEAM (white, intro + cards) ── */}
+        <section className="py-24 px-8 border-b border-zinc-100 about-section">
+          <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.2fr_1fr] gap-12 lg:gap-16 items-start split-pair">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] mb-6">
+                {t("about.founder.title")}
+              </h2>
+              <p className="text-zinc-500 leading-relaxed mb-4">
+                {t("about.founder.whyBuiltLine1")}
+              </p>
+              <p className="text-zinc-500 leading-relaxed">
+                {t("about.founder.whyBuiltLine2")}
+              </p>
+            </div>
+
+            <div className="grid gap-4 stagger-group">
+              <article className="rounded-2xl border border-zinc-200 bg-zinc-50 px-6 py-6 stagger-item">
+                <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-zinc-400 mb-3">
+                  {t("about.founder.founder.label")}
+                </p>
+                <h3 className="text-xl font-bold text-zinc-900 leading-tight mb-1">
+                  {t("about.founder.founder.name")}
+                </h3>
+                <p className="text-sm font-medium text-zinc-700 mb-3">
+                  {t("about.founder.founder.role")}
+                </p>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  {t("about.founder.founder.bio")}
+                </p>
+              </article>
+
+              <article className="rounded-2xl border border-zinc-200 bg-white px-6 py-6 stagger-item">
+                <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-zinc-400 mb-3">
+                  {t("about.founder.team.label")}
+                </p>
+                <h3 className="text-xl font-bold text-zinc-900 leading-tight mb-1">
+                  {t("about.founder.team.name")}
+                </h3>
+                <p className="text-sm font-medium text-zinc-700 mb-3">
+                  {t("about.founder.team.role")}
+                </p>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  {t("about.founder.team.bio")}
+                </p>
+              </article>
+            </div>
           </div>
         </section>
 
@@ -120,7 +174,6 @@ export default function AboutPage() {
         <section className="py-32 px-8 border-b border-zinc-100 about-section">
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-20 items-center split-pair">
             <div>
-              <p className="font-mono text-xs tracking-[0.2em] text-zinc-400 mb-8">/ 01</p>
               <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] mb-8">
                 {t("about.story.block1Title")}
               </h2>
@@ -140,7 +193,6 @@ export default function AboutPage() {
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-20 items-center split-pair">
             <TelegramMock />
             <div>
-              <p className="font-mono text-xs tracking-[0.2em] text-zinc-400 mb-8">/ 02</p>
               <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] mb-8">
                 {t("about.story.block2Title")}
               </h2>
@@ -180,9 +232,6 @@ export default function AboutPage() {
         {/* ── TIMELINE (white, horizontal grid) ── */}
         <section className="py-32 px-8 border-b border-zinc-100 about-section">
           <div className="max-w-6xl mx-auto">
-            <p className="font-mono text-xs tracking-[0.2em] text-zinc-400 mb-16">
-              {t("about.timeline.eyebrow")}
-            </p>
             <div className="grid md:grid-cols-4 gap-px bg-zinc-100 rounded-2xl overflow-hidden border border-zinc-100 stagger-group">
               {timelineItems.map((item) => (
                 <div
@@ -207,9 +256,6 @@ export default function AboutPage() {
         {/* ── VALUES (white, 2×2 card grid) ── */}
         <section className="py-32 px-8 border-b border-zinc-100 about-section">
           <div className="max-w-6xl mx-auto">
-            <p className="font-mono text-xs tracking-[0.2em] text-zinc-400 mb-16">
-              {t("about.values.eyebrow")}
-            </p>
             <div className="grid md:grid-cols-2 gap-px bg-zinc-100 rounded-2xl overflow-hidden border border-zinc-100 stagger-group">
               {valueItems.map((item) => (
                 <div key={item.title} className="bg-white px-10 py-10 stagger-item">

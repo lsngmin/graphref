@@ -4,7 +4,40 @@
     "pricing": "Precios",
     "openTelegram": "Abrir en Telegram",
     "features": "Características",
-    "changelog": "Cambios"
+    "changelog": "Cambios",
+    "betaBanner": "Buscamos beta testers — prueba Graphref gratis y ayuda a mejorar el producto.",
+    "betaApply": "Solicitar →"
+  },
+  "betaModal": {
+    "closeAria": "Cerrar",
+    "success": {
+      "title": "¡Solicitud enviada!",
+      "descLine1": "Tu solicitud para la beta fue recibida.",
+      "descLine2": "Nos pondremos en contacto pronto.",
+      "close": "Cerrar"
+    },
+    "form": {
+      "title": "Pruébalo gratis primero",
+      "subtitleLine1": "Usa Graphref gratis durante la beta,",
+      "subtitleLine2": "y tu feedback ayudará a mejorar el producto.",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Juan Pérez",
+      "emailLabel": "Correo electrónico",
+      "testUrlLabel": "URL para probar",
+      "testUrlPlaceholder": "https://example.com/page",
+      "searchConsoleQuestion": "¿Esta palabra clave ya está registrada en Google Search Console?",
+      "searchConsoleYes": "Sí",
+      "searchConsoleNo": "No",
+      "currentRankLabel": "Posición actual de la palabra clave",
+      "currentRankHint": "ej.: #15",
+      "currentRankPlaceholder": "15",
+      "messageLabel": "Mensaje",
+      "optional": "opcional",
+      "messagePlaceholder": "¿Qué palabra clave o sitio quieres probar?",
+      "consentLine1": "Acepto la recolección del correo y el contacto para revisar mi solicitud beta.",
+      "consentLine2": "Tras la revisión, te contactaremos a este correo.",
+      "submit": "Solicitar"
+    }
   },
   "home": {
     "hero": {
@@ -130,11 +163,31 @@
     "redirecting": "Redirigiendo…"
   },
   "about": {
+    "mission": {
+      "line": "Hacer que la visibilidad en búsquedas sea accesible para quienes crean cosas."
+    },
     "hero": {
       "eyebrow": "/ ACERCA DE GRAPHREF",
       "headline1": "Nos cansamos de",
       "headline2": "esperar tráfico.",
       "sub": "Así que construimos una herramienta que lo envía. Graphref es un equipo pequeño obsesionado con un problema: hacer que la visibilidad en búsquedas sea accesible para quienes crean cosas."
+    },
+    "founder": {
+      "title": "Founder / Team",
+      "whyBuiltLine1": "Graphref nació porque quienes construyen productos no deberían esperar meses para ganar visibilidad en búsqueda.",
+      "whyBuiltLine2": "Somos un equipo pequeño que une producto, infraestructura y experimentos de crecimiento en un mismo ciclo.",
+      "founder": {
+        "label": "Founder",
+        "name": "Sngmin",
+        "role": "Founder · Product & Engineering",
+        "bio": "Lidera la dirección del producto de punta a punta, desde funciones clave hasta experimentos de señales de ranking."
+      },
+      "team": {
+        "label": "Team",
+        "name": "Graphref Core Team",
+        "role": "Product · Infrastructure · Growth",
+        "bio": "Un equipo reducido y transversal que lanza rápido y convierte feedback real en mejoras de producto."
+      }
     },
     "story": {
       "block1Title": "Nació de la frustración",

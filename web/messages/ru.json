@@ -4,7 +4,40 @@
     "pricing": "Цены",
     "openTelegram": "Открыть в Telegram",
     "features": "Функции",
-    "changelog": "Изменения"
+    "changelog": "Изменения",
+    "betaBanner": "Ищем бета-тестеров — попробуйте Graphref бесплатно и помогите улучшить продукт.",
+    "betaApply": "Подать заявку →"
+  },
+  "betaModal": {
+    "closeAria": "Закрыть",
+    "success": {
+      "title": "Заявка отправлена!",
+      "descLine1": "Ваша заявка на бета-тест принята.",
+      "descLine2": "Мы свяжемся с вами в ближайшее время.",
+      "close": "Закрыть"
+    },
+    "form": {
+      "title": "Попробуйте бесплатно",
+      "subtitleLine1": "Пользуйтесь Graphref бесплатно в бета-период,",
+      "subtitleLine2": "а ваш отзыв поможет улучшить продукт.",
+      "nameLabel": "Имя",
+      "namePlaceholder": "Иван Иванов",
+      "emailLabel": "Email",
+      "testUrlLabel": "URL для теста",
+      "testUrlPlaceholder": "https://example.com/page",
+      "searchConsoleQuestion": "Этот ключ уже отслеживается в Google Search Console?",
+      "searchConsoleYes": "Да",
+      "searchConsoleNo": "Нет",
+      "currentRankLabel": "Текущая позиция по ключевому слову",
+      "currentRankHint": "напр.: #15",
+      "currentRankPlaceholder": "15",
+      "messageLabel": "Комментарий",
+      "optional": "необязательно",
+      "messagePlaceholder": "Какой ключ или сайт вы хотите протестировать?",
+      "consentLine1": "Я согласен(а) на сбор email и связь для рассмотрения бета-заявки.",
+      "consentLine2": "После проверки мы свяжемся с вами по этому email.",
+      "submit": "Подать заявку"
+    }
   },
   "home": {
     "hero": {
@@ -130,11 +163,31 @@
     "redirecting": "Перенаправление…"
   },
   "about": {
+    "mission": {
+      "line": "Сделать поисковую видимость доступной для тех, кто создаёт продукты."
+    },
     "hero": {
       "eyebrow": "/ О GRAPHREF",
       "headline1": "Нам надоело",
       "headline2": "ждать трафика.",
       "sub": "Поэтому мы создали инструмент, который отправляет его сам. Graphref — небольшая команда, одержимая одной проблемой: сделать поисковую видимость доступной для тех, кто создаёт продукты."
+    },
+    "founder": {
+      "title": "Founder / Team",
+      "whyBuiltLine1": "Graphref появился потому, что создатели продуктов не должны ждать месяцы ради видимости в поиске.",
+      "whyBuiltLine2": "Мы компактная команда, где продукт, инфраструктура и growth-эксперименты работают в одном цикле.",
+      "founder": {
+        "label": "Founder",
+        "name": "Sngmin",
+        "role": "Founder · Product & Engineering",
+        "bio": "Ведёт продукт от идеи до релиза: от ключевых функций до экспериментов с поисковыми сигналами."
+      },
+      "team": {
+        "label": "Team",
+        "name": "Graphref Core Team",
+        "role": "Product · Infrastructure · Growth",
+        "bio": "Небольшая кросс-функциональная команда, которая быстро выпускает обновления и сразу внедряет обратную связь пользователей."
+      }
     },
     "story": {
       "block1Title": "Рождён из разочарования",

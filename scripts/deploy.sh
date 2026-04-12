@@ -10,7 +10,8 @@ Optional env:
   DEPLOY_PATH       Remote repo path (default: ~/graphref)
   DEPLOY_BRANCH     Branch to deploy (default: current branch)
   DEPLOY_REMOTE     Git remote (default: origin)
-  DEPLOY_SERVICE_CMD Remote restart command (default: sudo docker compose up -d --build)
+  DEPLOY_SERVICE_CMD Remote restart command
+                    (default: remove legacy long-poll bot + up api/worker/redis)
 
 Notes:
   - SSH target is hard-coded for personal use.
@@ -32,7 +33,7 @@ DEPLOY_SSH_KEY="${HOME}/.ssh/id_rsa"
 DEPLOY_SUDO_PASSWORD="74403882"
 DEPLOY_PATH="${DEPLOY_PATH:-~/graphref}"
 DEPLOY_REMOTE="${DEPLOY_REMOTE:-origin}"
-DEPLOY_SERVICE_CMD="${DEPLOY_SERVICE_CMD:-printf '%s\n' '${DEPLOY_SUDO_PASSWORD}' | sudo -S -p '' docker compose up -d --build}"
+DEPLOY_SERVICE_CMD="${DEPLOY_SERVICE_CMD:-printf '%s\n' '${DEPLOY_SUDO_PASSWORD}' | sudo -S -p '' sh -lc 'docker rm -f graphref-bot-1 >/dev/null 2>&1 || true; docker compose up -d --build api worker redis'}"
 CURRENT_BRANCH="${DEPLOY_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 SSH_TARGET="${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}"
 SSH_ARGS=(-p "${DEPLOY_SSH_PORT}")
