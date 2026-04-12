@@ -18,6 +18,10 @@ services:
       PAYPAL_RETURN_URL: ${PAYPAL_RETURN_URL:-}
       PAYPAL_CANCEL_URL: ${PAYPAL_CANCEL_URL:-}
       PAYPAL_WEBHOOK_ID: ${PAYPAL_WEBHOOK_ID:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ALLOWED_CHAT_IDS: ${TELEGRAM_ALLOWED_CHAT_IDS:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-graphrefbot}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
     depends_on:
       - redis
 
@@ -35,32 +39,6 @@ services:
       PYTHONUNBUFFERED: "1"
       USE_XVFB: "1"
       CAPSOLVER_API_KEY: ${CAPSOLVER_API_KEY:-}
-    depends_on:
-      - redis
-
-  bot:
-    build:
-      context: .
-      dockerfile: apps/Dockerfile
-    command: ["python", "telegram_bot.py"]
-    init: true
-    environment:
-      REDIS_URL: redis://redis:6379/0
-      RQ_QUEUE: jobs
-      JOB_TIMEOUT: ${JOB_TIMEOUT:-1800}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      TELEGRAM_ALLOWED_CHAT_IDS: ${TELEGRAM_ALLOWED_CHAT_IDS:-}
-      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-graphrefbot}
-      BOT_POLL_TIMEOUT: ${BOT_POLL_TIMEOUT:-20}
-      SUPABASE_URL: ${SUPABASE_URL:-}
-      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
-      SUPABASE_SCHEMA: ${SUPABASE_SCHEMA:-public}
-      PAYPAL_API_BASE: ${PAYPAL_API_BASE:-}
-      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
-      PAYPAL_SECRET: ${PAYPAL_SECRET:-}
-      PAYPAL_RETURN_URL: ${PAYPAL_RETURN_URL:-}
-      PAYPAL_CANCEL_URL: ${PAYPAL_CANCEL_URL:-}
-      PAYPAL_WEBHOOK_ID: ${PAYPAL_WEBHOOK_ID:-}
     depends_on:
       - redis
 
