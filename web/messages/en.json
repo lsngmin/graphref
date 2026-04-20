@@ -16,6 +16,9 @@
       "descLine2": "We'll contact you soon.",
       "close": "Close"
     },
+    "error": {
+      "title": "Unable to submit"
+    },
     "form": {
       "title": "Try it first for free",
       "subtitleLine1": "Use Graphref for free during beta,",
@@ -36,7 +39,10 @@
       "messagePlaceholder": "Which keyword or site do you want to test?",
       "consentLine1": "I agree to email collection and contact for beta application review.",
       "consentLine2": "After review, we'll reach out to this email address.",
-      "submit": "Apply"
+      "submit": "Apply",
+      "submitting": "Sending...",
+      "submitError": "Failed to submit your application. Please try again.",
+      "rateLimited": "An application has already been submitted."
     }
   },
   "home": {
@@ -71,6 +77,12 @@
       "badgeNoExpire": "Credits never expire",
       "badgeFree": "50 free credits on signup"
     },
+    "pricingTeaser": {
+      "title": "Need a custom setup?",
+      "sub": "If none of the options fit, we can help with custom plans or business partnership proposals.",
+      "faqCta": "View FAQ",
+      "contactCta": "Business inquiry"
+    },
     "testimonials": {
       "title": "What people say"
     },
@@ -82,23 +94,23 @@
       "items": [
         {
           "q": "How does Graphref actually work?",
-          "a": "Graphref uses a network of real devices to perform genuine Google searches for your target keyword, then clicks through to your site from the search results. This simulates organic search behavior — the kind of engagement signal that Google uses to evaluate how relevant your page is to a given query. Because every visit originates from an actual search, it shows up as organic traffic in Google Search Console."
+          "a": "Graphref opens a real browser, performs a genuine Google search for your target keyword using a residential IP, then locates and clicks your site directly from the search results page — exactly how a real user would. The entire Google SERP is loaded and navigated on every session. Nothing is faked or shortcut."
         },
         {
-          "q": "Will I see results in Google Search Console?",
-          "a": "Yes. Since visits are driven through real search queries, they register as organic impressions and clicks in GSC. Most users start seeing movement within 24–72 hours of their first run. We recommend monitoring your target keyword's impression and click data in the Performance tab."
+          "q": "Why does it actually show up in Google Search Console?",
+          "a": "Because every click originates from Google's own search results page. When a result is clicked inside Google's SERP, Google's infrastructure records it as an organic click before the browser even reaches your site. Services that navigate directly to your URL bypass this step — they may appear in Google Analytics but won't register as organic clicks in GSC. Graphref always starts from the SERP, so the click signal is recorded by Google itself."
+        },
+        {
+          "q": "How is Graphref different from cheaper CTR services?",
+          "a": "Some services send traffic by navigating directly to your URL, skipping Google's search results entirely. This costs almost nothing to run but generates no GSC organic signal. Others use unmodified automation tools or mix in datacenter IPs that Google can identify. Graphref performs a full Google search from a residential IP on every session, with realistic browser fingerprinting and human-like interaction patterns. The difference shows up where it matters: in Google Search Console."
+        },
+        {
+          "q": "Why does Graphref cost more than some alternatives?",
+          "a": "Running a real Google search costs real money. Each session loads Google's full search results page — that's 4–5 MB of network data per run on a residential proxy, before even reaching your site. Cheaper services either skip the Google search entirely (URL injection) or use lower-quality datacenter IPs. Graphref's higher cost reflects the actual infrastructure required to generate a click signal that Google registers as organic."
         },
         {
           "q": "Is it safe? Will Google penalize my site?",
-          "a": "Graphref is designed to mimic natural user behavior as closely as possible — real devices, real searches, realistic session patterns. We don't use bots or headless browsers. That said, no third-party traffic tool can guarantee zero risk, and we encourage you to use it as one part of a broader SEO strategy rather than a sole growth channel."
-        },
-        {
-          "q": "How many visits does one credit give me?",
-          "a": "One run costs 10 credits and delivers 10 targeted search visits to your site. You choose the keyword and domain each time you run a job. There's no minimum spend — you can run a single job with your free credits to see how it works before purchasing more."
-        },
-        {
-          "q": "Can I target multiple keywords or domains?",
-          "a": "Yes. Each /run command accepts one keyword and one domain, but you can run as many jobs as your credits allow — across different keywords, different pages, or entirely different sites. There's no restriction on how many domains you use."
+          "a": "Graphref is built to match natural user behavior as closely as possible — residential IPs, real browser sessions, realistic navigation patterns, and human-like timing. That said, no third-party traffic tool can guarantee zero risk. We recommend using Graphref as part of a broader SEO strategy rather than as your only growth channel."
         },
         {
           "q": "Do credits expire?",

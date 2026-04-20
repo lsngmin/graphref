@@ -231,7 +231,26 @@ glParamSpoof(WebGL2RenderingContext.prototype);
             : originalQuery(parameters)
     );
     makeNative(window.navigator.permissions.query);
-    // ── 11. connection 위장 (항상 정의) ───────────────────────────
+    // ── 11. WebRTC IP 누출 방지 ─────────────────────────��─────────
+    // RTCPeerConnection을 relay 전용으로 강제 → 로컬/공인 IP ICE 후보 생성 차단
+    const _OrigRTC = window.RTCPeerConnection;
+    if (_OrigRTC) {
+        function _SafeRTC(config, constraints) {
+            const safeConfig = Object.assign({}, config || {});
+            safeConfig.iceTransportPolicy = 'relay';
+            return new _OrigRTC(safeConfig, constraints);
+        }
+        _SafeRTC.prototype = _OrigRTC.prototype;
+        if (_OrigRTC.generateCertificate) {
+            _SafeRTC.generateCertificate = _OrigRTC.generateCertificate.bind(_OrigRTC);
+        }
+        makeNative(_SafeRTC);
+        window.RTCPeerConnection = _SafeRTC;
+        if (window.webkitRTCPeerConnection) window.webkitRTCPeerConnection = _SafeRTC;
+        if (window.mozRTCPeerConnection)    window.mozRTCPeerConnection    = _SafeRTC;
+    }
+
+    // ── 12. connection 위장 (항상 정의) ───────────────────────────
     // 수정: if (navigator.connection) 조건을 제거하여
     // 환경에 상관없이 항상 실제 4G 환경처럼 보이도록 덮어씀
     Object.defineProperty(navigator, 'connection', {

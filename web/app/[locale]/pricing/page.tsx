@@ -115,15 +115,15 @@ export default function PricingPage() {
       <section className="py-16 px-6 bg-zinc-50">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
-            <p className="text-[16px] font-semibold text-zinc-900 mb-1">{t("faq.stillHaveQuestions")}</p>
-            <p className="text-[14px] text-zinc-500">{t("faq.cantFind")}</p>
+            <p className="text-[16px] font-semibold text-zinc-900 mb-1">{t("pricingTeaser.title")}</p>
+            <p className="text-[14px] text-zinc-500">{t("pricingTeaser.sub")}</p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <a
               href="/#faq"
               className="inline-flex items-center gap-2 border border-zinc-300 text-zinc-700 text-[13px] font-medium px-5 py-3 rounded-xl hover:border-zinc-400 hover:bg-zinc-100 transition-colors"
             >
-              {t("faq.title")}
+              {t("pricingTeaser.faqCta")}
             </a>
             <a
               href={TELEGRAM_URL}
@@ -132,7 +132,7 @@ export default function PricingPage() {
               className="inline-flex items-center gap-2 bg-zinc-900 text-white text-[13px] font-medium px-5 py-3 rounded-xl hover:bg-zinc-700 transition-colors"
             >
               <MessageCircle size={14} />
-              {t("faq.contactUs")}
+              {t("pricingTeaser.contactCta")}
             </a>
           </div>
         </div>

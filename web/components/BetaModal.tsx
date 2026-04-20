@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type BetaModalProps = {
   open: boolean;
@@ -11,6 +11,7 @@ type BetaModalProps = {
 
 export default function BetaModal({ open, onClose }: BetaModalProps) {
   const t = useTranslations("betaModal");
+  const locale = useLocale();
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [name, setName] = useState("");
@@ -20,7 +21,9 @@ export default function BetaModal({ open, onClose }: BetaModalProps) {
   const [currentRank, setCurrentRank] = useState("");
   const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitState, setSubmitState] = useState<"form" | "success" | "error">("form");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   // Mount → trigger enter animation on next frame
@@ -35,7 +38,7 @@ export default function BetaModal({ open, onClose }: BetaModalProps) {
       setVisible(false);
       const t = setTimeout(() => {
         setMounted(false);
-        setSubmitted(false);
+        setSubmitState("form");
         setName("");
         setEmail("");
         setTestUrl("");
@@ -43,6 +46,8 @@ export default function BetaModal({ open, onClose }: BetaModalProps) {
         setCurrentRank("");
         setMessage("");
         setConsent(false);
+        setSubmitting(false);
+        setSubmitError(null);
       }, 280);
       return () => clearTimeout(t);
     }
@@ -65,11 +70,45 @@ export default function BetaModal({ open, onClose }: BetaModalProps) {
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !testUrl.trim() || !consent) return;
-    // TODO: wire up to real backend / email service
-    setSubmitted(true);
+    if (!name.trim() || !email.trim() || !testUrl.trim() || !consent || submitting) return;
+
+    setSubmitError(null);
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/beta-apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          testUrl,
+          searchConsole,
+          currentRank,
+          message,
+          consent,
+          locale,
+        }),
+      });
+
+      if (!res.ok) {
+        if (res.status === 429) {
+          setSubmitError(t("form.rateLimited"));
+          setSubmitState("error");
+          return;
+        }
+        throw new Error("Failed to submit beta application");
+      }
+
+      setSubmitState("success");
+    } catch {
+      setSubmitError(t("form.submitError"));
+      setSubmitState("error");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (!mounted) return null;
@@ -106,19 +145,41 @@ export default function BetaModal({ open, onClose }: BetaModalProps) {
         </button>
 
         <div className="h-full overflow-y-auto px-6 sm:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
-          {submitted ? (
-            /* Success state */
+          {submitState !== "form" ? (
+            /* Result state */
             <div className="flex flex-col items-center text-center py-6 gap-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgb(16,185,129)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+              <div
+                className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  submitState === "success" ? "bg-emerald-100" : "bg-red-100"
+                }`}
+              >
+                {submitState === "success" ? (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgb(16,185,129)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgb(239,68,68)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                )}
               </div>
               <div>
-                <p className="text-[17px] font-bold text-zinc-900 mb-1">{t("success.title")}</p>
-                <p className="text-[13px] text-zinc-500 leading-relaxed">
-                  {t("success.descLine1")}<br />{t("success.descLine2")}
-                </p>
+                {submitState === "success" ? (
+                  <>
+                    <p className="text-[17px] font-bold text-zinc-900 mb-1">{t("success.title")}</p>
+                    <p className="text-[13px] text-zinc-500 leading-relaxed">
+                      {t("success.descLine1")}<br />{t("success.descLine2")}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[17px] font-bold text-zinc-900 mb-1">{t("error.title")}</p>
+                    <p className="text-[13px] text-zinc-500 leading-relaxed">
+                      {submitError}
+                    </p>
+                  </>
+                )}
               </div>
               <button
                 onClick={onClose}
@@ -253,9 +314,10 @@ export default function BetaModal({ open, onClose }: BetaModalProps) {
 
                 <button
                   type="submit"
-                  className="w-full bg-zinc-900 text-white text-[14px] font-semibold py-3 rounded-xl hover:bg-zinc-700 transition-colors mt-1"
+                  disabled={submitting}
+                  className="w-full bg-zinc-900 text-white text-[14px] font-semibold py-3 rounded-xl hover:bg-zinc-700 transition-colors mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {t("form.submit")}
+                  {submitting ? t("form.submitting") : t("form.submit")}
                 </button>
               </form>
             </>

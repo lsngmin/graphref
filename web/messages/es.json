@@ -16,6 +16,9 @@
       "descLine2": "Nos pondremos en contacto pronto.",
       "close": "Cerrar"
     },
+    "error": {
+      "title": "No se pudo enviar"
+    },
     "form": {
       "title": "Pruébalo gratis primero",
       "subtitleLine1": "Usa Graphref gratis durante la beta,",
@@ -36,7 +39,10 @@
       "messagePlaceholder": "¿Qué palabra clave o sitio quieres probar?",
       "consentLine1": "Acepto la recolección del correo y el contacto para revisar mi solicitud beta.",
       "consentLine2": "Tras la revisión, te contactaremos a este correo.",
-      "submit": "Solicitar"
+      "submit": "Solicitar",
+      "submitting": "Enviando...",
+      "submitError": "No se pudo enviar tu solicitud. Inténtalo de nuevo.",
+      "rateLimited": "La solicitud ya fue enviada."
     }
   },
   "home": {
@@ -71,6 +77,12 @@
       "badgeNoExpire": "Los créditos no vencen",
       "badgeFree": "50 créditos gratis al registrarte"
     },
+    "pricingTeaser": {
+      "title": "¿Necesitas una opción personalizada?",
+      "sub": "Si ninguno de los planes encaja, te ayudamos con planes a medida o propuestas para negocio.",
+      "faqCta": "Ver FAQ",
+      "contactCta": "Consulta de negocio"
+    },
     "testimonials": {
       "title": "Lo que dicen los usuarios"
     },
@@ -82,23 +94,23 @@
       "items": [
         {
           "q": "¿Cómo funciona realmente Graphref?",
-          "a": "Graphref usa una red de dispositivos reales para realizar búsquedas genuinas en Google con tu palabra clave objetivo, y luego hace clic en tu sitio desde los resultados de búsqueda. Esto simula el comportamiento de búsqueda orgánica — el tipo de señal de interacción que Google usa para evaluar qué tan relevante es tu página para una consulta determinada. Como cada visita proviene de una búsqueda real, aparece como tráfico orgánico en Google Search Console."
+          "a": "Graphref abre un navegador real, realiza una búsqueda genuina en Google con tu palabra clave objetivo usando una IP residencial, y luego localiza y hace clic en tu sitio directamente desde la página de resultados de búsqueda — exactamente como lo haría un usuario real. En cada sesión se carga y navega el SERP completo de Google. Nada se falsifica ni se toma atajos."
         },
         {
-          "q": "¿Veré resultados en Google Search Console?",
-          "a": "Sí. Como las visitas se generan a través de consultas de búsqueda reales, se registran como impresiones y clics orgánicos en GSC. La mayoría de los usuarios empiezan a ver movimiento entre 24 y 72 horas después de su primera ejecución. Recomendamos monitorear los datos de impresiones y clics de tu palabra clave objetivo en la pestaña Rendimiento."
+          "q": "¿Por qué aparece realmente en Google Search Console?",
+          "a": "Porque cada clic se origina desde la propia página de resultados de búsqueda de Google. Cuando se hace clic en un resultado dentro del SERP de Google, la infraestructura de Google lo registra como un clic orgánico antes de que el navegador llegue a tu sitio. Los servicios que navegan directamente a tu URL se saltan este paso — pueden aparecer en Google Analytics, pero no se registran como clics orgánicos en GSC. Graphref siempre comienza desde el SERP, por lo que la señal de clic es registrada por el propio Google."
+        },
+        {
+          "q": "¿En qué se diferencia Graphref de servicios CTR más baratos?",
+          "a": "Algunos servicios envían tráfico navegando directamente a tu URL, saltándose completamente los resultados de búsqueda de Google. Esto cuesta casi nada de ejecutar pero no genera ninguna señal orgánica en GSC. Otros usan herramientas de automatización sin modificar o mezclan IPs de centros de datos que Google puede identificar fácilmente. Graphref realiza una búsqueda completa en Google desde una IP residencial en cada sesión, con fingerprinting de navegador realista y patrones de interacción similares a los humanos. La diferencia se ve donde importa: en Google Search Console."
+        },
+        {
+          "q": "¿Por qué Graphref cuesta más que algunas alternativas?",
+          "a": "Ejecutar una búsqueda real en Google tiene un costo real. Cada sesión carga la página completa de resultados de búsqueda de Google — eso son 4–5 MB de datos de red por ejecución en un proxy residencial, antes de llegar siquiera a tu sitio. Los servicios más baratos o bien se saltan la búsqueda en Google completamente (inyección de URL) o usan IPs de centros de datos de menor calidad. El mayor costo de Graphref refleja la infraestructura real necesaria para generar una señal de clic que Google registre como orgánica."
         },
         {
           "q": "¿Es seguro? ¿Google penalizará mi sitio?",
-          "a": "Graphref está diseñado para imitar el comportamiento natural del usuario lo más fielmente posible — dispositivos reales, búsquedas reales, patrones de sesión realistas. No usamos bots ni navegadores sin interfaz. Dicho esto, ninguna herramienta de tráfico de terceros puede garantizar riesgo cero, y te recomendamos usarla como parte de una estrategia SEO más amplia y no como único canal de crecimiento."
-        },
-        {
-          "q": "¿Cuántas visitas da un crédito?",
-          "a": "Una ejecución cuesta 10 créditos y entrega 10 visitas de búsqueda dirigidas a tu sitio. Eliges la palabra clave y el dominio cada vez que lanzas un trabajo. No hay gasto mínimo — puedes ejecutar un solo trabajo con tus créditos gratis para ver cómo funciona antes de comprar más."
-        },
-        {
-          "q": "¿Puedo apuntar a varias palabras clave o dominios?",
-          "a": "Sí. Cada comando /run acepta una palabra clave y un dominio, pero puedes ejecutar tantos trabajos como tus créditos permitan — con diferentes palabras clave, diferentes páginas o sitios completamente distintos. No hay restricción en cuántos dominios uses."
+          "a": "Graphref está construido para imitar el comportamiento natural del usuario lo más fielmente posible — IPs residenciales, sesiones de navegador reales, patrones de navegación realistas y tiempos similares a los humanos. Dicho esto, ninguna herramienta de tráfico de terceros puede garantizar riesgo cero. Recomendamos usar Graphref como parte de una estrategia SEO más amplia y no como tu único canal de crecimiento."
         },
         {
           "q": "¿Los créditos vencen?",
